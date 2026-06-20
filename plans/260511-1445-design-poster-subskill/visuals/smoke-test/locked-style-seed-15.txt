@@ -1,0 +1,45 @@
+# seed=15 style=deconstructed-editorial palette=palette-06 layout=layout-01 texture=texture-07-newsprint
+
+Design a vertical A3 poster (297mm × 420mm, ~1:1.41) on the theme of "AI Conference 2026".
+
+STYLE (locked — preserve identity exactly):
+  Name: deconstructed-editorial
+  Category: expressive
+  Description: This style blends aggressive typography with high-contrast, distressed textures and deconstructed layouts for a raw, impactful, and editorially experimental aesthetic.
+  Mood: intense, edgy, rebellious, dramatic, powerful
+  Era: Late 20th Century Revival to Present
+  Hints: Utilize stark black and white with pops of color, layer distressed textures, play with deconstructed or fragmented typography, and experiment with photo collage elements.
+
+PALETTE (locked):
+  Name: palette-06
+  Hex: #FFFFFF #000000 #747A8B #D9725C #DBD6C8
+  Contrast: high
+  Mood: futuristic, nostalgic, contemplative
+
+TEXTURE / MATERIAL (locked — must remain identical to source style):
+  Material: newsprint
+  Finish: halftone dots
+  Effect: newsprint surface with halftone dots finish
+  Rendering: Render with visible halftone dots texture; preserve newsprint qualities.
+
+COMPOSITION (vary freely within style):
+  Grid: broken grid
+  Whitespace: low
+  Element hierarchy: supporting graphic > headline > decorative shapes > meta
+  Focal anchor: center
+  Secondary element positions: top-left, top-right, top-center
+  Shape primitives to incorporate (2-4 only): circle, cut paper edges, thick rule, rectangle
+  Density: dense
+  Rotation jitter on secondary elements: 3°
+
+COPY SLOTS:
+  Headline: derive from topic — "AI Conference 2026"
+  Sub: a short tagline that fits the mood
+  Meta: date / venue / org placeholder text
+
+CONSTRAINTS:
+- Style, palette, and texture must remain visually identical to the locked specs above.
+- Vary ONLY: layout grid usage, element positions, shape selection from the listed pool, density, rotation jitter.
+- Do not invent textures/materials outside the locked set.
+- Keep typography consistent with style description.
+

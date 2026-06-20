@@ -1,0 +1,128 @@
+DOCUMENTATION FILES MODIFIED - SKILL CONSOLIDATION UPDATE
+═════════════════════════════════════════════════════════════════════════════════
+Date: 2026-03-03
+Total Files: 11
+Total Changes: 236 insertions, 147 deletions
+
+═════════════════════════════════════════════════════════════════════════════════
+CORE DOCUMENTATION
+═════════════════════════════════════════════════════════════════════════════════
+
+1. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/skill-catalog.md
+   Changes: Header update + 6 consolidation notes added
+   Affected Skills: seo, social, email, campaign, brand, video
+   Details: Updated to document consolidation and note old skill directories
+            no longer exist
+
+2. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/codebase-summary.md
+   Changes: Status line updated + Skills section expanded with consolidation notes
+   Details: Updated timestamp, phase status, skills directory tree with
+            9 consolidation references
+
+3. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/system-architecture.md
+   Status: Verified - No changes needed
+   Details: No references to old skill directory paths found
+
+═════════════════════════════════════════════════════════════════════════════════
+QUICK REFERENCE
+═════════════════════════════════════════════════════════════════════════════════
+
+4. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/QUICK-REFERENCE.md
+   Changes: 4 script path updates
+   Updates:
+     - .claude/skills/brand-guidelines/ → .claude/skills/brand/
+     - inject-brand-context.cjs paths updated
+     - validate-asset.cjs paths updated
+     - extract-colors.cjs paths updated
+     - sync-brand-to-tokens.cjs paths updated
+   Documentation map references updated (guide file names)
+
+═════════════════════════════════════════════════════════════════════════════════
+KIT GUIDE DOCUMENTATION
+═════════════════════════════════════════════════════════════════════════════════
+
+5. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/kit-guide/00-overview.md
+   Changes: 1 consolidation note added
+   Details: Added note to brand skill entry showing previous skill name
+
+6. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/kit-guide/01-brand-system.md
+   Changes: 14 path replacements
+   Updates: All .claude/skills/brand-guidelines/ → .claude/skills/brand/
+   Details: Updated 14 script path references throughout brand system guide
+   Affected Scripts:
+     - sync-brand-to-tokens.cjs (7 references)
+     - inject-brand-context.cjs (3 references)
+     - Verification path checks (4 references)
+
+7. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/kit-guide/02-image-generation.md
+   Changes: 2 path replacements
+   Updates: All .claude/skills/brand-guidelines/ → .claude/skills/brand/
+   Details: Updated script validation references in design guide
+
+8. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/kit-guide/08-project-setup.md
+   Changes: 1 path replacement
+   Updates: All .claude/skills/brand-guidelines/ → .claude/skills/brand/
+   Details: Updated brand-guidelines reference in setup documentation
+
+9. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/kit-guide/09-scripts-reference.md
+   Changes: 13 path updates + 1 historical note
+   Updates: All .claude/skills/brand-guidelines/ → .claude/skills/brand/
+   Details: Updated location header with historical note (previous path documented)
+   Affected Scripts: All brand scripts (inject, validate, extract, sync)
+
+═════════════════════════════════════════════════════════════════════════════════
+TESTING & VALIDATION
+═════════════════════════════════════════════════════════════════════════════════
+
+10. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/manual-test-guide.md
+    Changes: 2 path replacements
+    Updates:
+      - inject-brand-context.cjs path updated
+      - sync-brand-to-tokens.cjs path updated
+    Details: Updated manual testing guide with correct script paths
+
+═════════════════════════════════════════════════════════════════════════════════
+OTHER DOCUMENTATION
+═════════════════════════════════════════════════════════════════════════════════
+
+11. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/code-standards.md
+    Status: Auto-updated (no significant content changes)
+
+12. /Users/duynguyen/www/claudekit/claudekit-marketing/docs/project-roadmap.md
+    Status: Auto-updated (no significant content changes)
+
+═════════════════════════════════════════════════════════════════════════════════
+SUMMARY BY CHANGE TYPE
+═════════════════════════════════════════════════════════════════════════════════
+
+Script Path Updates:          20+ replacements
+Consolidation Notes:           6 notes added
+Historical References:         1 reference added (intentional)
+Status Updates:                2 files updated
+Header Updates:                2 files updated
+
+═════════════════════════════════════════════════════════════════════════════════
+VERIFICATION
+═════════════════════════════════════════════════════════════════════════════════
+
+✅ All .claude/skills/brand-guidelines/ paths updated
+✅ All script references verified as correct
+✅ No broken links or references
+✅ Consolidation documented consistently across all files
+✅ Historical context preserved for future reference
+✅ Documentation now reflects actual codebase structure
+
+═════════════════════════════════════════════════════════════════════════════════
+REPORTS AVAILABLE
+═════════════════════════════════════════════════════════════════════════════════
+
+1. Comprehensive Report:
+   plans/reports/docs-update-skill-consolidation-2026-03-03.md
+   
+2. Summary Report:
+   plans/reports/docs-update-summary-2026-03-03.txt
+   
+3. This File:
+   plans/reports/MODIFIED-FILES-LIST-2026-03-03.txt
+
+═════════════════════════════════════════════════════════════════════════════════
