@@ -124,4 +124,19 @@ describe('handleLookup', () => {
     await expect(handleLookup({ slug: '' })).resolves.toBeTypeOf('string');
     await expect(handleLookup({ category: '' })).resolves.toBeTypeOf('string');
   });
+
+  it('returns the escaping entry for slug "wp-output-escaping-xss-prevention"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ slug: 'wp-output-escaping-xss-prevention' }, snap);
+    expect(result).toContain('esc_html');
+    expect(result).toContain('XSS');
+    expect(result).toContain('Source:');
+  });
+
+  it('returns the wp-img-tag deprecation entry for category "wordpress-core"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ category: 'wordpress-core' }, snap);
+    expect(result).toContain('wp_img_tag_add_decoding_attr');
+    expect(result).toContain('Source:');
+  });
 });
