@@ -104,9 +104,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has at least one entry', () => {
+  it('has exactly 3 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBeGreaterThan(0);
+    expect(snap.entries.length).toBe(3);
   });
 
   it('every entry has tier "free"', () => {
@@ -121,6 +121,13 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     for (const entry of snap.entries) {
       expect(Object.prototype.hasOwnProperty.call(entry, 'body')).toBe(false);
     }
+  });
+
+  it('every entry passes validateEntry', () => {
+    const snap = loadSnapshot();
+    snap.entries.forEach((entry, i) => {
+      expect(() => validateEntry(entry, i)).not.toThrow();
+    });
   });
 
   it('HPOS entry carries all required Free fields', () => {
@@ -149,9 +156,73 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(hpos?.versions[0]?.woo_version_min).toBe('8.2');
   });
 
+  it('wp-img-tag deprecation entry carries all required Free fields', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(entry).toBeDefined();
+    if (!entry) return;
+
+    expect(entry.summary).toBeTruthy();
+    expect(entry.bad_pattern).toBeTruthy();
+    expect(entry.code_example).toBeTruthy();
+    expect(entry.source_url).toBeTruthy();
+    expect(entry.test_step).toBeTruthy();
+    expect(entry.tier).toBe('free');
+    expect(entry.category_slug).toBe('wordpress-core');
+  });
+
+  it('wp-img-tag deprecation entry has no body field', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(Object.prototype.hasOwnProperty.call(entry, 'body')).toBe(false);
+  });
+
+  it('wp-img-tag deprecation entry has wp_version_min "6.4.0" and no woo_version_min', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(entry?.versions.length).toBeGreaterThan(0);
+    expect(entry?.versions[0]?.wp_version_min).toBe('6.4.0');
+    expect(entry?.versions[0]?.woo_version_min).toBeNull();
+    expect(entry?.versions[0]?.breaking_change).toBe(true);
+  });
+
+  it('wp-output-escaping entry carries all required Free fields', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-output-escaping-xss-prevention');
+    expect(entry).toBeDefined();
+    if (!entry) return;
+
+    expect(entry.summary).toBeTruthy();
+    expect(entry.bad_pattern).toBeTruthy();
+    expect(entry.code_example).toBeTruthy();
+    expect(entry.source_url).toBeTruthy();
+    expect(entry.test_step).toBeTruthy();
+    expect(entry.tier).toBe('free');
+    expect(entry.category_slug).toBe('wordpress-security');
+  });
+
+  it('wp-output-escaping entry has no body field', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-output-escaping-xss-prevention');
+    expect(Object.prototype.hasOwnProperty.call(entry, 'body')).toBe(false);
+  });
+
+  it('wp-output-escaping entry has wp_version_min "3.5" and no woo_version_min', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-output-escaping-xss-prevention');
+    expect(entry?.versions[0]?.wp_version_min).toBe('3.5');
+    expect(entry?.versions[0]?.woo_version_min).toBeNull();
+    expect(entry?.versions[0]?.breaking_change).toBe(false);
+  });
+
   it('generatedAt matches max updatedAt across entries (deterministic, not wall-clock)', () => {
     const snap = loadSnapshot();
     const maxUpdated = snap.entries.reduce((max, e) => (e.updatedAt > max ? e.updatedAt : max), '');
     expect(snap.generatedAt).toBe(maxUpdated);
+  });
+
+  it('generatedAt has advanced to 2026-06-21T20:00:00Z', () => {
+    const snap = loadSnapshot();
+    expect(snap.generatedAt).toBe('2026-06-21T20:00:00Z');
   });
 });

@@ -28,4 +28,10 @@ export const PATTERNS: readonly PatternDefinition[] = [
     directoryPaths: ['.env'],
     sourceSignals: [],
   },
+  {
+    pattern: 'wordpress-core',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: ['wp_img_tag_add_decoding_attr('],
+  },
 ];
