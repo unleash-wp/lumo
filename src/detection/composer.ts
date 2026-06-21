@@ -1,11 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PATTERNS } from './registry.js';
 import type { PluginDetection } from './types.js';
-
-const WOO_COMPOSER_KEYS = [
-  'woocommerce/woocommerce',
-  'wpackagist-plugin/woocommerce',
-] as const;
 
 /**
  * Extract a base version from a composer version constraint.
@@ -20,9 +16,9 @@ function parseConstraintVersion(constraint: string): string | null {
 }
 
 /**
- * Detect WooCommerce from composer.json in the given project root.
- * Checks both `require` and `require-dev` for known Woo composer keys.
- * Returns null when the file is absent, malformed, or WooCommerce not listed.
+ * Detect a registered pattern from composer.json in the given project root.
+ * Checks both `require` and `require-dev` for each pattern's composer keys.
+ * Returns null when the file is absent, malformed, or no pattern is listed.
  * NEVER throws.
  */
 export function detectFromComposer(projectRoot: string): PluginDetection | null {
@@ -42,14 +38,16 @@ export function detectFromComposer(projectRoot: string): PluginDetection | null 
       ? obj['require-dev'] as Record<string, unknown>
       : {};
 
-    for (const key of WOO_COMPOSER_KEYS) {
-      const constraint = require[key] ?? requireDev[key];
-      if (typeof constraint === 'string') {
-        return {
-          slug: 'woocommerce',
-          version: parseConstraintVersion(constraint),
-          source: 'composer',
-        };
+    for (const def of PATTERNS) {
+      for (const key of def.composerKeys) {
+        const constraint = require[key] ?? requireDev[key];
+        if (typeof constraint === 'string') {
+          return {
+            pattern: def.pattern,
+            version: parseConstraintVersion(constraint),
+            source: 'composer',
+          };
+        }
       }
     }
 
