@@ -35,13 +35,13 @@ describe('handleAudit', () => {
 
   it('returns neutral message for a non-Woo project', async () => {
     const result = await handleAudit({ project_root: join(fixturesDir, 'non-woo') });
-    expect(result).toContain('No WooCommerce detected');
+    expect(result).toContain('No known WordPress risk patterns detected');
   });
 
   it('returns neutral message for a non-existent path — never throws', async () => {
     await expect(
       handleAudit({ project_root: '/tmp/__lumo_nonexistent_fixture__' }),
-    ).resolves.toContain('No WooCommerce detected');
+    ).resolves.toContain('No known WordPress risk patterns detected');
   });
 
   it('defaults to process.cwd() when project_root is omitted — never throws', async () => {

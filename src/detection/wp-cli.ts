@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { PATTERNS } from './registry.js';
 import type { PluginDetection } from './types.js';
 
 /**
@@ -27,7 +28,8 @@ function looksLikeWordPress(projectRoot: string): boolean {
 }
 
 /**
- * Detect WooCommerce version via WP-CLI.
+ * Detect a registered pattern via WP-CLI.
+ * Only patterns with a wpCliSlug are attempted.
  *
  * Only attempted when:
  *   - a `wp` binary resolves on PATH, AND
@@ -43,27 +45,31 @@ export function detectFromWpCli(projectRoot: string): PluginDetection | null {
       return null;
     }
 
-    const result = spawnSync(
-      'wp',
-      ['plugin', 'get', 'woocommerce', '--field=version', `--path=${projectRoot}`],
-      { timeout: 5000, encoding: 'utf8' },
-    );
+    for (const def of PATTERNS.filter((p) => p.wpCliSlug !== undefined)) {
+      const result = spawnSync(
+        'wp',
+        ['plugin', 'get', def.wpCliSlug!, '--field=version', `--path=${projectRoot}`],
+        { timeout: 5000, encoding: 'utf8' },
+      );
 
-    if (result.error || result.status !== 0) {
-      return null;
+      if (result.error || result.status !== 0) {
+        continue;
+      }
+
+      const version = result.stdout.trim();
+      // Accept only version-looking strings: digits and dots
+      if (!/^\d+\.\d+/.test(version)) {
+        continue;
+      }
+
+      return {
+        pattern: def.pattern,
+        version,
+        source: 'wp-cli',
+      };
     }
 
-    const version = result.stdout.trim();
-    // Accept only version-looking strings: digits and dots
-    if (!/^\d+\.\d+/.test(version)) {
-      return null;
-    }
-
-    return {
-      slug: 'woocommerce',
-      version,
-      source: 'wp-cli',
-    };
+    return null;
   } catch {
     return null;
   }

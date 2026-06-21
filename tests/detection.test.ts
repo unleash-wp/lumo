@@ -20,7 +20,7 @@ describe('detectFromComposer', () => {
   it('detects WooCommerce with version from composer-woo fixture', () => {
     const result = detectFromComposer(join(fixturesDir, 'composer-woo'));
     expect(result).not.toBeNull();
-    expect(result?.slug).toBe('woocommerce');
+    expect(result?.pattern).toBe('woocommerce');
     expect(result?.version).toBe('8.5');
     expect(result?.source).toBe('composer');
   });
@@ -45,7 +45,7 @@ describe('detectFromDirectory', () => {
   it('detects WooCommerce with version from classic-wp fixture', () => {
     const result = detectFromDirectory(join(fixturesDir, 'classic-wp'));
     expect(result).not.toBeNull();
-    expect(result?.slug).toBe('woocommerce');
+    expect(result?.pattern).toBe('woocommerce');
     expect(result?.version).toBe('8.6.1');
     expect(result?.source).toBe('directory');
   });
@@ -60,6 +60,31 @@ describe('detectFromDirectory', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'lumo-test-'));
     expect(() => detectFromDirectory(emptyDir)).not.toThrow();
     expect(detectFromDirectory(emptyDir)).toBeNull();
+  });
+
+  // env-in-git fixtures are created at runtime in a tmp dir, never committed:
+  // a literal `.env` is matched by the repo .gitignore, so a committed fixture
+  // would be silently dropped on a fresh clone.
+  it('detects env-in-git pattern from a tmp dir containing .env', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
+    writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
+    const result = detectFromDirectory(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('env-in-git');
+    expect(result?.version).toBeNull();
+    expect(result?.source).toBe('directory');
+  });
+
+  it('resolves co-present patterns by registry order — woocommerce (row 0) wins over env-in-git', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-copresent-'));
+    writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
+    mkdirSync(join(dir, 'wp-content/plugins/woocommerce'), { recursive: true });
+    writeFileSync(
+      join(dir, 'wp-content/plugins/woocommerce/woocommerce.php'),
+      '<?php\n/**\n * Version: 9.0.0\n */\n',
+    );
+    // Single-hit per source: the first registry pattern that matches wins.
+    expect(detectFromDirectory(dir)?.pattern).toBe('woocommerce');
   });
 });
 
@@ -89,6 +114,27 @@ describe('detectStack', () => {
     expect(() => detectStack(emptyDir)).not.toThrow();
     expect(detectStack(emptyDir)).toBeNull();
   });
+
+  it('detects env-in-git pattern from a tmp dir containing .env', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
+    writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
+    const result = detectStack(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('env-in-git');
+    expect(result?.source).toBe('directory');
+  });
+
+  it('returns null for clean-repo (no pattern matches)', () => {
+    expect(() => detectStack(join(fixturesDir, 'clean-repo'))).not.toThrow();
+    expect(detectStack(join(fixturesDir, 'clean-repo'))).toBeNull();
+  });
+
+  it('still detects woocommerce from composer-woo with env-in-git in registry', () => {
+    const result = detectStack(join(fixturesDir, 'composer-woo'));
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('woocommerce');
+    expect(result?.source).toBe('composer');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -108,7 +154,7 @@ describe('auditProject', () => {
     expect(() => auditProject(emptyDir)).not.toThrow();
     const result = auditProject(emptyDir);
     expect(result.detected).toBe(false);
-    expect(result.message).toMatch(/No WooCommerce detected/);
+    expect(result.message).toMatch(/No known WordPress risk patterns detected/);
     expect(result.entry).toBeUndefined();
   });
 
@@ -116,7 +162,15 @@ describe('auditProject', () => {
     expect(() => auditProject(join(fixturesDir, 'non-woo'))).not.toThrow();
     const result = auditProject(join(fixturesDir, 'non-woo'));
     expect(result.detected).toBe(false);
-    expect(result.message).toMatch(/No WooCommerce detected/);
+    expect(result.message).toMatch(/No known WordPress risk patterns detected/);
+  });
+
+  it('returns detected:false (no snapshot entry) for env-in-git tmp dir — no throw', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
+    writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
+    expect(() => auditProject(dir)).not.toThrow();
+    const result = auditProject(dir);
+    expect(result.detected).toBe(false);
   });
 });
 
@@ -128,7 +182,7 @@ describe('detectFromSource', () => {
   it('detects WooCommerce in heuristic-woo fixture (signal in src/)', () => {
     const result = detectFromSource(join(fixturesDir, 'heuristic-woo'));
     expect(result).not.toBeNull();
-    expect(result?.slug).toBe('woocommerce');
+    expect(result?.pattern).toBe('woocommerce');
     expect(result?.version).toBeNull();
     expect(result?.source).toBe('heuristic');
   });
@@ -153,7 +207,7 @@ describe('detectStack — heuristic fallback', () => {
     const result = detectStack(join(fixturesDir, 'heuristic-woo'));
     expect(result).not.toBeNull();
     expect(result?.source).toBe('heuristic');
-    expect(result?.slug).toBe('woocommerce');
+    expect(result?.pattern).toBe('woocommerce');
   });
 });
 
@@ -211,7 +265,7 @@ describe('detectFromComposer — constraint variants', () => {
     const dir = makeComposerDir({ 'require-dev': { 'woocommerce/woocommerce': '^8.5' } });
     const result = detectFromComposer(dir);
     expect(result).not.toBeNull();
-    expect(result?.slug).toBe('woocommerce');
+    expect(result?.pattern).toBe('woocommerce');
     expect(result?.version).toBe('8.5');
   });
 });
@@ -224,7 +278,7 @@ describe('detectFromDirectory — Bedrock layout', () => {
   it('detects WooCommerce 8.7.2 from bedrock-woo fixture (web/app/plugins path)', () => {
     const result = detectFromDirectory(join(fixturesDir, 'bedrock-woo'));
     expect(result).not.toBeNull();
-    expect(result?.slug).toBe('woocommerce');
+    expect(result?.pattern).toBe('woocommerce');
     expect(result?.version).toBe('8.7.2');
     expect(result?.source).toBe('directory');
   });
