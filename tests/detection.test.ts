@@ -221,6 +221,50 @@ describe('auditProject — heuristic path', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Non-WooCommerce detection: wordpress-core pattern via heuristic source signal
+// ---------------------------------------------------------------------------
+
+describe('detectFromSource — wordpress-core', () => {
+  it('detects wordpress-core pattern when source contains wp_img_tag_add_decoding_attr(', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-wp-core-'));
+    writeFileSync(
+      join(dir, 'functions.php'),
+      '<?php\n$img = wp_img_tag_add_decoding_attr( $img_html, \'the-content\' );\n',
+    );
+    const result = detectFromSource(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('wordpress-core');
+    expect(result?.source).toBe('heuristic');
+  });
+
+  it('does not fire for a PHP file with no registered signals', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-wp-core-clean-'));
+    writeFileSync(join(dir, 'functions.php'), '<?php\n// clean file\nthe_content();\n');
+    const result = detectFromSource(dir);
+    expect(result).toBeNull();
+  });
+});
+
+describe('auditProject — non-WooCommerce end-to-end (wordpress-core)', () => {
+  it('detects:true, routes to wp-img-tag entry, and renders WordPress ≥ 6.4.0 affected line', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-wp-core-audit-'));
+    writeFileSync(
+      join(dir, 'plugin.php'),
+      '<?php\n$html = wp_img_tag_add_decoding_attr( $img, \'custom-context\' );\necho $html;\n',
+    );
+    const result = auditProject(dir);
+    expect(result.detected).toBe(true);
+    expect(result.entry?.slug).toBe('wp-img-tag-add-decoding-attr-deprecation');
+    // Title confirms non-Woo catch
+    expect(result.entry?.title).toContain('wp_img_tag_add_decoding_attr');
+    // Affected line comes from the render path
+    const { formatFreeMarkdown } = await import('../src/lib/render.js');
+    const md = formatFreeMarkdown(result.entry!);
+    expect(md).toContain('**Affected:** WordPress ≥ 6.4.0');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 2b: WP-CLI guard — env-independent short-circuit
 // ---------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-20T09:30:00Z",
+  "generatedAt": "2026-06-21T20:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -23,6 +23,46 @@
           "wp_version_max": null,
           "woo_version_min": "8.2",
           "breaking_change": true
+        }
+      ]
+    },
+    {
+      "slug": "wp-img-tag-add-decoding-attr-deprecation",
+      "title": "wp_img_tag_add_decoding_attr() deprecated in WP 6.4 — use wp_img_tag_add_loading_optimization_attrs()",
+      "category_slug": "wordpress-core",
+      "summary": "The wp_img_tag_add_decoding_attr() function was deprecated in WordPress 6.4.0 in favor of wp_img_tag_add_loading_optimization_attrs(), which consolidates image optimization (decoding, loading, fetchpriority). Themes and plugins still using the old function will trigger deprecation notices on WP 6.4+. Replace calls with the new function.",
+      "code_example": "// CORRECT — WP 6.4.0+\n// Use the consolidated function that handles decoding + loading + fetchpriority\n$img_html = '<img src=\"example.jpg\" alt=\"\" />';\n$img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );\necho $img_html;\n\n// Or let WordPress handle it automatically on the_post_thumbnail(), wp_get_attachment_image(), etc.\n// The new function is used internally by WordPress for all image output.",
+      "bad_pattern": "// WRONG — deprecated since WP 6.4.0\nif ( ! function_exists( 'wp_img_tag_add_decoding_attr' ) ) {\n    return;\n}\n\n// Themes/plugins calling the deprecated function\n$img_html = '<img src=\"example.jpg\" alt=\"\" />';\n$img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );\necho $img_html;",
+      "source_url": "https://developer.wordpress.org/reference/functions/wp_img_tag_add_decoding_attr/",
+      "test_step": "1. On a WP 6.4.0+ site, search theme/plugin code for `wp_img_tag_add_decoding_attr(` calls.\n2. Enable debug.log (WP_DEBUG = true) and check for deprecation notices.\n3. Replace with `wp_img_tag_add_loading_optimization_attrs()` or remove the call and let WordPress handle optimization automatically.\n4. Confirm no deprecation notices; verify images still render correctly.",
+      "tier": "free",
+      "updatedAt": "2026-06-21T20:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "6.4.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": true
+        }
+      ]
+    },
+    {
+      "slug": "wp-output-escaping-xss-prevention",
+      "title": "Escaping data at output prevents XSS — use context-correct escape functions",
+      "category_slug": "wordpress-security",
+      "summary": "WordPress requires escaping (sanitizing) data at the output boundary to prevent XSS attacks. Use esc_html() for HTML content, esc_attr() for HTML attributes, esc_url() for URLs, and esc_js() for JavaScript. Always escape late, as you output, not early in the request lifecycle.",
+      "code_example": "// CORRECT — escaping at output boundary\n$post_title = get_the_title();\necho '<h4>' . esc_html( $post_title ) . '</h4>';\n\n// CORRECT — URL in href attribute\n$permalink = get_permalink();\necho '<a href=\"' . esc_url( $permalink ) . '\">' . esc_html( get_the_title() ) . '</a>';\n\n// CORRECT — URL in src attribute\n$image_url = get_the_post_thumbnail_url();\necho '<img alt=\"\" src=\"' . esc_url( $image_url ) . '\" />';\n\n// CORRECT — data attribute (JSON/JS context)\n$my_value = sanitize_text_field( $_POST['some_value'] ?? '' );\necho '<div data-value=\"' . esc_attr( $my_value ) . '\"></div>';\n\n// CORRECT — For rich HTML that should allow some tags\n$content = get_the_content();\necho wp_kses_post( $content );",
+      "bad_pattern": "// WRONG — no escaping; XSS vulnerability\n$post_title = get_the_title();\necho '<h4>' . $post_title . '</h4>';\n\n// WRONG — unescaped URL attribute\n$permalink = get_permalink();\necho '<a href=\"' . $permalink . '\">' . get_the_title() . '</a>';\n\n// WRONG — unescaped image src\n$image_url = get_the_post_thumbnail_url();\necho '<img alt=\"\" src=\"' . $image_url . '\" />';\n\n// WRONG — unescaped JavaScript context\n$my_value = $_POST['some_value'];\necho '<div data-value=\"' . $my_value . '\"></div>';",
+      "source_url": "https://developer.wordpress.org/apis/security/escaping/",
+      "test_step": "1. Search theme/plugin code for echo/print statements with variable interpolation.\n2. For each output line, identify the context: HTML content, attribute, URL, or JavaScript.\n3. Apply the appropriate escape function:\n   - esc_html() for <tag>content</tag>\n   - esc_attr() for attribute=\"value\"\n   - esc_url() for href/src/action\n   - esc_js() for JavaScript / data-json contexts\n   - wp_kses_post() for user-generated content that may contain safe HTML\n4. Test in browser; verify no output corruption; run OWASP-ZAP or similar XSS test.",
+      "tier": "free",
+      "updatedAt": "2026-06-21T20:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "3.5",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
         }
       ]
     }

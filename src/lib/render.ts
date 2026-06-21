@@ -64,24 +64,31 @@ export function renderFree(entry: SnapshotEntry): FreeRenderedEntry {
  *   ```php code_example ```
  *   **Source:** source_url
  *   **Verify:** test_step
- *   **Affected:** WooCommerce ≥ woo_version_min (from versions[0], if present)
+ *   **Affected:** WooCommerce ≥ {woo} | WordPress ≥ {wp} | all supported versions
  *   _Knowledge current as of verifiedAt (date only)_
  *   _upgradeHint_
  *
  * Pure function — no Date.now / Math.random (the date comes from the entry data).
  */
 export function formatFreeMarkdown(r: FreeRenderedEntry): string {
-  const affectedLine =
-    r.versions.length > 0 && r.versions[0]?.woo_version_min != null
-      ? `**Affected:** WooCommerce ≥ ${r.versions[0].woo_version_min}`
-      : '**Affected:** WooCommerce (version constraint unavailable)';
+  const v0 = r.versions[0];
+  const isWoo = r.versions.length > 0 && v0 != null && v0.woo_version_min != null;
+  const affectedLine = isWoo
+    ? `**Affected:** WooCommerce ≥ ${v0!.woo_version_min}`
+    : r.versions.length > 0 && v0 != null && v0.wp_version_min != null
+      ? `**Affected:** WordPress ≥ ${v0.wp_version_min}`
+      : '**Affected:** all supported versions';
+
+  // "HPOS-unsafe" only applies to WooCommerce order-storage patterns; a generic
+  // WordPress entry must not inherit WooCommerce framing.
+  const wrongHeading = isWoo ? '### ❌ Wrong (HPOS-unsafe)' : '### ❌ Wrong';
 
   return [
     `## ${r.title}`,
     '',
     r.summary,
     '',
-    '### ❌ Wrong (HPOS-unsafe)',
+    wrongHeading,
     '',
     '```php',
     r.bad_pattern,
