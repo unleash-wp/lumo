@@ -1,11 +1,11 @@
 import type { SnapshotEntry, FreeRenderedEntry } from '../types.js';
 
-// mirrored by contract from lumo-pro lookup.ts — keep in sync.
-// Corrected 2026-06-21: prior version overclaimed fields Free already ships
-// (code diff, source URL, test step, single version line). Now names only the
-// true Pro-only delta: the full written breakdown (body) + the complete
-// version/breaking-change matrix. lumo-pro/src/knowledge/lookup.ts must be
-// reconciled to match (cross-repo, handled separately — FA-43 follow-up).
+// The hint here intentionally differs from lumo-pro's free-tier output and is
+// not kept in sync with it. The Free agent ships the full wrong-vs-correct
+// contrast (summary, code diff, source, test step, the ≥8.2 line) and points
+// to Pro for the written breakdown + full version matrix; the Pro server's free
+// tier returns a summary-only projection. Two surfaces, two correct messages —
+// reconciling them would be wrong.
 export const FREE_UPGRADE_HINT =
   'Lumo Pro has the full breakdown and the complete version range for this entry.';
 
