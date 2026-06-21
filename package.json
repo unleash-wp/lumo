@@ -1,6 +1,6 @@
 {
   "name": "@unleashwp/lumo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "UnleashWP Lumo — HPOS guardrail for WooCommerce developers (Claude Code plugin)",
   "type": "module",
   "engines": {

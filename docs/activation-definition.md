@@ -29,6 +29,4 @@ Key points:
 
 `activation / install` — segmentable by `source` (the `LUMO_INSTALL_SOURCE` channel on the install event). This is the master conversion metric for the Free → Pro gate.
 
-## TODO
-
-README must link this document once FA-52 creates it (README is a W5 deliverable; do not block this definition on it).
+The `README.md` at the repo root links to `docs/configuration.md` which covers `LUMO_INSTALL_SOURCE` and related env vars.
