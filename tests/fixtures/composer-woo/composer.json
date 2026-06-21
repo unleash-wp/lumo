@@ -1,0 +1,6 @@
+{
+  "name": "example/woo-project",
+  "require": {
+    "woocommerce/woocommerce": "^8.5"
+  }
+}
