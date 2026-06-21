@@ -1,0 +1,28 @@
+{
+  "name": "@unleashwp/lumo",
+  "version": "0.1.0",
+  "description": "UnleashWP Lumo — HPOS guardrail for WooCommerce developers (Claude Code plugin)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "woocommerce",
+    "hpos",
+    "wordpress"
+  ],
+  "author": "Benjamin Zekavica",
+  "license": "MIT"
+}

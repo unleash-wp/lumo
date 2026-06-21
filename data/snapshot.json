@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-20T09:30:00Z",
+  "source": {
+    "repo": "unleash-wp/lumo-pro",
+    "db": "knowledge.db"
+  },
+  "entries": [
+    {
+      "slug": "woocommerce-hpos-order-access",
+      "title": "WooCommerce HPOS: reading and writing order data",
+      "category_slug": "woocommerce",
+      "summary": "Under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta. Reading or writing orders with get_post_meta(), get_post() or direct $wpdb against the post tables returns stale data or writes where nothing reads. Always go through the WooCommerce order CRUD: load with wc_get_order(), use the order object getters/setters and get_meta()/update_meta_data(), then call save().",
+      "code_example": "// Load the order through WooCommerce — works on the legacy post store AND HPOS.\n$order = wc_get_order( $order_id );\nif ( ! $order ) {\n    return;\n}\n\n// Core fields: typed getters/setters.\n$email = $order->get_billing_email();\n$order->set_billing_email( 'new@example.com' );\n\n// Custom meta: read/write through the order object, then persist.\n$plan = $order->get_meta( '_subscription_plan' );\n$order->update_meta_data( '_subscription_plan', 'pro' );\n$order->save();\n\n// Plugins/themes: declare HPOS compatibility (main plugin file, so __FILE__ is right).\nadd_action( 'before_woocommerce_init', function () {\n    if ( class_exists( \\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::class ) ) {\n        \\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::declare_compatibility(\n            'custom_order_tables',\n            __FILE__,\n            true\n        );\n    }\n} );",
+      "bad_pattern": "// WRONG under HPOS — reads/writes wp_postmeta, which orders no longer use.\n$email = get_post_meta( $order_id, '_billing_email', true );\nupdate_post_meta( $order_id, '_subscription_plan', 'pro' );\n\n// WRONG — querying the post tables for orders.\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+      "source_url": "https://github.com/woocommerce/woocommerce/wiki/High-Performance-Order-Storage-Upgrade-Recipe-Book",
+      "test_step": "On staging, enable HPOS (WooCommerce -> Settings -> Advanced -> Features -> \"High-performance order storage\") and confirm your order reads/writes still work. A plugin/theme appears in the compatible list there once FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true) runs.",
+      "tier": "free",
+      "updatedAt": "2026-06-20T09:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": null,
+          "wp_version_max": null,
+          "woo_version_min": "8.2",
+          "breaking_change": true
+        }
+      ]
+    }
+  ]
+}
