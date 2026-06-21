@@ -81,6 +81,8 @@ Print the following block verbatim, substituting fields from that entry — do n
 
 **Affected:** WooCommerce ≥ {entry.versions[0].woo_version_min}
 
+_Knowledge current as of {entry.updatedAt, date only as YYYY-MM-DD}._
+
 _{FREE_UPGRADE_HINT}_
 ```
 

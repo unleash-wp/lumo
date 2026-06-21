@@ -38,6 +38,7 @@ describe('renderFree', () => {
     expect(rendered.source_url).toBeDefined();
     expect(rendered.test_step).toBeDefined();
     expect(rendered.versions).toBeDefined();
+    expect(rendered.verifiedAt).toBeDefined();
     expect(rendered.upgradeHint).toBeDefined();
   });
 
@@ -113,6 +114,14 @@ describe('formatFreeMarkdown', () => {
     const rendered = renderFree(hposEntry());
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('**Affected:** WooCommerce ≥ 8.2');
+  });
+
+  it('renders the freshness line from the entry verified-current date', () => {
+    const entry = hposEntry();
+    const rendered = renderFree(entry);
+    expect(rendered.verifiedAt).toBe(entry.updatedAt);
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain(`_Knowledge current as of ${entry.updatedAt.slice(0, 10)}._`);
   });
 
   it('is deterministic — same input produces identical string on repeated calls', () => {

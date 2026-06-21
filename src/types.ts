@@ -85,6 +85,8 @@ export interface FreeRenderedEntry {
   source_url: string;
   test_step: string;
   versions: SnapshotVersion[];
+  /** ISO date this entry was last verified-current; rendered as the freshness line. */
+  verifiedAt: string;
   /** Quiet depth reveal — appended after the Free answer, never a hard block. */
   upgradeHint: string;
 }
