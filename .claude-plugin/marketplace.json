@@ -4,6 +4,7 @@
     "name": "UnleashWP",
     "url": "https://github.com/unleash-wp"
   },
+  "description": "Self-hosted marketplace for the UnleashWP Lumo Claude Code plugin — the HPOS guardrail for WooCommerce developers.",
   "plugins": [
     {
       "name": "lumo",
