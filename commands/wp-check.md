@@ -89,3 +89,18 @@ Where `FREE_UPGRADE_HINT` is:
 > Pro unlocks the full fix, the exact wrong-vs-correct code, the source, the verification step, and the affected WordPress/WooCommerce versions.
 
 Print snapshot content verbatim. Do not add interpretation, examples, or additional sections.
+
+## Onboarding own-code beat (guarded — only when invoked from wp-onboard beat 2)
+
+This section applies ONLY when this command is running as the own-code detection step inside `/lumo:wp-onboard` beat 2. A plain `/lumo:wp-check` invoked directly by the developer MUST NOT execute this step.
+
+If WooCommerce was detected above (you reached the Output block) and this invocation is part of beat 2 from `/lumo:wp-onboard`:
+
+Record an `activation` event using `recordEvent()` and `buildEvent()` from `src/lib/events.ts`:
+- `type: 'activation'`
+- `target: 'own'`
+- `gated: true`
+- `variant`: the value already obtained from `getOrAssignVariant()` in beat 1
+- `at`: current ISO timestamp
+
+Do not record this event on a standalone `/lumo:wp-check` run. The guard is the invocation context — `/lumo:wp-onboard` is the sole caller that activates this step.
