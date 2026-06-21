@@ -1,6 +1,8 @@
 import { appendFileSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import type { PromptState, PromptVariant } from './prompt.js';
+import { DEFAULT_PROMPT_STATE } from './prompt.js';
 
 // ---------------------------------------------------------------------------
 // Event/activation contract — canonical seam. W3 extends W2; do not fork.
@@ -28,7 +30,8 @@ export type LumoEventType =
   | 'no_target'           // clean repo: sample shown, no own-code Woo order target
   | 'pql_gated_touch'     // a gated HPOS catch happened; carries running gated_count
   | 'checkout_started'    // upgrade CTA clicked (emitted by W4; shape defined here)
-  | 'checkout_completed'; // purchase confirmed (LS webhook reconciliation)
+  | 'checkout_completed'  // purchase confirmed (LS webhook reconciliation)
+  | 'prompt_suppressed';  // session silenced (two ignores OR 12-tier consumed); local-only
 
 /** A/B arm for the auto-vs-discover onboarding lever. Assigned once at install, then immutable. */
 export type OnboardVariant = 'A' | 'B';
@@ -300,4 +303,92 @@ export function setTelemetryConsent(
  */
 export function resolveInstallSource(env: Record<string, string | undefined> = process.env): string {
   return env['LUMO_INSTALL_SOURCE'] ?? 'unknown';
+}
+
+// ---------------------------------------------------------------------------
+// W4 — prompt state persistence (fs wrappers; keeps prompt.ts pure).
+// Mirrors the pattern of getOrAssignVariant / telemetry helpers above.
+// ---------------------------------------------------------------------------
+
+const PROMPT_STATE_FILE = 'prompt-state.json';
+const PROMPT_VARIANT_FILE = 'prompt-variant';
+
+/**
+ * Read the persisted prompt state.
+ * Fail-open → DEFAULT_PROMPT_STATE on any read, parse, or absent-file error.
+ * Never throws.
+ */
+export function readPromptState(stateDir?: string): PromptState {
+  try {
+    const dir = stateDir ?? resolveStateDir();
+    const raw = readFileSync(join(dir, PROMPT_STATE_FILE), 'utf8');
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== 'object') return { ...DEFAULT_PROMPT_STATE };
+    const p = parsed as Record<string, unknown>;
+    return {
+      threshold: typeof p['threshold'] === 'number' ? p['threshold'] : DEFAULT_PROMPT_STATE.threshold,
+      cooldownUntil: typeof p['cooldown_until'] === 'string' ? p['cooldown_until'] : undefined,
+      ignoreCount: typeof p['ignore_count'] === 'number' ? p['ignore_count'] : DEFAULT_PROMPT_STATE.ignoreCount,
+      promptVariant: typeof p['prompt_variant'] === 'string' ? p['prompt_variant'] : DEFAULT_PROMPT_STATE.promptVariant,
+      sessionId: typeof p['session_id'] === 'string' ? p['session_id'] : undefined,
+      sessionPromptShown: typeof p['session_prompt_shown'] === 'boolean' ? p['session_prompt_shown'] : false,
+      sessionRevealShown: typeof p['session_reveal_shown'] === 'boolean' ? p['session_reveal_shown'] : false,
+      sessionSilenced: typeof p['session_silenced'] === 'boolean' ? p['session_silenced'] : false,
+      sessionClickedThrough: typeof p['session_clicked_through'] === 'boolean' ? p['session_clicked_through'] : false,
+    };
+  } catch {
+    return { ...DEFAULT_PROMPT_STATE };
+  }
+}
+
+/**
+ * Persist the prompt state to disk.
+ * Uses snake_case JSON keys to match the prompt-state.json spec.
+ * Never throws.
+ */
+export function writePromptState(state: PromptState, stateDir?: string): void {
+  try {
+    const dir = stateDir ?? resolveStateDir();
+    mkdirSync(dir, { recursive: true });
+    const obj: Record<string, unknown> = {
+      threshold: state.threshold,
+      ignore_count: state.ignoreCount,
+      prompt_variant: state.promptVariant,
+      session_prompt_shown: state.sessionPromptShown,
+      session_reveal_shown: state.sessionRevealShown,
+      session_silenced: state.sessionSilenced,
+      session_clicked_through: state.sessionClickedThrough ?? false,
+    };
+    if (state.cooldownUntil !== undefined) obj['cooldown_until'] = state.cooldownUntil;
+    if (state.sessionId !== undefined) obj['session_id'] = state.sessionId;
+    writeFileSync(join(dir, PROMPT_STATE_FILE), JSON.stringify(obj, null, 2), 'utf8');
+  } catch {
+    // fail-open: a bad dir or permission error must not interrupt a value path
+  }
+}
+
+/**
+ * Read or assign the persisted prompt variant. Write-once: on first call the
+ * variant is written; subsequent calls return the same value.
+ * Defaults to 'calm' on any read or write failure. Never throws.
+ * Mirrors getOrAssignVariant — randomness lives here, not in the pure module.
+ */
+export function getOrAssignPromptVariant(stateDir?: string): PromptVariant {
+  try {
+    const dir = stateDir ?? resolveStateDir();
+    mkdirSync(dir, { recursive: true });
+    const variantPath = join(dir, PROMPT_VARIANT_FILE);
+    try {
+      const stored = readFileSync(variantPath, 'utf8').trim();
+      if (stored.length > 0) return stored;
+    } catch {
+      // file absent — assign now
+    }
+    // W4 ships one arm; field recorded for future A/B without code change.
+    const assigned: PromptVariant = 'calm';
+    writeFileSync(variantPath, assigned, 'utf8');
+    return assigned;
+  } catch {
+    return 'calm';
+  }
 }

@@ -48,3 +48,25 @@ The developer has asked about HPOS or order-data access mid-task — not request
    - `tool`: `'wp_knowledge'`
 
    This counts the Skill surface toward the same scoreboard that `/lumo:wp-check` increments, so `getGatedCount()` reflects all HPOS touches regardless of which surface answered the question.
+
+## Upgrade prompt (after the Free answer)
+
+After printing the Free answer and recording the gated touch, apply the upgrade-prompt logic. The kill-switch gates only this section — the HPOS answer and the gated touch are never behind the gate.
+
+1. Read `LUMO_UPGRADE_PROMPT` env var via `isUpgradePromptEnabled()` from `src/lib/config.ts`. If it returns false, skip this entire section.
+
+2. Read the prompt state: call `readPromptState()` from `src/lib/events.ts`.
+
+3. Get the live gated count: call `getGatedCount()` from `src/lib/events.ts`.
+
+4. Determine the session identity: use the caller-supplied conversation id if available; otherwise fall back to a date-hour bucket string.
+
+4a. Reconcile cross-session back-off: call `reconcileSession(state, sessionId, now)` from `src/lib/prompt.ts`. Assign the returned value as the new `state`, then call `writePromptState(state)` from `src/lib/events.ts` to persist before deciding. This is the step that applies `onIgnore` for any prior-session show-and-ignore before the current session evaluates eligibility.
+
+5. Call `decidePrompt({ now, gatedCount, state, killSwitchOn: true, sessionId })` from `src/lib/prompt.ts`.
+
+6. Act on the returned `PromptDecision` — same logic as `commands/wp-check.md` "Upgrade prompt" section:
+   - `showReveal` true → print `UPGRADE_REVEAL_LINE` from `src/lib/render.ts` (first-per-session).
+   - `showPrompt` true → build the attributed URL via `buildCheckoutUrl` from `src/lib/config.ts`, print `UPGRADE_PROMPT_BLOCK` from `src/lib/render.ts` with `{N}` and `{checkout_url}` substituted, then call `onPromptShown` + `writePromptState`.
+   - `reason === 'session_silenced'` and prompt not shown → emit `prompt_suppressed` event via `recordEvent` + `buildEvent`.
+   - On CTA click → emit `checkout_started`, call `onCheckoutClick`, persist with `writePromptState`.

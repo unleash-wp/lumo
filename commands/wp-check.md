@@ -84,11 +84,48 @@ Print the following block verbatim, substituting fields from that entry — do n
 _{FREE_UPGRADE_HINT}_
 ```
 
-Where `FREE_UPGRADE_HINT` is:
+Where `FREE_UPGRADE_HINT` is the value of `FREE_UPGRADE_HINT` from `src/lib/render.ts`:
 
-> Pro unlocks the full fix, the exact wrong-vs-correct code, the source, the verification step, and the affected WordPress/WooCommerce versions.
+> Lumo Pro has the full breakdown and the complete version range for this entry.
 
 Print snapshot content verbatim. Do not add interpretation, examples, or additional sections.
+
+## Upgrade prompt (after the Free answer)
+
+After printing the deterministic Free output above, apply the upgrade-prompt logic. The kill-switch gates only this section — the detection ladder, Free answer, scoreboard, and all value paths are never behind the gate.
+
+1. Read `LUMO_UPGRADE_PROMPT` env var via `isUpgradePromptEnabled()` from `src/lib/config.ts`. If it returns false, skip this entire section.
+
+2. Read the prompt state: call `readPromptState()` from `src/lib/events.ts`.
+
+3. Get the live gated count: call `getGatedCount()` from `src/lib/events.ts` (no parallel counter).
+
+4. Determine the session identity: use the caller-supplied conversation id if the runtime provides one; otherwise fall back to a date-hour bucket string (e.g. `new Date().toISOString().slice(0, 13)`).
+
+4a. Reconcile cross-session back-off: call `reconcileSession(state, sessionId, now)` from `src/lib/prompt.ts`. Assign the returned value as the new `state`, then call `writePromptState(state)` from `src/lib/events.ts` to persist before deciding. This is the step that applies `onIgnore` for any prior-session show-and-ignore before the current session evaluates eligibility.
+
+5. Call `decidePrompt({ now, gatedCount, state, killSwitchOn: true, sessionId })` from `src/lib/prompt.ts`.
+
+6. Act on the returned `PromptDecision`:
+
+   **If `showReveal` is true:** print on a blank line after the Free answer:
+   > Pro has the full breakdown and the complete version range for this.
+
+   (This is `UPGRADE_REVEAL_LINE` from `src/lib/render.ts`. Shown first-per-session only — `sessionRevealShown` prevents repetition.)
+
+   **If `showPrompt` is true:**
+   - Call `getCheckoutUrl()` from `src/lib/config.ts` to get the base URL.
+   - Use `decision.promptVariant` (returned by `decidePrompt`) as `promptVariant`.
+   - Call `buildCheckoutUrl(base, { source: resolveInstallSource(), gatedCount, promptVariant })` from `src/lib/config.ts` to build the attributed URL.
+   - Print the `UPGRADE_PROMPT_BLOCK` from `src/lib/render.ts`, substituting `{N}` with `gatedCount` and `{checkout_url}` with the built URL.
+   - Call `onPromptShown(state, sessionId)` from `src/lib/prompt.ts` to get the next state.
+   - Call `writePromptState(nextState)` from `src/lib/events.ts` to persist.
+
+   **If `reason` is `'session_silenced'` and the prompt was not shown:** emit a `prompt_suppressed` event via `recordEvent(buildEvent({ type: 'prompt_suppressed', at, variant, prompt_variant: state.promptVariant, gated_count: gatedCount }))` from `src/lib/events.ts` (local-only; no transmit payload).
+
+7. **On CTA click** (developer follows the checkout URL): call `buildCheckoutUrl` as above and emit `checkout_started` via `buildCheckoutStartedPayload` + `transmit` from `src/lib/track.ts`. Then call `onCheckoutClick(state)` from `src/lib/prompt.ts` and persist with `writePromptState`. Record the event locally via `recordEvent(buildEvent({ type: 'checkout_started', ... }))`.
+
+The default deterministic Free output above stays unchanged. This section appends after it.
 
 ## Scoreboard increment (standalone /lumo:wp-check runs only)
 

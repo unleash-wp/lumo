@@ -116,7 +116,7 @@ Both events are correct and expected — the gated touch records the catch in th
 
 Say briefly:
 
-> Lumo caught a real HPOS pattern in your code. The summary above is the Free answer — Pro unlocks the exact wrong-vs-correct diff, the affected WooCommerce versions, and the verified fix step.
+> Lumo caught a real HPOS pattern in your code. The summary above is the Free answer — Pro has the full breakdown and the complete version range for this entry.
 
 ### If no WooCommerce was detected (clean repo)
 
