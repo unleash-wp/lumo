@@ -47,6 +47,7 @@ export function renderFree(entry: SnapshotEntry): FreeRenderedEntry {
     source_url: entry.source_url,
     test_step: entry.test_step,
     versions: entry.versions,
+    verifiedAt: entry.updatedAt,
     upgradeHint: FREE_UPGRADE_HINT,
   };
 }
@@ -64,9 +65,10 @@ export function renderFree(entry: SnapshotEntry): FreeRenderedEntry {
  *   **Source:** source_url
  *   **Verify:** test_step
  *   **Affected:** WooCommerce ≥ woo_version_min (from versions[0], if present)
+ *   _Knowledge current as of verifiedAt (date only)_
  *   _upgradeHint_
  *
- * Pure function — no Date.now / Math.random.
+ * Pure function — no Date.now / Math.random (the date comes from the entry data).
  */
 export function formatFreeMarkdown(r: FreeRenderedEntry): string {
   const affectedLine =
@@ -96,6 +98,8 @@ export function formatFreeMarkdown(r: FreeRenderedEntry): string {
     `**Verify:** ${r.test_step}`,
     '',
     affectedLine,
+    '',
+    `_Knowledge current as of ${r.verifiedAt.slice(0, 10)}._`,
     '',
     `_${r.upgradeHint}_`,
   ].join('\n');
