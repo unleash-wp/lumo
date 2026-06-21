@@ -1,0 +1,18 @@
+{
+  "marketplace": {
+    "name": "UnleashWP Lumo Plugin Marketplace",
+    "description": "Self-hosted marketplace for the UnleashWP Lumo Claude Code plugin.",
+    "url": "https://github.com/unleash-wp/lumo"
+  },
+  "plugins": [
+    {
+      "name": "lumo",
+      "displayName": "UnleashWP Lumo",
+      "description": "HPOS guardrail for WooCommerce developers — audits order-data patterns, shows the wrong-vs-correct contrast with a verified source, and upgrades to Lumo Pro for the full evidence layer.",
+      "version": "0.1.0",
+      "author": "Benjamin Zekavica",
+      "source": ".",
+      "tags": ["woocommerce", "hpos", "wordpress", "audit"]
+    }
+  ]
+}

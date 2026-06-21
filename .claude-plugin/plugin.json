@@ -1,0 +1,10 @@
+{
+  "name": "lumo",
+  "displayName": "UnleashWP Lumo",
+  "description": "HPOS guardrail for WooCommerce developers — audits order-data patterns against the current HPOS standard and surfaces the wrong-vs-correct contrast with a verified source.",
+  "version": "0.1.0",
+  "author": { "name": "Benjamin Zekavica" },
+  "license": "MIT",
+  "commands": "../commands",
+  "skills": "../skills"
+}
