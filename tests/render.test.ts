@@ -138,6 +138,52 @@ describe('formatFreeMarkdown', () => {
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('**Affected:**');
   });
+
+  it('renders "WordPress ≥ {wp}" when wp_version_min is set and woo_version_min is null', () => {
+    const entry = hposEntry();
+    const rendered = renderFree({
+      ...entry,
+      versions: [{ wp_version_min: '6.4.0', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+    });
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('**Affected:** WordPress ≥ 6.4.0');
+  });
+
+  it('drops the HPOS framing from the wrong-heading for non-WooCommerce entries', () => {
+    const entry = hposEntry();
+    const rendered = renderFree({
+      ...entry,
+      versions: [{ wp_version_min: '6.4.0', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+    });
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('### ❌ Wrong');
+    expect(md).not.toContain('HPOS-unsafe');
+  });
+
+  it('renders "all supported versions" when both woo and wp version_min are null', () => {
+    const entry = hposEntry();
+    const rendered = renderFree({
+      ...entry,
+      versions: [{ wp_version_min: null, wp_version_max: null, woo_version_min: null, breaking_change: false }],
+    });
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('**Affected:** all supported versions');
+  });
+
+  it('HPOS entry still renders "WooCommerce ≥ 8.2" byte-equal (woo_version_min wins over wp)', () => {
+    const rendered = renderFree(hposEntry());
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('**Affected:** WooCommerce ≥ 8.2');
+  });
+
+  it('renders wp-img-tag deprecation entry with "WordPress ≥ 6.4.0" affected line', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    if (!entry) throw new Error('wp-img-tag entry missing from snapshot — test setup broken');
+    const rendered = renderFree(entry);
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('**Affected:** WordPress ≥ 6.4.0');
+  });
 });
 
 // ---------------------------------------------------------------------------
