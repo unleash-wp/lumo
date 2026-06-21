@@ -49,7 +49,28 @@ Follow with one sentence explaining why the save is real:
 
 Then record an `onboarded` event using `recordEvent()` and `buildEvent()` from `src/lib/events.ts`. Use the current ISO timestamp for `at`. Use the variant returned by `getOrAssignVariant()`. Set `type: 'onboarded'`. This is NOT an activation event.
 
-Also record an `install` event the very first time (same session, before the `onboarded` event). The `install` line in the event log is what `hasOnboarded()` reads — so write it first. Use `type: 'install'`, same `at`, same `variant`.
+Also record an `install` event the very first time (same session, before the `onboarded` event). The `install` line in the event log is what `hasOnboarded()` reads — so write it first. Build it with `buildEvent()` using:
+- `type: 'install'`
+- `at`: same ISO timestamp
+- `variant`: same value from `getOrAssignVariant()`
+- `source`: call `resolveInstallSource(process.env)` from `src/lib/events.ts` (returns `LUMO_INSTALL_SOURCE` env value or `'unknown'`)
+- `os`: `process.platform`
+- `plugin_version`: the plugin version string if known, otherwise omit
+
+## After beat 1 — telemetry opt-in (asked exactly once)
+
+Before starting beat 2, check telemetry consent using `getTelemetryConsent()` from `src/lib/events.ts` (using the default state dir).
+
+If the result is NOT `'unset'` (i.e. already `'granted'` or `'declined'`), skip this section silently — the developer has already been asked.
+
+If the result IS `'unset'`, print exactly one plain line:
+
+> Share anonymous usage so we fix the right things? No code and no personal data ever leaves your machine. (yes/no)
+
+- If the developer responds **yes** → call `setTelemetryConsent('granted')` from `src/lib/events.ts`.
+- If the developer responds with anything else (no, blank, other) → call `setTelemetryConsent('declined')`.
+
+Continue to beat 2 regardless of the answer. Telemetry consent never gates the aha moment — beat 2 always runs.
 
 ## Beat 2 — Mirror on the developer's own repo
 
@@ -79,12 +100,19 @@ After completing the `/lumo:wp-check` steps on the developer's own repo, record 
 
 The developer's repo contains WooCommerce order code. The HPOS guardrail fired on their actual work. This is the activation moment.
 
-Record an `activation` event:
+First, record a `pql_gated_touch` event using `recordGatedTouch()` from `src/lib/events.ts`:
+- `at`: current ISO timestamp
+- `variant`: same value from `getOrAssignVariant()`
+- `tool`: `'wp_check'`
+
+Then record an `activation` event using `recordEvent()` and `buildEvent()`:
 - `type: 'activation'`
 - `target: 'own'`
 - `gated: true` (Free withholds the version matrix and verified fix; every Free HPOS catch is depth-gated by definition)
 - `variant`: same value from `getOrAssignVariant()`
 - `at`: current ISO timestamp
+
+Both events are correct and expected — the gated touch records the catch in the scoreboard, the activation records the milestone. Do not de-duplicate them.
 
 Say briefly:
 
