@@ -104,9 +104,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has exactly 3 entries', () => {
+  it('has exactly 4 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBe(3);
+    expect(snap.entries.length).toBe(4);
   });
 
   it('every entry has tier "free"', () => {
@@ -224,5 +224,53 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
   it('generatedAt has advanced to 2026-06-21T20:00:00Z', () => {
     const snap = loadSnapshot();
     expect(snap.generatedAt).toBe('2026-06-21T20:00:00Z');
+  });
+
+  it('env-file-committed-to-git entry is present with slug and correct category', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'env-file-committed-to-git');
+    expect(entry).toBeDefined();
+    expect(entry?.category_slug).toBe('env-in-git');
+    expect(entry?.tier).toBe('free');
+  });
+
+  it('env-file-committed-to-git entry carries all required Free fields', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'env-file-committed-to-git');
+    expect(entry).toBeDefined();
+    if (!entry) return;
+
+    expect(entry.title).toBeTruthy();
+    expect(entry.summary).toBeTruthy();
+    expect(entry.bad_pattern).toBeTruthy();
+    expect(entry.code_example).toBeTruthy();
+    expect(entry.source_url).toBe(
+      'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository',
+    );
+    expect(entry.test_step).toBeTruthy();
+  });
+
+  it('env-file-committed-to-git entry has no body field', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'env-file-committed-to-git');
+    expect(Object.prototype.hasOwnProperty.call(entry, 'body')).toBe(false);
+  });
+
+  it('env-file-committed-to-git entry versions are all-null (not version-bound)', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'env-file-committed-to-git');
+    expect(entry?.versions.length).toBe(1);
+    expect(entry?.versions[0]?.wp_version_min).toBeNull();
+    expect(entry?.versions[0]?.wp_version_max).toBeNull();
+    expect(entry?.versions[0]?.woo_version_min).toBeNull();
+    expect(entry?.versions[0]?.breaking_change).toBe(false);
+  });
+
+  it('env-file-committed-to-git entry passes validateEntry', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'env-file-committed-to-git');
+    expect(entry).toBeDefined();
+    if (!entry) return;
+    expect(() => validateEntry(entry, snap.entries.indexOf(entry))).not.toThrow();
   });
 });

@@ -65,6 +65,26 @@
           "breaking_change": false
         }
       ]
+    },
+    {
+      "slug": "env-file-committed-to-git",
+      "title": "Committed .env file exposes secrets — use .gitignore and git rm --cached to remove",
+      "category_slug": "env-in-git",
+      "summary": "Environment files (.env) containing API keys, database passwords, license keys, and other secrets must NEVER be committed to git. If a .env with real credentials is already tracked, remove it from history with git rm --cached, add .env to .gitignore, and immediately rotate all exposed credentials. Use a secrets manager (1Password, Vaultless, AWS Secrets Manager) or environment variables for production.",
+      "code_example": "// CORRECT — .env is git-ignored and not in repository\n// File: .gitignore\n.env\n.env.local\n.env.*.local\n/vendor/\n/node_modules/\n\n// CORRECT — .env.example exists (template, no real secrets)\n// File: .env.example (tracked; used by developers to create .env locally)\nDB_HOST=localhost\nDB_USER=wp_user\nDB_PASSWORD=CHANGE_ME_IN_LOCAL_ENV\nAPI_KEY=your-api-key-here\n\n// CORRECT — Load .env at runtime from gitignored .env file\n// File: wp-config.php or config.php\nrequire_once __DIR__ . '/vendor/autoload.php';\n$dotenv = Dotenv\\Dotenv::createImmutable( __DIR__ );\n$dotenv->load();\n\n$db_host = $_ENV['DB_HOST'] ?? 'localhost';\n$db_pass = $_ENV['DB_PASSWORD'] ?? '';\n$api_key = $_ENV['API_KEY'] ?? '';\n\n// CORRECT — If .env was already committed: remove from history\n// $ git rm --cached .env\n// $ echo \".env\" >> .gitignore\n// $ git add .gitignore\n// $ git commit -m \"Remove tracked .env file with secrets\"\n// $ git push",
+      "bad_pattern": "// WRONG — .env file IS tracked in git (contains real secrets)\n// File: .env (committed in git)\nDB_HOST=prod.example.com\nDB_USER=admin\nDB_PASSWORD=SuperSecret123!\nAPI_KEY=sk-live-1234567890abcdef\nSTRIPE_SECRET=sk_live_...\n\n// WRONG — no .gitignore rule for .env files\n// File: .gitignore (missing .env entry)\nnode_modules/\n*.log\n// (no .env rule — files get committed)\n\n// WRONG — loading from tracked .env with creds\nrequire_once __DIR__ . '/.env';\n$db_pass = $_ENV['DB_PASSWORD'];  // Exposes from history",
+      "source_url": "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository",
+      "test_step": "1. Check if .env is currently tracked in git:\n   $ git ls-files | grep -E '(^|/)\\\\.env$'\n   If empty: safe. If output shows .env: at risk.\n\n2. If tracked, remove and rotate credentials:\n   $ git rm --cached .env\n   $ echo \".env\" >> .gitignore\n   $ git commit -m \"Remove tracked .env file with secrets\"\n   $ git push\n\n3. Rotate ALL exposed credentials (DB passwords, API keys, tokens).\n\n4. Verify removal:\n   $ git ls-files | grep -E '(^|/)\\\\.env$'\n   (Should output nothing.)",
+      "tier": "free",
+      "updatedAt": "2026-06-21T20:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": null,
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
     }
   ]
 }
