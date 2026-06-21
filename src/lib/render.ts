@@ -1,8 +1,32 @@
 import type { SnapshotEntry, FreeRenderedEntry } from '../types.js';
 
-// mirrored by contract from lumo-pro lookup.ts — keep in sync
+// mirrored by contract from lumo-pro lookup.ts — keep in sync.
+// Corrected 2026-06-21: prior version overclaimed fields Free already ships
+// (code diff, source URL, test step, single version line). Now names only the
+// true Pro-only delta: the full written breakdown (body) + the complete
+// version/breaking-change matrix. lumo-pro/src/knowledge/lookup.ts must be
+// reconciled to match (cross-repo, handled separately — FA-43 follow-up).
 export const FREE_UPGRADE_HINT =
-  'Pro unlocks the full fix, the exact wrong-vs-correct code, the source, the verification step, and the affected WordPress/WooCommerce versions.';
+  'Lumo Pro has the full breakdown and the complete version range for this entry.';
+
+// ---------------------------------------------------------------------------
+// W4 upgrade-prompt copy constants — single tested source of truth.
+// Markdown surfaces import and print verbatim; runtime fills {N}/{checkout_url}.
+// ---------------------------------------------------------------------------
+
+/** Shown once per session, first gated response only. Appended after the Free answer. */
+export const UPGRADE_REVEAL_LINE =
+  'Pro has the full breakdown and the complete version range for this.';
+
+/**
+ * Upgrade-prompt block. `{N}` = live gated_count. `{checkout_url}` = getCheckoutUrl().
+ * Runtime substitutes both before printing.
+ */
+export const UPGRADE_PROMPT_BLOCK =
+  'Lumo caught {N} HPOS risks in your code.\n\n' +
+  'The version range across your WP/Woo stack — which exact versions break the old\n' +
+  'pattern and which do not — is in Pro, along with the full written breakdown.\n\n' +
+  'Get it: {checkout_url}';
 
 /**
  * Render a Free-tier response from a snapshot entry.
