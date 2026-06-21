@@ -17,7 +17,7 @@ export interface AuditResult {
 }
 
 const NEUTRAL_NO_MATCH =
-  "No WooCommerce detected in this project. Lumo's HPOS guardrail is WooCommerce-specific — nothing to check here.";
+  'No known WordPress risk patterns detected in this project — nothing to check here.';
 
 /**
  * Run the fail-open detection ladder: composer → directory → wp-cli → heuristic.
@@ -33,10 +33,10 @@ export function detectStack(projectRoot: string): PluginDetection | null {
 }
 
 /**
- * Detect WooCommerce in `projectRoot` and, when found, look up and render the
- * matching HPOS snapshot entry.
+ * Detect a registered pattern in `projectRoot` and, when found, look up and
+ * render the matching snapshot entry.
  *
- * Slug `woocommerce` → category_slug `woocommerce` → first matched entry.
+ * detection.pattern → category_slug → first matched entry.
  * No detection or no matching entry → `{ detected: false, message: <neutral> }`.
  * NEVER throws, NEVER blocks.
  */
@@ -48,8 +48,7 @@ export function auditProject(projectRoot: string, snapshot?: Snapshot): AuditRes
     }
 
     const snap = snapshot ?? loadSnapshot();
-    // slug `woocommerce` maps to category_slug `woocommerce`
-    const matches = findByCategory(snap, detection.slug);
+    const matches = findByCategory(snap, detection.pattern);
     if (matches.length === 0) {
       return { detected: false, message: NEUTRAL_NO_MATCH };
     }

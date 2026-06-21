@@ -8,10 +8,10 @@ import { renderFree, formatFreeMarkdown } from '../lib/render.js';
 import type { Snapshot } from '../types.js';
 
 const NOT_FOUND_AUDIT =
-  "No WooCommerce detected in this project. Lumo's HPOS guardrail is WooCommerce-specific — nothing to check here.";
+  'No known WordPress risk patterns detected in this project — nothing to check here.';
 
 const NOT_FOUND_LOOKUP = (query: string) =>
-  `No curated entry found for "${query}" in the HPOS snapshot.`;
+  `No curated entry found for "${query}" in the snapshot.`;
 
 // ---------------------------------------------------------------------------
 // lumo_audit handler
@@ -22,7 +22,7 @@ export interface AuditHandlerInput {
 }
 
 /**
- * Run HPOS audit against `project_root` (defaults to process.cwd()).
+ * Run the pattern-detection audit against `project_root` (defaults to process.cwd()).
  * Returns Free-tier Markdown on detection; neutral message otherwise.
  * Never throws.
  */
@@ -79,7 +79,7 @@ export async function handleLookup(
       return NOT_FOUND_LOOKUP(input.category);
     }
 
-    return 'Provide either a "slug" or a "category" to look up HPOS guidance.';
+    return 'Provide either a "slug" or a "category" to look up an entry.';
   } catch {
     return 'Snapshot unavailable — cannot look up entries right now.';
   }
