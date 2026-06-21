@@ -90,17 +90,25 @@ Where `FREE_UPGRADE_HINT` is:
 
 Print snapshot content verbatim. Do not add interpretation, examples, or additional sections.
 
-## Onboarding own-code beat (guarded — only when invoked from wp-onboard beat 2)
+## Scoreboard increment (standalone /lumo:wp-check runs only)
 
-This section applies ONLY when this command is running as the own-code detection step inside `/lumo:wp-onboard` beat 2. A plain `/lumo:wp-check` invoked directly by the developer MUST NOT execute this step.
-
-If WooCommerce was detected above (you reached the Output block) and this invocation is part of beat 2 from `/lumo:wp-onboard`:
-
-Record an `activation` event using `recordEvent()` and `buildEvent()` from `src/lib/events.ts`:
-- `type: 'activation'`
-- `target: 'own'`
-- `gated: true`
-- `variant`: the value already obtained from `getOrAssignVariant()` in beat 1
+When WooCommerce was detected above (you reached the Output block) AND this is a standalone `/lumo:wp-check` invocation (NOT the beat-2 path from `/lumo:wp-onboard`), record a `pql_gated_touch` using `recordGatedTouch()` from `src/lib/events.ts`:
 - `at`: current ISO timestamp
+- `variant`: call `getOrAssignVariant()` from `src/lib/events.ts` to get the current variant
+- `tool`: `'wp_check'`
 
-Do not record this event on a standalone `/lumo:wp-check` run. The guard is the invocation context — `/lumo:wp-onboard` is the sole caller that activates this step.
+If you are running this command because `/lumo:wp-onboard` told you to run `/lumo:wp-check` as beat 2, skip this entire "Scoreboard increment" section — `/lumo:wp-onboard` records the gated touch itself.
+
+## Optional scoreboard summary (on demand only)
+
+Only when the developer explicitly asks for a running tally (e.g. "how many HPOS risks has Lumo caught?" or "show me the scoreboard"), and not on every default run:
+
+Call `getGatedCount()` from `src/lib/events.ts`. If the count is greater than 0, print exactly:
+
+> Lumo caught {N} HPOS risks in your code.
+
+where `{N}` is the number returned by `getGatedCount()`. If the count is 0, print nothing.
+
+This line is never shown unsolicited. The default deterministic output above is unchanged.
+
+Activation is never recorded here. The own-code activation milestone is owned by `/lumo:wp-onboard` beat 2, which records it after this command returns — recording it here too would double-count every WooCommerce user's activation.

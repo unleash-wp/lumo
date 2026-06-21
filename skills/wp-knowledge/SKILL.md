@@ -42,3 +42,9 @@ The developer has asked about HPOS or order-data access mid-task — not request
 
 4. Cite `source_url` and `test_step` explicitly — these are non-negotiable evidence fields.
 5. Do not reproduce the full `/lumo:wp-check` flow (no detection ladder, no project scan). This skill answers the "I was just asked about HPOS" moment; `/lumo:wp-check` is for auditing a specific project root.
+6. After answering, record a `pql_gated_touch` using `recordGatedTouch()` from `src/lib/events.ts`:
+   - `at`: current ISO timestamp
+   - `variant`: call `getOrAssignVariant()` from `src/lib/events.ts`
+   - `tool`: `'wp_knowledge'`
+
+   This counts the Skill surface toward the same scoreboard that `/lumo:wp-check` increments, so `getGatedCount()` reflects all HPOS touches regardless of which surface answered the question.

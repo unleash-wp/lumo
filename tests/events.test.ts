@@ -8,6 +8,9 @@ import {
   recordEvent,
   hasOnboarded,
   getOrAssignVariant,
+  getTelemetryConsent,
+  setTelemetryConsent,
+  resolveInstallSource,
 } from '../src/lib/events.js';
 import type { LumoEvent, OnboardVariant } from '../src/lib/events.js';
 
@@ -199,5 +202,88 @@ describe('getOrAssignVariant', () => {
     }
     expect(seen.has('A')).toBe(true);
     expect(seen.has('B')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getTelemetryConsent + setTelemetryConsent — FA-32 opt-in persistence
+// ---------------------------------------------------------------------------
+
+describe('getTelemetryConsent', () => {
+  it("returns 'unset' on a fresh tmp dir (no telemetry file)", () => {
+    const dir = makeTmpDir();
+    expect(getTelemetryConsent(dir)).toBe('unset');
+  });
+
+  it("returns 'granted' after setTelemetryConsent('granted')", () => {
+    const dir = makeTmpDir();
+    setTelemetryConsent('granted', dir);
+    expect(getTelemetryConsent(dir)).toBe('granted');
+  });
+
+  it("returns 'declined' after setTelemetryConsent('declined')", () => {
+    const dir = makeTmpDir();
+    setTelemetryConsent('declined', dir);
+    expect(getTelemetryConsent(dir)).toBe('declined');
+  });
+
+  it("persists 'declined' across multiple reads (asked-once semantics)", () => {
+    const dir = makeTmpDir();
+    setTelemetryConsent('declined', dir);
+    expect(getTelemetryConsent(dir)).toBe('declined');
+    expect(getTelemetryConsent(dir)).toBe('declined');
+    expect(getTelemetryConsent(dir)).toBe('declined');
+  });
+
+  it("persists 'granted' across multiple reads", () => {
+    const dir = makeTmpDir();
+    setTelemetryConsent('granted', dir);
+    expect(getTelemetryConsent(dir)).toBe('granted');
+    expect(getTelemetryConsent(dir)).toBe('granted');
+  });
+
+  it('fail-open: does not throw when stateDir is unwritable', () => {
+    const dir = makeTmpDir();
+    writeFileSync(join(dir, 'blocker'), 'x');
+    expect(() => getTelemetryConsent(join(dir, 'blocker', 'subdir'))).not.toThrow();
+    expect(getTelemetryConsent(join(dir, 'blocker', 'subdir'))).toBe('unset');
+  });
+});
+
+describe('setTelemetryConsent', () => {
+  it('fail-open: does not throw when stateDir is unwritable', () => {
+    const dir = makeTmpDir();
+    writeFileSync(join(dir, 'blocker'), 'x');
+    expect(() => setTelemetryConsent('granted', join(dir, 'blocker', 'subdir'))).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveInstallSource — FA-34 injectable env
+// ---------------------------------------------------------------------------
+
+describe('resolveInstallSource', () => {
+  it("returns the LUMO_INSTALL_SOURCE value when present", () => {
+    expect(resolveInstallSource({ LUMO_INSTALL_SOURCE: 'wp-community' })).toBe('wp-community');
+  });
+
+  it("returns 'unknown' when LUMO_INSTALL_SOURCE is absent", () => {
+    expect(resolveInstallSource({})).toBe('unknown');
+  });
+
+  it("returns 'unknown' when LUMO_INSTALL_SOURCE is undefined", () => {
+    expect(resolveInstallSource({ LUMO_INSTALL_SOURCE: undefined })).toBe('unknown');
+  });
+
+  it('passes through arbitrary channel strings without normalisation', () => {
+    expect(resolveInstallSource({ LUMO_INSTALL_SOURCE: 'mcp-directory' })).toBe('mcp-directory');
+    expect(resolveInstallSource({ LUMO_INSTALL_SOURCE: 'ph' })).toBe('ph');
+    expect(resolveInstallSource({ LUMO_INSTALL_SOURCE: 'some-new-channel' })).toBe('some-new-channel');
+  });
+
+  it('does not mutate process.env (injectable env, not real env)', () => {
+    const before = process.env['LUMO_INSTALL_SOURCE'];
+    resolveInstallSource({ LUMO_INSTALL_SOURCE: 'test-channel' });
+    expect(process.env['LUMO_INSTALL_SOURCE']).toBe(before);
   });
 });
