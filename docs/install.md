@@ -15,7 +15,68 @@ This is the recommended path. It resolves directly against the public `unleash-w
 
 ---
 
-## (b) MCP add — for Lumo Pro or shared team config
+## (b) Local MCP — Free agent via stdio (Claude Code, Cursor)
+
+The `lumo` repo ships a local MCP server (`lumo_audit` + `lumo_lookup`) that runs entirely on your machine — no license, no network call.
+
+### Build the bin once
+
+```
+git clone https://github.com/unleash-wp/lumo.git
+cd lumo
+npm install
+npm run build
+# produces dist/mcp.mjs
+```
+
+Or install globally from the repo root so `lumo-mcp` is on your PATH:
+
+```
+npm install -g .
+```
+
+### Claude Code
+
+Add the server to your project's `.mcp.json` (created automatically by `claude mcp add`):
+
+```
+claude mcp add --transport stdio --scope project lumo-free -- node /absolute/path/to/lumo/dist/mcp.mjs
+```
+
+Or write `.mcp.json` by hand:
+
+```json
+{
+  "mcpServers": {
+    "lumo-free": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
+    }
+  }
+}
+```
+
+If you installed globally (`npm install -g .`), use `"command": "lumo-mcp"` and `"args": []`.
+
+### Cursor
+
+Open **Settings → MCP** and add a new server entry:
+
+```json
+{
+  "lumo-free": {
+    "command": "node",
+    "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
+  }
+}
+```
+
+Cursor picks up the server on next restart. Both `lumo_audit` and `lumo_lookup` will appear in the tool list.
+
+---
+
+## (c) MCP add — for Lumo Pro or shared team config
 
 Use this when you have a Lumo Pro license and want to connect the Pro knowledge endpoint, or when you need to pin the MCP config for a shared project.
 
@@ -47,7 +108,7 @@ claude mcp add --transport http lumo-pro "https://mcp.unleashwp.de/mcp" --scope 
 
 ---
 
-## (c) Manual — copy the skill directly
+## (d) Manual — copy the skill directly
 
 If the marketplace or MCP path is not available, copy the skill into your project manually.
 
@@ -68,9 +129,10 @@ The skill loads automatically the next time Claude Code starts in that project.
 
 ## Choosing a path
 
-| | Marketplace | MCP add | Manual |
-|---|---|---|---|
-| Free agent | Yes (primary) | Fallback | Fallback |
-| Lumo Pro endpoint | No | Yes | Yes (`.mcp.json` only) |
-| Shared team config | Via repo | Yes (`--scope project`) | Yes |
-| No internet at install | No | No | Yes |
+| | Marketplace | Local MCP (stdio) | Pro MCP (HTTP) | Manual |
+|---|---|---|---|---|
+| Free agent | Yes (primary) | Yes | Fallback | Fallback |
+| Lumo Pro endpoint | No | No | Yes | Yes (`.mcp.json` only) |
+| Shared team config | Via repo | Yes (`.mcp.json`) | Yes (`--scope project`) | Yes |
+| No internet at install | No | Yes | No | Yes |
+| No license required | Yes | Yes | No | Yes |
