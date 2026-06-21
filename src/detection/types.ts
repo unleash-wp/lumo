@@ -1,4 +1,4 @@
-export type DetectionSource = 'composer' | 'directory' | 'wp-cli' | 'heuristic';
+export type DetectionSource = 'composer' | 'directory' | 'wp-cli' | 'heuristic' | 'git';
 
 export interface PluginDetection {
   /** Matched pattern slug (== registry PatternDefinition.pattern). */
