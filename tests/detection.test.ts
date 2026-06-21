@@ -3,10 +3,12 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 import { detectFromComposer } from '../src/detection/composer.js';
 import { detectFromDirectory } from '../src/detection/directory.js';
 import { detectFromWpCli } from '../src/detection/wp-cli.js';
 import { detectFromSource } from '../src/detection/heuristic.js';
+import { detectFromGitTracked } from '../src/detection/git.js';
 import { detectStack, auditProject } from '../src/detection/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -62,29 +64,14 @@ describe('detectFromDirectory', () => {
     expect(detectFromDirectory(emptyDir)).toBeNull();
   });
 
-  // env-in-git fixtures are created at runtime in a tmp dir, never committed:
-  // a literal `.env` is matched by the repo .gitignore, so a committed fixture
-  // would be silently dropped on a fresh clone.
-  it('detects env-in-git pattern from a tmp dir containing .env', () => {
+  // env-in-git detection moved to the git rung — the directory rung no longer owns .env.
+  // A .env that merely exists on disk (without being git-tracked) is the normal correct state
+  // and must not be flagged as a false positive by the directory detector.
+  it('returns null for a tmp dir that contains only a .env file (directory rung no longer owns .env)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
     writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
     const result = detectFromDirectory(dir);
-    expect(result).not.toBeNull();
-    expect(result?.pattern).toBe('env-in-git');
-    expect(result?.version).toBeNull();
-    expect(result?.source).toBe('directory');
-  });
-
-  it('resolves co-present patterns by registry order — woocommerce (row 0) wins over env-in-git', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'lumo-copresent-'));
-    writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
-    mkdirSync(join(dir, 'wp-content/plugins/woocommerce'), { recursive: true });
-    writeFileSync(
-      join(dir, 'wp-content/plugins/woocommerce/woocommerce.php'),
-      '<?php\n/**\n * Version: 9.0.0\n */\n',
-    );
-    // Single-hit per source: the first registry pattern that matches wins.
-    expect(detectFromDirectory(dir)?.pattern).toBe('woocommerce');
+    expect(result).toBeNull();
   });
 });
 
@@ -115,13 +102,12 @@ describe('detectStack', () => {
     expect(detectStack(emptyDir)).toBeNull();
   });
 
-  it('detects env-in-git pattern from a tmp dir containing .env', () => {
+  it('returns null for a tmp dir with only a .env file — directory rung no longer fires on .env alone', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
     writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
     const result = detectStack(dir);
-    expect(result).not.toBeNull();
-    expect(result?.pattern).toBe('env-in-git');
-    expect(result?.source).toBe('directory');
+    // Not a git repo and no other signals → all rungs return null
+    expect(result).toBeNull();
   });
 
   it('returns null for clean-repo (no pattern matches)', () => {
@@ -165,12 +151,120 @@ describe('auditProject', () => {
     expect(result.message).toMatch(/No known WordPress risk patterns detected/);
   });
 
-  it('returns detected:false (no snapshot entry) for env-in-git tmp dir — no throw', () => {
+  it('returns detected:false for a dir with an untracked .env — git rung requires tracking, not mere presence', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
     writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
     expect(() => auditProject(dir)).not.toThrow();
     const result = auditProject(dir);
+    // Not a git repo → git rung returns null → no detection
     expect(result.detected).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// git-tracked detector
+// ---------------------------------------------------------------------------
+
+/**
+ * Skip all git-rung tests when `git` is not on PATH — the detector itself is
+ * fail-open in that case, so there is nothing to assert.
+ */
+function gitAvailable(): boolean {
+  try {
+    const r = spawnSync('git', ['--version'], { timeout: 3000, encoding: 'utf8' });
+    return r.status === 0 && !r.error;
+  } catch {
+    return false;
+  }
+}
+
+/** Init a bare git repo in `dir` and add (stage) `.env` so ls-files sees it. */
+function initAndAddEnv(dir: string): void {
+  // Staging (git add) is enough for `git ls-files` to report .env — no commit,
+  // so no user identity needed (keeps the fixture green on a bare CI runner).
+  spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+  writeFileSync(join(dir, '.env'), 'DB_PASSWORD=SuperSecret\nAPI_KEY=sk-live-123\n');
+  spawnSync('git', ['add', '.env'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+}
+
+describe('detectFromGitTracked', () => {
+  it('returns { pattern: env-in-git, source: git } when .env is staged in a git repo', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-git-tracked-'));
+    initAndAddEnv(dir);
+    const result = detectFromGitTracked(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('env-in-git');
+    expect(result?.source).toBe('git');
+    expect(result?.version).toBeNull();
+  });
+
+  it('returns null when .env exists but is untracked (correct gitignored state)', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-git-untracked-'));
+    spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    writeFileSync(join(dir, '.gitignore'), '.env\n');
+    writeFileSync(join(dir, '.env'), 'DB_PASSWORD=secret\n');
+    // .env is NOT added — ls-files --error-unmatch exits non-zero
+    const result = detectFromGitTracked(dir);
+    expect(result).toBeNull();
+  });
+
+  it('returns null for a non-git dir with a .env — fail-open, no throw', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-no-git-'));
+    writeFileSync(join(dir, '.env'), 'DB_PASSWORD=secret\n');
+    expect(() => detectFromGitTracked(dir)).not.toThrow();
+    expect(detectFromGitTracked(dir)).toBeNull();
+  });
+
+  it('returns null for a completely empty non-git dir — fail-open, no throw', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-empty-'));
+    expect(() => detectFromGitTracked(dir)).not.toThrow();
+    expect(detectFromGitTracked(dir)).toBeNull();
+  });
+});
+
+describe('detectStack — git rung fires when .env is tracked', () => {
+  it('returns env-in-git with source git for a repo with a staged .env', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-stack-git-'));
+    initAndAddEnv(dir);
+    const result = detectStack(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('env-in-git');
+    expect(result?.source).toBe('git');
+  });
+
+  it('ladder precedence: woocommerce wins over a tracked .env (git rung is last)', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-precedence-'));
+    // Set up WooCommerce composer signal AND a tracked .env
+    writeFileSync(
+      join(dir, 'composer.json'),
+      JSON.stringify({ require: { 'woocommerce/woocommerce': '^9.0' } }),
+    );
+    initAndAddEnv(dir);
+    const result = detectStack(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('woocommerce');
+    expect(result?.source).toBe('composer');
+  });
+});
+
+describe('auditProject — tracked .env end-to-end', () => {
+  it('detected:true, slug env-file-committed-to-git, source git, rendered output contains title and all supported versions', async () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-git-'));
+    initAndAddEnv(dir);
+    const result = auditProject(dir);
+    expect(result.detected).toBe(true);
+    expect(result.detection?.source).toBe('git');
+    expect(result.entry?.slug).toBe('env-file-committed-to-git');
+
+    const { formatFreeMarkdown } = await import('../src/lib/render.js');
+    const md = formatFreeMarkdown(result.entry!);
+    expect(md).toContain('Committed .env file exposes secrets');
+    expect(md).toContain('**Affected:** all supported versions');
   });
 });
 

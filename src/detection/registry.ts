@@ -9,6 +9,8 @@ export interface PatternDefinition {
   wpCliSlug?: string;
   /** substrings in project .php source that imply it (heuristic last resort). */
   sourceSignals: readonly string[];
+  /** paths that constitute a finding only when tracked by git (not merely present on disk). */
+  gitTrackedPaths?: readonly string[];
 }
 
 export const PATTERNS: readonly PatternDefinition[] = [
@@ -25,8 +27,9 @@ export const PATTERNS: readonly PatternDefinition[] = [
   {
     pattern: 'env-in-git',
     composerKeys: [],
-    directoryPaths: ['.env'],
+    directoryPaths: [],
     sourceSignals: [],
+    gitTrackedPaths: ['.env'],
   },
   {
     pattern: 'wordpress-core',
