@@ -1,0 +1,6 @@
+{
+  "name": "example/composer-and-dir-project",
+  "require": {
+    "woocommerce/woocommerce": "^8.5"
+  }
+}

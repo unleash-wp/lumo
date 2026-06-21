@@ -1,0 +1,7 @@
+{
+  "name": "example/non-woo-project",
+  "require": {
+    "monolog/monolog": "^3.0",
+    "guzzlehttp/guzzle": "^7.5"
+  }
+}
