@@ -65,14 +65,19 @@ Open **Settings → MCP** and add a new server entry:
 
 ```json
 {
-  "lumo-free": {
-    "command": "node",
-    "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
+  "mcpServers": {
+    "lumo-free": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
+    }
   }
 }
 ```
 
-Cursor picks up the server on next restart. Both `lumo_audit` and `lumo_lookup` will appear in the tool list.
+Cursor picks up the server on next restart. Both `lumo_audit` and `lumo_lookup` will appear in the tool list. The bundled `.cursor/rules/lumo.mdc` nudges the agent to reach for them on WordPress/WooCommerce code.
+
+Cursor gets the full knowledge + audit experience with the evidence layer and the per-answer upgrade hint. The Claude Code plugin additionally ships the onboarding walk-through, the local risk scoreboard, and the dampened upgrade prompt; those are Claude-Code-specific and do not run in Cursor. Cursor converts through the upgrade hint carried in each answer.
 
 ---
 
