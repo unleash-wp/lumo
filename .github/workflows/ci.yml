@@ -34,7 +34,7 @@ jobs:
         run: node scripts/mcp-smoke-test.mjs
 
       - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code@2.1.185
 
       - name: Validate plugin manifest
         run: claude plugin validate . --strict
