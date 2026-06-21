@@ -11,8 +11,12 @@ import {
   getTelemetryConsent,
   setTelemetryConsent,
   resolveInstallSource,
+  readPromptState,
+  writePromptState,
+  getOrAssignPromptVariant,
 } from '../src/lib/events.js';
 import type { LumoEvent, OnboardVariant } from '../src/lib/events.js';
+import { DEFAULT_PROMPT_STATE } from '../src/lib/prompt.js';
 
 function makeTmpDir(): string {
   return mkdtempSync(join(tmpdir(), 'lumo-events-test-'));
@@ -285,5 +289,156 @@ describe('resolveInstallSource', () => {
     const before = process.env['LUMO_INSTALL_SOURCE'];
     resolveInstallSource({ LUMO_INSTALL_SOURCE: 'test-channel' });
     expect(process.env['LUMO_INSTALL_SOURCE']).toBe(before);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildEvent — prompt_suppressed type
+// ---------------------------------------------------------------------------
+
+describe('buildEvent prompt_suppressed', () => {
+  it('builds a prompt_suppressed event with prompt_variant and gated_count', () => {
+    const e = buildEvent({
+      type: 'prompt_suppressed',
+      at: '2026-06-21T15:00:00Z',
+      variant: 'A',
+      prompt_variant: 'calm',
+      gated_count: 5,
+    });
+    expect(e.type).toBe('prompt_suppressed');
+    expect(e.prompt_variant).toBe('calm');
+    expect(e.gated_count).toBe(5);
+    expect(e.variant).toBe('A');
+  });
+
+  it('omits undefined optional fields (compact output)', () => {
+    const e = buildEvent({
+      type: 'prompt_suppressed',
+      at: '2026-06-21T15:00:00Z',
+      variant: 'B',
+      gated_count: 3,
+    });
+    expect('target' in e).toBe(false);
+    expect('tool' in e).toBe(false);
+    expect(e.gated_count).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// readPromptState / writePromptState — round-trip + fail-open
+// ---------------------------------------------------------------------------
+
+describe('readPromptState', () => {
+  it('returns DEFAULT_PROMPT_STATE on a fresh dir (no file)', () => {
+    const dir = makeTmpDir();
+    const state = readPromptState(dir);
+    expect(state.threshold).toBe(DEFAULT_PROMPT_STATE.threshold);
+    expect(state.ignoreCount).toBe(DEFAULT_PROMPT_STATE.ignoreCount);
+    expect(state.promptVariant).toBe(DEFAULT_PROMPT_STATE.promptVariant);
+    expect(state.sessionPromptShown).toBe(false);
+    expect(state.sessionRevealShown).toBe(false);
+    expect(state.sessionSilenced).toBe(false);
+  });
+
+  it('returns DEFAULT_PROMPT_STATE on garbage file content (fail-open)', () => {
+    const dir = makeTmpDir();
+    writeFileSync(join(dir, 'prompt-state.json'), '{not valid json', 'utf8');
+    expect(() => readPromptState(dir)).not.toThrow();
+    const state = readPromptState(dir);
+    expect(state.threshold).toBe(DEFAULT_PROMPT_STATE.threshold);
+  });
+
+  it('returns DEFAULT_PROMPT_STATE on empty file (fail-open)', () => {
+    const dir = makeTmpDir();
+    writeFileSync(join(dir, 'prompt-state.json'), '', 'utf8');
+    expect(() => readPromptState(dir)).not.toThrow();
+    const state = readPromptState(dir);
+    expect(state.threshold).toBe(DEFAULT_PROMPT_STATE.threshold);
+  });
+});
+
+describe('writePromptState + readPromptState — round-trip', () => {
+  it('round-trips threshold, ignoreCount, promptVariant', () => {
+    const dir = makeTmpDir();
+    const written = {
+      ...DEFAULT_PROMPT_STATE,
+      threshold: 6,
+      ignoreCount: 1,
+      promptVariant: 'calm',
+    };
+    writePromptState(written, dir);
+    const read = readPromptState(dir);
+    expect(read.threshold).toBe(6);
+    expect(read.ignoreCount).toBe(1);
+    expect(read.promptVariant).toBe('calm');
+  });
+
+  it('round-trips cooldownUntil', () => {
+    const dir = makeTmpDir();
+    const cooldown = '2026-06-22T15:00:00Z';
+    writePromptState({ ...DEFAULT_PROMPT_STATE, cooldownUntil: cooldown }, dir);
+    const read = readPromptState(dir);
+    expect(read.cooldownUntil).toBe(cooldown);
+  });
+
+  it('round-trips sessionId', () => {
+    const dir = makeTmpDir();
+    writePromptState({ ...DEFAULT_PROMPT_STATE, sessionId: 'conv-xyz' }, dir);
+    const read = readPromptState(dir);
+    expect(read.sessionId).toBe('conv-xyz');
+  });
+
+  it('round-trips boolean session flags', () => {
+    const dir = makeTmpDir();
+    writePromptState({
+      ...DEFAULT_PROMPT_STATE,
+      sessionPromptShown: true,
+      sessionRevealShown: true,
+      sessionSilenced: true,
+    }, dir);
+    const read = readPromptState(dir);
+    expect(read.sessionPromptShown).toBe(true);
+    expect(read.sessionRevealShown).toBe(true);
+    expect(read.sessionSilenced).toBe(true);
+  });
+
+  it('writePromptState does not throw on unwritable path (fail-open)', () => {
+    const dir = makeTmpDir();
+    writeFileSync(join(dir, 'blocker'), 'x');
+    expect(() =>
+      writePromptState(DEFAULT_PROMPT_STATE, join(dir, 'blocker', 'subdir')),
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getOrAssignPromptVariant — write-once, defaults to 'calm'
+// ---------------------------------------------------------------------------
+
+describe('getOrAssignPromptVariant', () => {
+  it("returns 'calm' on a fresh dir", () => {
+    const dir = makeTmpDir();
+    expect(getOrAssignPromptVariant(dir)).toBe('calm');
+  });
+
+  it('is write-once: subsequent calls return the same value', () => {
+    const dir = makeTmpDir();
+    const first = getOrAssignPromptVariant(dir);
+    expect(getOrAssignPromptVariant(dir)).toBe(first);
+    expect(getOrAssignPromptVariant(dir)).toBe(first);
+  });
+
+  it('persists the variant to disk', () => {
+    const dir = makeTmpDir();
+    const v = getOrAssignPromptVariant(dir);
+    const stored = readFileSync(join(dir, 'prompt-variant'), 'utf8').trim();
+    expect(stored).toBe(v);
+  });
+
+  it("defaults to 'calm' on read/write failure (unwritable path)", () => {
+    const dir = makeTmpDir();
+    writeFileSync(join(dir, 'blocker'), 'x');
+    const v = getOrAssignPromptVariant(join(dir, 'blocker', 'subdir'));
+    expect(v).toBe('calm');
   });
 });

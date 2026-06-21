@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { renderFree, formatFreeMarkdown, FREE_UPGRADE_HINT } from '../src/lib/render.js';
+import {
+  renderFree,
+  formatFreeMarkdown,
+  FREE_UPGRADE_HINT,
+  UPGRADE_REVEAL_LINE,
+  UPGRADE_PROMPT_BLOCK,
+} from '../src/lib/render.js';
 import { loadSnapshot, findEntry } from '../src/lib/snapshot.js';
 import type { SnapshotEntry } from '../src/types.js';
 
@@ -122,5 +128,77 @@ describe('formatFreeMarkdown', () => {
     expect(() => formatFreeMarkdown(rendered)).not.toThrow();
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('**Affected:**');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FREE_UPGRADE_HINT — corrected true delta (must NOT name Free-shipped fields)
+// ---------------------------------------------------------------------------
+
+describe('FREE_UPGRADE_HINT — corrected copy', () => {
+  it('does not mention "source" (Free already ships source_url)', () => {
+    expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('source');
+  });
+
+  it('does not mention "test step" or "verify" (Free already ships test_step)', () => {
+    expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('test step');
+    expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('verification step');
+  });
+
+  it('does not claim wrong-vs-correct code diff as Pro-only (Free ships it)', () => {
+    expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('wrong-vs-correct');
+    expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('wrong vs correct');
+    expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('exact');
+  });
+
+  it('does not name "≥ 8.2" or single affected version (Free ships it)', () => {
+    expect(FREE_UPGRADE_HINT).not.toContain('≥ 8.2');
+    expect(FREE_UPGRADE_HINT).not.toContain('>= 8.2');
+  });
+
+  it('references the true Pro-only value (breakdown or version range)', () => {
+    const lower = FREE_UPGRADE_HINT.toLowerCase();
+    const hasBreakdown = lower.includes('breakdown') || lower.includes('deep-dive');
+    const hasVersionRange = lower.includes('version range') || lower.includes('version matrix') || lower.includes('complete');
+    expect(hasBreakdown || hasVersionRange).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// UPGRADE_REVEAL_LINE + UPGRADE_PROMPT_BLOCK — constants exist and are correct
+// ---------------------------------------------------------------------------
+
+describe('UPGRADE_REVEAL_LINE', () => {
+  it('is a non-empty string', () => {
+    expect(typeof UPGRADE_REVEAL_LINE).toBe('string');
+    expect(UPGRADE_REVEAL_LINE.length).toBeGreaterThan(0);
+  });
+
+  it('does not name Free-shipped fields', () => {
+    const lower = UPGRADE_REVEAL_LINE.toLowerCase();
+    expect(lower).not.toContain('source');
+    expect(lower).not.toContain('test step');
+    expect(lower).not.toContain('≥ 8.2');
+  });
+});
+
+describe('UPGRADE_PROMPT_BLOCK', () => {
+  it('is a non-empty string', () => {
+    expect(typeof UPGRADE_PROMPT_BLOCK).toBe('string');
+    expect(UPGRADE_PROMPT_BLOCK.length).toBeGreaterThan(0);
+  });
+
+  it('contains the {N} placeholder for gated_count injection', () => {
+    expect(UPGRADE_PROMPT_BLOCK).toContain('{N}');
+  });
+
+  it('contains the {checkout_url} placeholder for URL injection', () => {
+    expect(UPGRADE_PROMPT_BLOCK).toContain('{checkout_url}');
+  });
+
+  it('does not name Free-shipped fields', () => {
+    const lower = UPGRADE_PROMPT_BLOCK.toLowerCase();
+    expect(lower).not.toContain('test step');
+    expect(lower).not.toContain('≥ 8.2');
   });
 });
