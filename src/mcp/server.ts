@@ -28,12 +28,12 @@ const server = new McpServer({
 server.registerTool(
   'lumo_audit',
   {
-    title: 'Lumo HPOS audit',
+    title: 'Lumo WordPress/WooCommerce audit',
     description: [
-      'Detect HPOS-unsafe WooCommerce order-access patterns in a local project.',
-      'Returns the correct pattern with source citation, a verification step, and',
-      'the minimum affected WooCommerce version — all from the curated HPOS snapshot.',
-      'Proposes the fix; never applies code changes autonomously.',
+      'Scan the open project for known WordPress and WooCommerce risk patterns —',
+      'such as deprecated order-meta calls and HPOS-incompatible code — and return',
+      'the wrong-vs-correct fix with the source and a verification step to run before',
+      'deploying. Proposes and cites; never applies code changes autonomously.',
     ].join(' '),
     inputSchema: {
       project_root: z
@@ -57,13 +57,13 @@ server.registerTool(
 server.registerTool(
   'lumo_lookup',
   {
-    title: 'Lumo HPOS knowledge lookup',
+    title: 'Lumo WordPress/WooCommerce knowledge lookup',
     description: [
-      'Look up curated, evidence-backed HPOS guidance by entry slug or category slug.',
-      'Returns the wrong pattern, the correct replacement, source URL, test step, and',
-      'the minimum affected WooCommerce version.',
-      'Free tier — proposes/cites only, never edits autonomously.',
-      'Example slugs: "woocommerce-hpos-order-access". Example categories: "woocommerce".',
+      'Look up the current, evidence-backed correct pattern for a WordPress or',
+      'WooCommerce topic. Pass an entry slug or a category and get back the right',
+      'approach, the source, the affected version range, and a test step to verify it.',
+      'Free tier — proposes and cites, never edits autonomously.',
+      'Example slug: "woocommerce-hpos-order-access". Example category: "woocommerce".',
     ].join(' '),
     inputSchema: {
       slug: z

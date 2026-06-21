@@ -2,7 +2,7 @@
 
 **The HPOS guardrail for WooCommerce developers.**
 
-Lumo audits your PHP code for order-data patterns that break under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) and shows you the wrong-vs-correct contrast with a verified source, right inside Claude Code.
+Lumo audits your PHP code for order-data patterns that break under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) and shows you the wrong-vs-correct contrast with a verified source, in Claude Code, Cursor, or any MCP client.
 
 > Your code isn't wrong yet. It will be — the moment a client upgrades past 8.2 and orders stop writing.
 
@@ -42,6 +42,14 @@ $order->save();
 ```
 
 With the source, a verification step, and the exact WooCommerce version the old pattern breaks on.
+
+---
+
+## The WordPress agent with receipts
+
+AI coding tools freeze at their training cutoff. WordPress does not. Every Core release, every WooCommerce major, can shift which patterns are safe and which ones silently break production — and most of the time the AI you are using does not know yet.
+
+Lumo tracks the current standard and answers with proof: source, affected version range, and a test step you can run before the code ships. It proposes and cites, it does not silently edit your files. Whatever AI editor you use — Claude Code, Cursor, or any MCP client — Lumo gives it a reference point that stays current.
 
 ---
 
