@@ -27,6 +27,12 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Build MCP server
+        run: npm run build
+
+      - name: Smoke test MCP server
+        run: node scripts/mcp-smoke-test.mjs
+
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
