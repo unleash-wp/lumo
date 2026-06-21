@@ -4,6 +4,7 @@ import { detectFromComposer } from './composer.js';
 import { detectFromDirectory } from './directory.js';
 import { detectFromWpCli } from './wp-cli.js';
 import { detectFromSource } from './heuristic.js';
+import { detectFromGitTracked } from './git.js';
 import type { PluginDetection } from './types.js';
 import type { FreeRenderedEntry, Snapshot } from '../types.js';
 
@@ -20,7 +21,7 @@ const NEUTRAL_NO_MATCH =
   'No known WordPress risk patterns detected in this project — nothing to check here.';
 
 /**
- * Run the fail-open detection ladder: composer → directory → wp-cli → heuristic.
+ * Run the fail-open detection ladder: composer → directory → wp-cli → heuristic → git-tracked.
  * Stops at the first non-null result. NEVER throws.
  */
 export function detectStack(projectRoot: string): PluginDetection | null {
@@ -28,7 +29,8 @@ export function detectStack(projectRoot: string): PluginDetection | null {
     detectFromComposer(projectRoot) ??
     detectFromDirectory(projectRoot) ??
     detectFromWpCli(projectRoot) ??
-    detectFromSource(projectRoot)
+    detectFromSource(projectRoot) ??
+    detectFromGitTracked(projectRoot)
   );
 }
 
