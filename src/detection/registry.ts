@@ -78,6 +78,18 @@ export interface PatternDefinition {
    * project-scan path are NEVER read from this field and remain byte-identical.
    */
   catchSignals?: readonly CatchSignal[];
+  /**
+   * When true, Lumo Free has no knowledge entry for this pattern. Detection
+   * surfaces an honest Pro teaser instead of a Free answer. The teaser is
+   * additive: Free patterns (WooCommerce, wordpress-core, etc.) still win when
+   * detected first in the ladder.
+   */
+  proTeaser?: true;
+  /**
+   * Human-readable plugin name shown in the Pro teaser message.
+   * Required when proTeaser is true.
+   */
+  proTeaserName?: string;
 }
 
 export const PATTERNS: readonly PatternDefinition[] = [
@@ -249,6 +261,172 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
     ],
   },
+  // ---------------------------------------------------------------------------
+  // Premium agency plugins — Pro-teaser only.
+  // Detection fires when the plugin is found; Free has no knowledge entry for
+  // these. auditProject surfaces a measured teaser instead of a blank no-match.
+  // ---------------------------------------------------------------------------
+
+  {
+    pattern: 'premium-acf-pro',
+    proTeaser: true,
+    proTeaserName: 'Advanced Custom Fields Pro',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/advanced-custom-fields-pro/acf.php',
+      'web/app/plugins/advanced-custom-fields-pro/acf.php',
+    ],
+    wpCliSlug: 'advanced-custom-fields-pro',
+    sourceSignals: ['acf_add_local_field_group(', 'acf_register_block_type('],
+  },
+  {
+    pattern: 'premium-acf-extended',
+    proTeaser: true,
+    proTeaserName: 'ACF Extended',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/acf-extended/acf-extended.php',
+      'web/app/plugins/acf-extended/acf-extended.php',
+    ],
+    wpCliSlug: 'acf-extended',
+    sourceSignals: ['acfe_add_options_page(', 'acfe_get_post_field_groups('],
+  },
+  {
+    pattern: 'premium-gravity-forms',
+    proTeaser: true,
+    proTeaserName: 'Gravity Forms',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/gravityforms/gravityforms.php',
+      'web/app/plugins/gravityforms/gravityforms.php',
+    ],
+    wpCliSlug: 'gravityforms',
+    sourceSignals: ['GFForms::', 'gform_after_submission'],
+  },
+  {
+    pattern: 'premium-meta-box',
+    proTeaser: true,
+    proTeaserName: 'Meta Box',
+    composerKeys: ['meta-box/meta-box'],
+    directoryPaths: [
+      'wp-content/plugins/meta-box/meta-box.php',
+      'web/app/plugins/meta-box/meta-box.php',
+    ],
+    wpCliSlug: 'meta-box',
+    sourceSignals: ['rwmb_meta(', 'rwmb_the_field('],
+  },
+  {
+    pattern: 'premium-pods',
+    proTeaser: true,
+    proTeaserName: 'Pods',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/pods/init.php',
+      'web/app/plugins/pods/init.php',
+    ],
+    wpCliSlug: 'pods',
+    sourceSignals: ['pods_field(', 'pods_field_display('],
+  },
+  {
+    pattern: 'premium-carbon-fields',
+    proTeaser: true,
+    proTeaserName: 'Carbon Fields',
+    composerKeys: ['htmlburger/carbon-fields'],
+    directoryPaths: [
+      'wp-content/plugins/carbon-fields/carbon-fields-plugin.php',
+      'web/app/plugins/carbon-fields/carbon-fields-plugin.php',
+    ],
+    sourceSignals: ['carbon_get_post_meta(', 'Carbon_Fields\\Container\\Container'],
+  },
+  {
+    pattern: 'premium-toolset-types',
+    proTeaser: true,
+    proTeaserName: 'Toolset Types',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/types/plugin.php',
+      'web/app/plugins/types/plugin.php',
+    ],
+    wpCliSlug: 'types',
+    sourceSignals: ['types_render_field(', 'types_field('],
+  },
+  {
+    pattern: 'premium-elementor-pro',
+    proTeaser: true,
+    proTeaserName: 'Elementor Pro',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/elementor-pro/elementor-pro.php',
+      'web/app/plugins/elementor-pro/elementor-pro.php',
+    ],
+    wpCliSlug: 'elementor-pro',
+    sourceSignals: ['\\Elementor\\Widget_Base'],
+  },
+  {
+    pattern: 'premium-wpbakery',
+    proTeaser: true,
+    proTeaserName: 'WPBakery Page Builder',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/js_composer/js_composer.php',
+      'web/app/plugins/js_composer/js_composer.php',
+    ],
+    wpCliSlug: 'js-composer',
+    sourceSignals: ['vc_map(', 'vc_add_param('],
+  },
+  {
+    pattern: 'premium-polylang',
+    proTeaser: true,
+    proTeaserName: 'Polylang',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/polylang-pro/polylang.php',
+      'web/app/plugins/polylang-pro/polylang.php',
+      'wp-content/plugins/polylang/polylang.php',
+      'web/app/plugins/polylang/polylang.php',
+    ],
+    wpCliSlug: 'polylang',
+    sourceSignals: ['pll_e(', 'pll_current_language('],
+  },
+  {
+    pattern: 'premium-rank-math',
+    proTeaser: true,
+    proTeaserName: 'Rank Math SEO',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/seo-by-rank-math-pro/rank-math.php',
+      'web/app/plugins/seo-by-rank-math-pro/rank-math.php',
+      'wp-content/plugins/seo-by-rank-math/rank-math.php',
+      'web/app/plugins/seo-by-rank-math/rank-math.php',
+    ],
+    wpCliSlug: 'seo-by-rank-math',
+    sourceSignals: ['RankMath\\JSON_LD\\', 'rank_math_get_head('],
+  },
+  {
+    pattern: 'premium-wp-rocket',
+    proTeaser: true,
+    proTeaserName: 'WP Rocket',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/wp-rocket/wp-rocket.php',
+      'web/app/plugins/wp-rocket/wp-rocket.php',
+    ],
+    wpCliSlug: 'wp-rocket',
+    sourceSignals: ['rocket_clean_domain(', 'rocket_clean_post('],
+  },
+  {
+    pattern: 'premium-wordfence',
+    proTeaser: true,
+    proTeaserName: 'Wordfence Security',
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/wordfence/wordfence.php',
+      'web/app/plugins/wordfence/wordfence.php',
+    ],
+    wpCliSlug: 'wordfence',
+    sourceSignals: ['wfBlock::', 'wordfence::liveTraf('],
+  },
+
   {
     // WordPress 7.0 Interactivity API changes (released May 20, 2026 — after model training cutoff).
     //
