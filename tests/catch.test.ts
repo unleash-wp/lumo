@@ -644,6 +644,101 @@ wp_register_ability( 'my-plugin/get-data', [
 });
 
 // ---------------------------------------------------------------------------
+// wordpress-7-0: Interactivity API catch signals (released May 20, 2026)
+// ---------------------------------------------------------------------------
+
+describe('wordpress-7-0 — Interactivity API catch signals', () => {
+  // state.navigation.hasStarted → SOFT (breaking_change: false in entry, deprecated
+  // in 7.0, will break in 7.1; CERTAIN class caps at SOFT without breaking_change)
+  it('state.navigation.hasStarted fires SOFT (WP 7.0 deprecation)', () => {
+    const code = `
+import { store } from '@wordpress/interactivity';
+const { state } = store( 'core/router', {} );
+if ( state.navigation.hasStarted ) {
+  showLoader();
+}
+`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
+  });
+
+  it('state.navigation.hasFinished fires SOFT (WP 7.0 deprecation)', () => {
+    const code = `
+const done = state.navigation.hasFinished;
+`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
+  });
+
+  // state.navigation.hasStarted inside a string → must NOT fire
+  it('state.navigation.hasStarted inside a string literal does NOT fire', () => {
+    const code = `const msg = 'do not use state.navigation.hasStarted anymore';`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
+    expect(match?.tier).not.toBe('LOUD');
+  });
+
+  // @preact/signals import alongside @wordpress/interactivity → SOFT (context-dependent)
+  it('@preact/signals import without @wordpress/interactivity fires SOFT (context-dependent)', () => {
+    const code = `
+import { effect } from '@preact/signals';
+effect( () => { console.log( state.count ); } );
+`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-7-0-interactivity-watch');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
+  });
+
+  // @preact/signals + @wordpress/interactivity together → suppressed (dev already
+  // imports from @wordpress/interactivity, which exports watch = effect)
+  it('@preact/signals import is SILENT when @wordpress/interactivity is also imported', () => {
+    const code = `
+import { store, watch } from '@wordpress/interactivity';
+import { effect } from '@preact/signals';
+`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-7-0-interactivity-watch');
+    expect(match).toBeUndefined();
+  });
+
+  // Correct pattern: watch() from @wordpress/interactivity → no signal
+  it('correct watch() from @wordpress/interactivity does not fire any WP 7.0 signal', () => {
+    const code = `
+import { store, watch } from '@wordpress/interactivity';
+const { state } = store( 'my-plugin/counter', { state: { count: 0 } } );
+watch( () => { console.log( state.count ); } );
+`;
+    const results = checkCode(code, 'js', snap);
+    const wp7matches = results.filter(
+      (r) =>
+        r.entry.slug === 'wp-7-0-interactivity-watch' ||
+        r.entry.slug === 'wp-7-0-router-navigation-deprecated',
+    );
+    expect(wp7matches).toHaveLength(0);
+  });
+
+  // SOFT output for state.navigation deprecation includes the dated WP 7.0 claim
+  it('SOFT render for state.navigation includes dated WP 7.0 claim in summary', async () => {
+    const code = `const done = state.navigation.hasFinished;`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
+    expect(match).toBeDefined();
+    const { formatCatch } = await import('../src/lib/render.js');
+    const rendered = formatCatch(match!);
+    expect(rendered).toContain('🔍');
+    expect(rendered).toContain('Worth reviewing');
+    expect(rendered).not.toContain('⚠️');
+    // The entry summary contains the dated "WP 7.0" / "May 2026" proof phrase
+    expect(rendered).toMatch(/7\.0|May 2026/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // lumo_audit / sourceSignals unchanged (regression guard)
 // ---------------------------------------------------------------------------
 
