@@ -14,7 +14,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { handleAudit, handleLookup } from './handlers.js';
+import { handleAudit, handleLookup, handleCheckCode } from './handlers.js';
 
 const server = new McpServer({
   name: 'unleashwp-lumo',
@@ -78,6 +78,39 @@ server.registerTool(
   },
   async ({ slug, category }) => {
     const text = await handleLookup({ slug, category });
+    return { content: [{ type: 'text', text }] };
+  },
+);
+
+// ---------------------------------------------------------------------------
+// lumo_check_code
+// ---------------------------------------------------------------------------
+
+server.registerTool(
+  'lumo_check_code',
+  {
+    title: 'Lumo WordPress/WooCommerce code catch',
+    description: [
+      'Before presenting WordPress or WooCommerce PHP/JS to the user, pass it here.',
+      'Returns any place the code uses a pattern that broke in a specific WP/WooCommerce',
+      'version — with the dated source and the correct form.',
+      'Call this on every WordPress/WooCommerce code suggestion before the user sees it.',
+      'Proposes and cites; never edits autonomously.',
+      'Accepts a raw blob or a unified diff (scans added lines only when a diff is detected).',
+    ].join(' '),
+    inputSchema: {
+      code: z.string().describe('Raw PHP/JS code blob or unified diff to check.'),
+      language: z
+        .enum(['php', 'js', 'auto'])
+        .optional()
+        .describe(
+          'Language of the blob. "auto" (default) sniffs from syntax cues. ' +
+            'Pass "php" or "js" to force a language.',
+        ),
+    },
+  },
+  async ({ code, language }) => {
+    const text = await handleCheckCode({ code, language: language as 'php' | 'js' | 'auto' | undefined });
     return { content: [{ type: 'text', text }] };
   },
 );
