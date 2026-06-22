@@ -421,3 +421,125 @@ describe('detectFromDirectory — Bedrock layout', () => {
     expect(result?.source).toBe('directory');
   });
 });
+
+// ---------------------------------------------------------------------------
+// composer.lock absent (wordpress-dependencies pattern)
+// ---------------------------------------------------------------------------
+
+describe('detectFromGitTracked — composer.lock absent', () => {
+  function initWithComposerJson(dir: string): void {
+    spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    writeFileSync(join(dir, 'composer.json'), JSON.stringify({ require: { 'vendor/pkg': '^1.0' } }));
+    spawnSync('git', ['add', 'composer.json'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+  }
+
+  it('returns wordpress-dependencies when composer.json is tracked and composer.lock is absent', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-composer-lock-'));
+    initWithComposerJson(dir);
+    // composer.lock intentionally NOT created or tracked
+    const result = detectFromGitTracked(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('wordpress-dependencies');
+    expect(result?.source).toBe('git');
+  });
+
+  it('returns null (no match) when both composer.json AND composer.lock are tracked', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-both-tracked-'));
+    initWithComposerJson(dir);
+    // composer.lock present and tracked — correct state, must NOT fire
+    writeFileSync(join(dir, 'composer.lock'), JSON.stringify({ packages: [] }));
+    spawnSync('git', ['add', 'composer.lock'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    const result = detectFromGitTracked(dir);
+    // env-in-git and wordpress-dependencies should both be null; result may be null
+    expect(result?.pattern ?? null).not.toBe('wordpress-dependencies');
+  });
+});
+
+describe('detectStack — composer.lock absent fires wordpress-dependencies', () => {
+  it('returns { pattern: wordpress-dependencies, source: git } when composer.json tracked, composer.lock absent', () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-stack-composer-'));
+    spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    writeFileSync(join(dir, 'composer.json'), JSON.stringify({ require: { 'vendor/pkg': '^1.0' } }));
+    spawnSync('git', ['add', 'composer.json'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    const result = detectStack(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('wordpress-dependencies');
+    expect(result?.source).toBe('git');
+  });
+});
+
+describe('auditProject — missing composer.lock end-to-end', () => {
+  it('detected:true, slug missing-composer-lock-file, renders the entry', async () => {
+    if (!gitAvailable()) return;
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-composer-'));
+    spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    writeFileSync(join(dir, 'composer.json'), JSON.stringify({ require: { 'vendor/pkg': '^1.0' } }));
+    spawnSync('git', ['add', 'composer.json'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
+    const result = auditProject(dir);
+    expect(result.detected).toBe(true);
+    expect(result.entry?.slug).toBe('missing-composer-lock-file');
+    const { formatFreeMarkdown } = await import('../src/lib/render.js');
+    const md = formatFreeMarkdown(result.entry!);
+    expect(md).toContain('composer.lock');
+    expect(md).toContain('**Affected:** all supported versions');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// hardcoded-secrets (heuristic via sourceSignals)
+// ---------------------------------------------------------------------------
+
+describe('detectFromSource — hardcoded-secrets', () => {
+  it('detects hardcoded-secrets when PHP source contains sk_live_ prefix', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-hc-secrets-'));
+    writeFileSync(
+      join(dir, 'gateway.php'),
+      "<?php\n$key = 'sk_live_abcdef1234567890';\n",
+    );
+    const result = detectFromSource(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('hardcoded-secrets');
+    expect(result?.source).toBe('heuristic');
+  });
+
+  it('returns null for a clean PHP file with no secret signals', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-hc-clean-'));
+    writeFileSync(join(dir, 'functions.php'), '<?php\n$key = getenv("API_KEY");\n');
+    const result = detectFromSource(dir);
+    expect(result).toBeNull();
+  });
+});
+
+describe('detectStack — hardcoded-secrets heuristic', () => {
+  it('returns { pattern: hardcoded-secrets, source: heuristic } for PHP with sk_live_ key', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-stack-hc-'));
+    writeFileSync(
+      join(dir, 'plugin.php'),
+      "<?php\ndefine('STRIPE_KEY', 'sk_live_realkey1234');\n",
+    );
+    const result = detectStack(dir);
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('hardcoded-secrets');
+    expect(result?.source).toBe('heuristic');
+  });
+});
+
+describe('auditProject — hardcoded-secrets end-to-end', () => {
+  it('detected:true, slug hardcoded-api-keys-secrets, renders the entry', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-hc-'));
+    writeFileSync(
+      join(dir, 'config.php'),
+      "<?php\n$token = 'ghp_abc123ExampleToken';\n",
+    );
+    const result = auditProject(dir);
+    expect(result.detected).toBe(true);
+    expect(result.entry?.slug).toBe('hardcoded-api-keys-secrets');
+    const { formatFreeMarkdown } = await import('../src/lib/render.js');
+    const md = formatFreeMarkdown(result.entry!);
+    expect(md).toContain('API keys');
+    expect(md).toContain('**Affected:** all supported versions');
+  });
+});
