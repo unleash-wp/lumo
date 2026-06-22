@@ -360,7 +360,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
       'web/app/plugins/elementor-pro/elementor-pro.php',
     ],
     wpCliSlug: 'elementor-pro',
-    sourceSignals: ['\\Elementor\\Widget_Base', '_register_controls('],
+    sourceSignals: ['\\Elementor\\Widget_Base'],
   },
   {
     pattern: 'premium-wpbakery',
