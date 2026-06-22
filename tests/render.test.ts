@@ -209,6 +209,18 @@ describe('formatFreeMarkdown', () => {
     expect(fenced?.length).toBeGreaterThanOrEqual(4);
     expect(md).toContain('**Affected:** all supported versions');
   });
+
+  it('renders gutenberg-usesetting entry with "WordPress ≥ 6.5.0" affected line', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-usesetting-deprecated-wp6-5');
+    if (!entry) throw new Error('gutenberg-usesetting entry missing from snapshot');
+    const rendered = renderFree(entry);
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('useSettings');
+    expect(md).toContain('**Affected:** WordPress ≥ 6.5.0');
+    const fenced = md.match(/```/g);
+    expect(fenced?.length).toBeGreaterThanOrEqual(4);
+  });
 });
 
 // ---------------------------------------------------------------------------
