@@ -1,5 +1,7 @@
 import type { SnapshotEntry, FreeRenderedEntry } from '../types.js';
 import type { CatchResult } from '../detection/catch.js';
+import { compareVersions, resolveVersionState } from './version.js';
+import type { VersionFact } from '../detection/catch.js';
 
 // The hint here intentionally differs from lumo-pro's free-tier output and is
 // not kept in sync with it. The Free agent ships the full wrong-vs-correct
@@ -114,6 +116,37 @@ export function formatFreeMarkdown(r: FreeRenderedEntry): string {
 }
 
 // ---------------------------------------------------------------------------
+// versionRelativeLine — version-scoping for the catch lead
+//
+// Pure: no I/O, no Date.now(). Returns '' for 'unknown' so the caller can
+// safely append without emitting a fabricated claim.
+// ---------------------------------------------------------------------------
+
+/**
+ * Produce a single blockquote line that contextualises the breaking version
+ * relative to the project's detected version. Returns '' when the state cannot
+ * be determined (missing args, unparseable input).
+ *
+ * already-broken: project is already on or past the breaking release.
+ * upcoming:       project targets a version before the break.
+ */
+export function versionRelativeLine(
+  versionFact: VersionFact,
+  projectVersion: string | null | undefined,
+): string {
+  const state = resolveVersionState(projectVersion ?? null, versionFact.value);
+  const ecosystem = versionFact.field === 'woo' ? 'WooCommerce' : 'WordPress';
+
+  if (state === 'already-broken') {
+    return `> You're on ${ecosystem} ${projectVersion}; this was removed/changed in ${versionFact.value} — fix now.`;
+  }
+  if (state === 'upcoming') {
+    return `> You target ${ecosystem} ${projectVersion}; this breaks in ${versionFact.value} — you're writing a soon-dead pattern.`;
+  }
+  return '';
+}
+
+// ---------------------------------------------------------------------------
 // formatCatch — Phase 02
 //
 // Wraps formatFreeMarkdown with a tier-specific lead block. Pure: all dates
@@ -133,8 +166,12 @@ export function formatFreeMarkdown(r: FreeRenderedEntry): string {
  * Reuses `formatFreeMarkdown` for the body (DRY). Adds only the lead line and
  * the verification footnote. Never emits a LOUD lead without a real version fact
  * — if versionFact is absent the function renders SOFT regardless of tier input.
+ *
+ * Optional `projectVersion` — when provided and `result.versionFact` is present,
+ * a relative-version line is appended to the LOUD lead. Absent arg ⇒ byte-identical
+ * output to calling without it (no fabricated claims).
  */
-export function formatCatch(result: CatchResult): string {
+export function formatCatch(result: CatchResult, projectVersion?: string): string {
   const { tier, entry, versionFact, condition } = result;
   const rendered = renderFree(entry);
 
@@ -156,11 +193,18 @@ export function formatCatch(result: CatchResult): string {
     const ecosystem = versionFact.field === 'woo' ? 'WooCommerce' : 'WordPress';
     const action = versionFact.breaking ? 'broke' : 'changed';
     const dateStr = versionFact.date.slice(0, 10);
-    lead = [
+    const leadLines = [
       `> ⚠️ Your AI suggested code that ${action} in ${ecosystem} ${versionFact.value}.`,
       `> This was ${versionFact.breaking ? 'deprecated or removed' : 'changed'} in ${ecosystem} ${versionFact.value} (${dateStr}).`,
       `> Your model's training likely predates this release.`,
-    ].join('\n');
+    ];
+    // Append relative-version line when project version is known and versionFact is present.
+    // Gated on versionFact != null (inherits the no-false-LOUD guarantee).
+    if (projectVersion != null) {
+      const relativeLine = versionRelativeLine(versionFact, projectVersion);
+      if (relativeLine) leadLines.push(relativeLine);
+    }
+    lead = leadLines.join('\n');
   } else {
     const conditionText =
       condition != null
