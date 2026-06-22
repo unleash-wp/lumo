@@ -4,7 +4,7 @@
  */
 
 import { loadSnapshot, findEntry, findByCategory } from '../lib/snapshot.js';
-import { renderFree, formatFreeMarkdown } from '../lib/render.js';
+import { renderFree, formatFreeMarkdown, formatCatch, CATCH_NEUTRAL_LINE } from '../lib/render.js';
 import type { Snapshot } from '../types.js';
 
 const NOT_FOUND_AUDIT =
@@ -60,6 +60,7 @@ export async function handleLookup(
   input: LookupHandlerInput,
   snapshot?: Snapshot,
 ): Promise<string> {
+
   try {
     const snap = snapshot ?? loadSnapshot();
 
@@ -82,5 +83,38 @@ export async function handleLookup(
     return 'Provide either a "slug" or a "category" to look up an entry.';
   } catch {
     return 'Snapshot unavailable — cannot look up entries right now.';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// lumo_check_code handler
+// ---------------------------------------------------------------------------
+
+export interface CheckCodeHandlerInput {
+  code: string;
+  language?: 'php' | 'js' | 'auto';
+}
+
+/**
+ * Scan a raw code blob (or unified diff) for WordPress/WooCommerce patterns that
+ * broke in a specific version. Returns ranked catch results (LOUD before SOFT) or
+ * a neutral line when nothing fires.
+ * Never throws.
+ */
+export async function handleCheckCode(
+  input: CheckCodeHandlerInput,
+  snapshot?: Snapshot,
+): Promise<string> {
+  try {
+    const { checkCode } = await import('../detection/catch.js');
+    const results = checkCode(input.code ?? '', input.language ?? 'auto', snapshot);
+
+    if (results.length === 0) {
+      return CATCH_NEUTRAL_LINE;
+    }
+
+    return results.map((r) => formatCatch(r)).join('\n\n---\n\n');
+  } catch {
+    return CATCH_NEUTRAL_LINE;
   }
 }
