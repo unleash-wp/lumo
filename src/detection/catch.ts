@@ -107,14 +107,23 @@ export function classify(
 }
 
 // ---------------------------------------------------------------------------
-// Comment-only strip — applied before CERTAIN signal matching to prevent
-// doc-comment false fires ("we mention isValidBlockContent( here" in a comment).
+// Strip helpers for CERTAIN signal matching.
 //
-// Intentionally strips COMMENTS only, not quoted strings. Stripping strings
-// would remove 'shop_order' and similar literals that are the actual signal
-// content for HPOS Class A matches. The risk of a quoted function name in a
-// comment causing a false LOUD is extremely low given the specificity of the
-// Class A symbols (they include the open paren).
+// Two variants are pre-computed once and selected per signal:
+//
+//   strippedComments  — comments blanked, quoted strings kept intact.
+//                       Used by signals whose match target IS a string literal
+//                       (e.g. 'shop_order', 'sk_live_'). Stripping the string
+//                       body would erase the very signal being detected.
+//
+//   strippedAll       — comments AND quoted string bodies blanked.
+//                       Used by call-pattern signals whose match target is a
+//                       function name with an open paren. A function name
+//                       inside a string literal is not a call; keeping the
+//                       string body causes false-LOUD fires on error messages,
+//                       log strings, and PHP heredocs that name the old API.
+//
+// Signals opt into the aggressive variant via `signal.stripStrings === true`.
 // ---------------------------------------------------------------------------
 
 function stripComments(code: string): string {
@@ -125,20 +134,40 @@ function stripComments(code: string): string {
   return out;
 }
 
+function stripCommentsAndStrings(code: string): string {
+  // Strip comments first so quote chars inside comments don't confuse the
+  // string scanner.
+  const noComments = stripComments(code);
+  // Replace single-quoted, double-quoted, and backtick string bodies with
+  // spaces. The opener and closer delimiters are kept so surrounding syntax
+  // remains parseable. Handles escaped delimiters (\' \") inside strings.
+  // Does NOT handle heredoc/nowdoc — those are rare and the string body is
+  // already unlikely to produce a false-LOUD (no open paren follows the name).
+  return noComments.replace(
+    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g,
+    (m) => m[0] + ' '.repeat(Math.max(0, m.length - 2)) + m[m.length - 1],
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Diff-mode filter: keep only added lines (lines starting with '+', excluding
 // the '+++' file header). Plain blobs are returned unchanged.
 //
-// Detection heuristic: a unified diff starts with 'diff --git' or contains
-// the '--- ' / '+++ ' header pair. We require at least one of these markers
-// to avoid misidentifying normal PHP that happens to have a '+' at a line start.
+// Detection heuristic: a unified diff starts with 'diff --git', contains
+// the '--- ' / '+++ ' header pair, or contains a raw hunk header ('@@').
+// Raw hunks without file headers are valid unified diff output (e.g. from
+// 'git diff --no-index', clipboard pastes, AI before/after blocks). Without
+// this check, removed '-' lines in a raw hunk would be scanned as plain code
+// and fire LOUD on code the developer is deleting — a false accusation.
 // ---------------------------------------------------------------------------
 
 function filterDiffAddedLines(code: string): string {
   const isDiff =
     code.startsWith('diff ') ||
     (code.includes('\n--- ') && code.includes('\n+++ ')) ||
-    code.startsWith('--- ');
+    code.startsWith('--- ') ||
+    code.startsWith('@@ ') ||
+    code.includes('\n@@ ');
 
   if (!isDiff) {
     return code;
@@ -206,8 +235,12 @@ export function checkCode(
 
     const lang: Language = language === 'auto' ? detectLanguage(diffFiltered) : language;
 
-    // Build comment-stripped blob for CERTAIN signal tests (strings kept intact)
-    const stripped = stripComments(diffFiltered);
+    // Two stripped variants, computed once and selected per signal:
+    //   strippedComments  — strings intact (for literal-content signals like 'shop_order')
+    //   strippedAll       — strings also blanked (for call-pattern signals like func_name()
+    //                       where a mention inside a string is not an actual call)
+    const strippedComments = stripComments(diffFiltered);
+    const strippedAll = stripCommentsAndStrings(diffFiltered);
 
     // Collect all catch signals from the registry for the detected language
     const allSignals: CatchSignal[] = [];
@@ -223,7 +256,16 @@ export function checkCode(
     const seen = new Map<string, CatchResult>(); // keyed by entrySlug
 
     for (const signal of allSignals) {
-      const testBlob = signal.class === 'CERTAIN' ? stripped : diffFiltered;
+      // Select test blob per signal:
+      //   CERTAIN + stripStrings → strip both comments and string bodies
+      //   CERTAIN (no stripStrings) → strip comments only (string literals are the signal)
+      //   non-CERTAIN → raw diff-filtered blob (context needed for shim guards etc.)
+      const testBlob =
+        signal.class !== 'CERTAIN'
+          ? diffFiltered
+          : signal.stripStrings
+            ? strippedAll
+            : strippedComments;
       const hit =
         typeof signal.match === 'string'
           ? testBlob.includes(signal.match)

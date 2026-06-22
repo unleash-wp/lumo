@@ -473,6 +473,97 @@ describe('handleCheckCode — handler integration', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Regression: false-LOUD fixes
+//
+// C1 — call-pattern signals must not fire when the function name appears only
+//      inside a quoted string literal or double-quoted string.
+// C2 — removed lines in a raw @@-only diff hunk must not fire.
+// H1 — apiVersion: 1 must not fire the v2-specific entry.
+// ---------------------------------------------------------------------------
+
+describe('false-LOUD regressions', () => {
+  // C1: wp_img_tag_add_decoding_attr( in single-quoted PHP string
+  it('C1: wp_img_tag_add_decoding_attr( inside single-quoted string does NOT fire LOUD', () => {
+    const code = `<?php\n$error = 'You called wp_img_tag_add_decoding_attr( incorrectly.';`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(match?.tier).not.toBe('LOUD');
+  });
+
+  // C1: wp_img_tag_add_decoding_attr( in double-quoted PHP string
+  it('C1: wp_img_tag_add_decoding_attr( inside double-quoted string does NOT fire LOUD', () => {
+    const code = `<?php\n$log = "The function wp_img_tag_add_decoding_attr( is deprecated";`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(match?.tier).not.toBe('LOUD');
+  });
+
+  // C1: isValidBlockContent( in a JS string literal
+  it('C1: isValidBlockContent( inside JS string literal does NOT fire LOUD', () => {
+    const code = `const msg = 'isValidBlockContent( is no longer supported';`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'gutenberg-isvalidblockcontent-removed');
+    expect(match?.tier).not.toBe('LOUD');
+  });
+
+  // C1: real call still fires correctly after the fix
+  it('C1: actual wp_img_tag_add_decoding_attr() call still fires LOUD', () => {
+    const code = `<?php\n$img = wp_img_tag_add_decoding_attr( $img_html, 'ctx' );`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(match?.tier).toBe('LOUD');
+  });
+
+  // C1: HPOS 'shop_order' literal must still fire — string stripping must NOT erase it
+  it("C1: 'shop_order' in array value still fires LOUD (literal-content signal unaffected)", () => {
+    const code = `$q = new WP_Query( [ 'post_type' => 'shop_order' ] );`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'woocommerce-hpos-order-access');
+    expect(match?.tier).toBe('LOUD');
+  });
+
+  // C2: raw @@ hunk with bad pattern on the removed line — must NOT fire
+  it('C2: bad pattern on removed (-) line in raw @@ hunk does NOT fire', () => {
+    const hunk = [
+      '@@ -1,3 +1,3 @@',
+      "-$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+      '+$order = wc_get_order( $order_id );',
+      ' // context',
+    ].join('\n');
+    const results = checkCode(hunk, 'php', snap);
+    expect(results).toHaveLength(0);
+  });
+
+  // C2: bad pattern on added (+) line in raw @@ hunk still fires
+  it('C2: bad pattern on added (+) line in raw @@ hunk still fires LOUD', () => {
+    const hunk = [
+      '@@ -1,2 +1,3 @@',
+      ' // context',
+      "+$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+    ].join('\n');
+    const results = checkCode(hunk, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'woocommerce-hpos-order-access');
+    expect(match?.tier).toBe('LOUD');
+  });
+
+  // H1: apiVersion: 1 must NOT fire the v2-specific entry
+  it('H1: apiVersion: 1 does NOT fire gutenberg-apiversion-2-deprecated-wp6-9', () => {
+    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 1, edit: () => null } );`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
+    expect(match).toBeUndefined();
+  });
+
+  // H1: apiVersion: 2 still fires
+  it('H1: apiVersion: 2 still fires gutenberg-apiversion-2-deprecated-wp6-9', () => {
+    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
+    const results = checkCode(code, 'js', snap);
+    const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
+    expect(match?.tier).toBe('LOUD');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // lumo_audit / sourceSignals unchanged (regression guard)
 // ---------------------------------------------------------------------------
 
