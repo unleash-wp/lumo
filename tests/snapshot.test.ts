@@ -104,9 +104,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has exactly 6 entries', () => {
+  it('has exactly 9 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBe(6);
+    expect(snap.entries.length).toBe(9);
   });
 
   it('every entry has tier "free"', () => {
@@ -221,9 +221,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.generatedAt).toBe(maxUpdated);
   });
 
-  it('generatedAt is 2026-06-22T09:00:00Z', () => {
+  it('generatedAt is 2026-06-22T13:00:00Z', () => {
     const snap = loadSnapshot();
-    expect(snap.generatedAt).toBe('2026-06-22T09:00:00Z');
+    expect(snap.generatedAt).toBe('2026-06-22T13:00:00Z');
   });
 
   it('env-file-committed-to-git entry is present with slug and correct category', () => {
@@ -330,5 +330,104 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(entry).toBeDefined();
     if (!entry) return;
     expect(() => validateEntry(entry, snap.entries.indexOf(entry))).not.toThrow();
+  });
+
+  it('gutenberg-usesetting-deprecated-wp6-5 entry is present with correct category', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-usesetting-deprecated-wp6-5');
+    expect(entry).toBeDefined();
+    expect(entry?.category_slug).toBe('gutenberg');
+    expect(entry?.tier).toBe('free');
+  });
+
+  it('gutenberg-usesetting-deprecated-wp6-5 entry carries all required Free fields', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-usesetting-deprecated-wp6-5');
+    expect(entry).toBeDefined();
+    if (!entry) return;
+    expect(entry.summary).toBeTruthy();
+    expect(entry.bad_pattern).toBeTruthy();
+    expect(entry.code_example).toBeTruthy();
+    expect(entry.source_url).toBe(
+      'https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/',
+    );
+    expect(entry.test_step).toBeTruthy();
+  });
+
+  it('gutenberg-usesetting entry has wp_version_min "6.5.0" and breaking_change false', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-usesetting-deprecated-wp6-5');
+    expect(entry?.versions.length).toBe(1);
+    expect(entry?.versions[0]?.wp_version_min).toBe('6.5.0');
+    expect(entry?.versions[0]?.woo_version_min).toBeNull();
+    expect(entry?.versions[0]?.breaking_change).toBe(false);
+  });
+
+  it('gutenberg-isvalidblockcontent-removed entry is present with correct category', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-isvalidblockcontent-removed');
+    expect(entry).toBeDefined();
+    expect(entry?.category_slug).toBe('gutenberg');
+    expect(entry?.tier).toBe('free');
+  });
+
+  it('gutenberg-isvalidblockcontent-removed entry carries all required Free fields', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-isvalidblockcontent-removed');
+    expect(entry).toBeDefined();
+    if (!entry) return;
+    expect(entry.summary).toBeTruthy();
+    expect(entry.bad_pattern).toBeTruthy();
+    expect(entry.code_example).toBeTruthy();
+    expect(entry.source_url).toBe(
+      'https://developer.wordpress.org/block-editor/reference-guides/packages/packages-blocks/',
+    );
+    expect(entry.test_step).toBeTruthy();
+  });
+
+  it('gutenberg-isvalidblockcontent entry has wp_version_min "5.9" and breaking_change true', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'gutenberg-isvalidblockcontent-removed');
+    expect(entry?.versions.length).toBe(1);
+    expect(entry?.versions[0]?.wp_version_min).toBe('5.9');
+    expect(entry?.versions[0]?.woo_version_min).toBeNull();
+    expect(entry?.versions[0]?.breaking_change).toBe(true);
+  });
+
+  it('gutenberg-apiversion-2-deprecated-wp6-9 entry is present with correct category', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find(
+      (e) => e.slug === 'gutenberg-apiversion-2-deprecated-wp6-9',
+    );
+    expect(entry).toBeDefined();
+    expect(entry?.category_slug).toBe('gutenberg');
+    expect(entry?.tier).toBe('free');
+  });
+
+  it('gutenberg-apiversion-2-deprecated-wp6-9 entry carries all required Free fields', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find(
+      (e) => e.slug === 'gutenberg-apiversion-2-deprecated-wp6-9',
+    );
+    expect(entry).toBeDefined();
+    if (!entry) return;
+    expect(entry.summary).toBeTruthy();
+    expect(entry.bad_pattern).toBeTruthy();
+    expect(entry.code_example).toBeTruthy();
+    expect(entry.source_url).toBe(
+      'https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/',
+    );
+    expect(entry.test_step).toBeTruthy();
+  });
+
+  it('gutenberg-apiversion entry has wp_version_min "6.9" and breaking_change true', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find(
+      (e) => e.slug === 'gutenberg-apiversion-2-deprecated-wp6-9',
+    );
+    expect(entry?.versions.length).toBe(1);
+    expect(entry?.versions[0]?.wp_version_min).toBe('6.9');
+    expect(entry?.versions[0]?.woo_version_min).toBeNull();
+    expect(entry?.versions[0]?.breaking_change).toBe(true);
   });
 });

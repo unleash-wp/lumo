@@ -153,4 +153,32 @@ describe('handleLookup', () => {
     expect(result).toContain('API keys');
     expect(result).toContain('Source:');
   });
+
+  it('returns Gutenberg entries for category "gutenberg"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ category: 'gutenberg' }, snap);
+    expect(result).toContain('useSetting');
+    expect(result).toContain('Source:');
+  });
+
+  it('returns the useSetting entry for slug "gutenberg-usesetting-deprecated-wp6-5"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ slug: 'gutenberg-usesetting-deprecated-wp6-5' }, snap);
+    expect(result).toContain('useSettings');
+    expect(result).toContain('Source:');
+  });
+
+  it('returns the isValidBlockContent entry for slug "gutenberg-isvalidblockcontent-removed"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ slug: 'gutenberg-isvalidblockcontent-removed' }, snap);
+    expect(result).toContain('validateBlock');
+    expect(result).toContain('Source:');
+  });
+
+  it('returns the apiVersion entry for slug "gutenberg-apiversion-2-deprecated-wp6-9"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ slug: 'gutenberg-apiversion-2-deprecated-wp6-9' }, snap);
+    expect(result).toContain('apiVersion');
+    expect(result).toContain('Source:');
+  });
 });
