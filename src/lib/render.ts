@@ -8,7 +8,7 @@ import type { CatchResult } from '../detection/catch.js';
 // tier returns a summary-only projection. Two surfaces, two correct messages —
 // reconciling them would be wrong.
 export const FREE_UPGRADE_HINT =
-  'Lumo Pro has the full breakdown and the complete version range for this entry.';
+  'Lumo Pro has the full breakdown, the complete version range, and what breaks in upcoming WP releases before they ship.';
 
 // ---------------------------------------------------------------------------
 // W4 upgrade-prompt copy constants — single tested source of truth.
