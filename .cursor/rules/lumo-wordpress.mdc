@@ -1,0 +1,14 @@
+---
+description: Run lumo_check_code on every WordPress/WooCommerce PHP or JS suggestion
+globs: ["**/*.php", "**/blocks/**", "**/block.json", "**/*.jsx", "**/*.tsx", "**/*.js"]
+alwaysApply: true
+---
+
+When you produce or review WordPress or WooCommerce PHP or JavaScript code:
+
+1. Call `lumo_check_code` on it before showing the user.
+2. If a LOUD catch returns, lead your response with it — your AI was demonstrably wrong and Lumo has the dated source.
+3. If a SOFT catch returns, include it as a review note after your code.
+4. If the result is the neutral line, continue normally — silence is correct.
+
+Lumo proposes and cites; it never edits code autonomously.
