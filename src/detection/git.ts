@@ -31,15 +31,39 @@ function isInsideWorkTree(projectRoot: string): boolean {
 }
 
 /**
- * Detect a registered pattern by checking whether a path is tracked in git.
- * Only patterns with a non-empty `gitTrackedPaths` field are attempted.
+ * Return true when `path` is tracked by git in `projectRoot`.
+ * Runs: git ls-files --error-unmatch -- <path>
+ * Exit 0 ⟹ tracked. Any error or non-zero exit ⟹ false.
+ */
+function isTracked(projectRoot: string, path: string): boolean {
+  try {
+    const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', path], {
+      cwd: projectRoot,
+      timeout: 5000,
+      encoding: 'utf8',
+    });
+    return !result.error && result.status === 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Unified git-tracked detector.
  *
- * For each candidate path, runs:
- *   git ls-files --error-unmatch -- <path>
- * Exit 0 ⟹ the file is tracked ⟹ return a detection with source 'git'.
+ * A pattern matches when:
+ *   - every `gitTrackedPaths` entry IS tracked in git, AND
+ *   - every `gitMissingPaths` entry is NOT tracked in git.
  *
- * Fail-open: git absent, not a repo, any error or non-zero exit ⟹ null.
- * NEVER throws.
+ * Patterns with no `gitTrackedPaths` are skipped (they use other detectors).
+ *
+ * Examples:
+ *   env-in-git:             { gitTrackedPaths: ['.env'] }
+ *     → matches when .env is tracked
+ *   wordpress-dependencies: { gitTrackedPaths: ['composer.json'], gitMissingPaths: ['composer.lock'] }
+ *     → matches when composer.json tracked AND composer.lock NOT tracked
+ *
+ * Fail-open: git absent, not a repo, any git error → null, never throws.
  */
 export function detectFromGitTracked(projectRoot: string): PluginDetection | null {
   try {
@@ -52,17 +76,20 @@ export function detectFromGitTracked(projectRoot: string): PluginDetection | nul
         continue;
       }
 
-      for (const trackedPath of p.gitTrackedPaths) {
-        const result = spawnSync(
-          'git',
-          ['ls-files', '--error-unmatch', '--', trackedPath],
-          { cwd: projectRoot, timeout: 5000, encoding: 'utf8' },
-        );
-
-        if (!result.error && result.status === 0) {
-          return { pattern: p.pattern, version: null, source: 'git' };
-        }
+      // All required-tracked paths must be tracked.
+      const allTracked = p.gitTrackedPaths.every((path) => isTracked(projectRoot, path));
+      if (!allTracked) {
+        continue;
       }
+
+      // All required-absent paths must NOT be tracked.
+      const missingPaths = p.gitMissingPaths ?? [];
+      const allAbsent = missingPaths.every((path) => !isTracked(projectRoot, path));
+      if (!allAbsent) {
+        continue;
+      }
+
+      return { pattern: p.pattern, version: null, source: 'git' };
     }
 
     return null;

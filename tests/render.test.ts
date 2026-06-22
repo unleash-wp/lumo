@@ -184,6 +184,31 @@ describe('formatFreeMarkdown', () => {
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('**Affected:** WordPress ≥ 6.4.0');
   });
+
+  it('renders missing-composer-lock-file entry with bad_pattern, code_example, and "all supported versions"', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'missing-composer-lock-file');
+    if (!entry) throw new Error('missing-composer-lock-file entry missing from snapshot');
+    const rendered = renderFree(entry);
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('composer.lock');
+    // Both bad_pattern and code_example present → two fenced blocks
+    const fenced = md.match(/```/g);
+    expect(fenced?.length).toBeGreaterThanOrEqual(4); // opening+closing × 2
+    expect(md).toContain('**Affected:** all supported versions');
+  });
+
+  it('renders hardcoded-api-keys-secrets entry with bad_pattern, code_example, and "all supported versions"', () => {
+    const snap = loadSnapshot();
+    const entry = snap.entries.find((e) => e.slug === 'hardcoded-api-keys-secrets');
+    if (!entry) throw new Error('hardcoded-api-keys-secrets entry missing from snapshot');
+    const rendered = renderFree(entry);
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('API keys');
+    const fenced = md.match(/```/g);
+    expect(fenced?.length).toBeGreaterThanOrEqual(4);
+    expect(md).toContain('**Affected:** all supported versions');
+  });
 });
 
 // ---------------------------------------------------------------------------
