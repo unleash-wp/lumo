@@ -1,78 +1,78 @@
-# Snapshot Sync — Maintainer Procedure
+# Snapshot Sync — Consumer Side
 
-`data/snapshot.json` is the Free agent's knowledge base. This document describes how to regenerate it from the Pro snapshot generator (R4-9) when HPOS content changes.
-
-The stub script `scripts/sync-snapshot.mjs` reserves the path and encodes this procedure as comments, but refuses to run until R4-9 is available. Use it as the authoritative reference for the wiring needed.
-
----
-
-## When to regenerate
-
-Regenerate `data/snapshot.json` whenever the HPOS knowledge base in `lumo-pro` changes — specifically on the changelog cadence when the Pro generator emits a new snapshot projection. The Free HPOS core is deliberately low-churn; most weeks nothing changes.
-
-The signal: the Pro generator R4-9 produces a new snapshot output. That output is the input to this procedure.
+`data/snapshot.json` is the Free agent's knowledge base. It is **generated** in
+the private `lumo-pro` repository — do not edit it by hand.
 
 ---
 
-## Manual procedure (until R4-9 is wired)
+## Provenance
 
-1. **Run the Pro snapshot generator (R4-9)** in `lumo-pro` to produce a fresh Free-projection snapshot. The generator emits a JSON file in the same shape as the current `data/snapshot.json` — `schemaVersion`, `generatedAt`, `source`, `entries[]`.
+The generator in `lumo-pro` reads the Pro knowledge DB, projects every published
+entry to the Free shape (no `body`, `tier: "free"`), and writes a deterministic
+JSON artifact. A committed golden copy (`lumo-pro/src/snapshot/snapshot.golden.json`)
+and a CI byte-parity guard ensure the generator output is always in sync with what
+ships here.
 
-2. **Verify the Free projection contract** (see "Contract" below) before replacing the file. The generator should enforce this automatically, but the maintainer verifies before committing.
+---
 
-3. **Replace `data/snapshot.json`** with the new file.
+## Update procedure
 
-4. **Run the full test suite** in `lumo`:
-   ```
-   npm run typecheck && npm test
-   ```
-   All 256 tests must stay green. If any snapshot-driven test fails, the new snapshot violates the contract — do not commit.
+```sh
+# In lumo-pro (on a content branch):
+npm run snapshot:generate -- /tmp/new-snapshot.json
+diff lumo-pro/src/snapshot/snapshot.golden.json /tmp/new-snapshot.json  # must be content-only
+cp /tmp/new-snapshot.json lumo-pro/src/snapshot/snapshot.golden.json
+git add lumo-pro/src/snapshot/snapshot.golden.json && git commit
 
-5. **Commit** with a message describing the content change (e.g., "update HPOS snapshot: woo 8.3 breaking-change note"). Do not reference internal plan or ticket IDs in the commit message.
+# Copy the artifact here:
+cp /tmp/new-snapshot.json data/snapshot.json
+
+# Verify this repo:
+npm run typecheck && npm test   # all tests must stay green
+
+git add data/snapshot.json && git commit -m "update snapshot: <reason>"
+```
+
+Full generator-side documentation: `lumo-pro/docs/snapshot-sync.md`.
+
+---
+
+## SCHEMA_VERSION bump protocol
+
+`schemaVersion` is currently `1`. Bump it only when the snapshot shape changes in
+a way the loader (`src/lib/snapshot.ts`) cannot accept without modification. A new
+optional field does not require a bump; a removed or renamed field does.
+
+When bumping:
+
+1. Update `schemaVersion` in the lumo-pro generator.
+2. Update the loader in `src/lib/snapshot.ts` to handle the new version.
+3. Update `tests/snapshot.test.ts` if it pins the version value.
+4. Follow the update procedure above.
+
+Ship the loader change before shipping the new artifact — the loader rejects an
+unknown version and the agent will fail to start if the order is reversed.
 
 ---
 
 ## Contract
 
-The following invariants must hold after every sync. The generator is expected to enforce them; the maintainer verifies before shipping.
+Every update must satisfy these invariants (enforced by `tests/snapshot.test.ts`):
 
-**1. Free fields are preserved byte-stable unless the Pro summary genuinely changed.**
+- Exactly the documented number of entries, each with the 4 expected slugs.
+- No `body` key on any entry.
+- `tier: "free"` on every entry.
+- `schemaVersion: 1` (until explicitly bumped with a coordinated loader change).
+- `generatedAt` equals `max(updatedAt)` across all entries.
+- Field order per entry: `slug, title, category_slug, summary, code_example,
+  bad_pattern, source_url, test_step, tier, updatedAt, versions`.
 
-The Free render reads these fields from each entry:
-- `summary`
-- `code_example`
-- `bad_pattern`
-- `source_url`
-- `test_step`
-- `versions[0].woo_version_min` → rendered as "Affected: WooCommerce ≥ {woo_version_min}"
-
-If none of these changed on the Pro side, the rendered Free output must be byte-identical to the previous version. A sync that changes only `generatedAt` must not alter the rendered Free Markdown for any entry.
-
-**2. `generatedAt` advances.**
-
-The envelope field `generatedAt` must be a newer ISO 8601 UTC timestamp than the previous file. Per-entry `updatedAt` advances only when that entry's content changed.
-
-**3. `body` is never written into the snapshot.**
-
-`body` is a Pro-only field. The generator emits the Free projection — `body` must not appear in `data/snapshot.json` under any entry. `src/lib/render.ts` hard-guards against reading `body`, but the snapshot must not carry it either.
-
-**4. `schemaVersion` stays at `1`.**
-
-The snapshot loader at `src/lib/snapshot.ts:85` rejects any file whose `schemaVersion` does not match the expected value. Do not increment this field without a corresponding loader update and full test pass.
-
-**5. Slug stability.**
-
-Existing entry slugs must not be renamed without a corresponding update to any tests or commands that reference them by slug. Slug changes are breaking changes for any cached state keyed on slug.
+If any test fails after copying the new artifact, do not commit — the generator
+output violates the contract and the bug must be fixed in lumo-pro.
 
 ---
 
-## Blocked on R4-9
+## What sync-snapshot.mjs does
 
-The live regeneration script (`scripts/sync-snapshot.mjs`) is a stub until the Pro snapshot generator (R4-9) is built and its output shape is confirmed. When R4-9 lands, replace the stub with a real implementation that:
-
-- Calls the R4-9 generator (or reads its output file)
-- Applies the contract checks above programmatically
-- Writes the verified snapshot to `data/snapshot.json`
-- Exits non-zero if any contract check fails
-
-Open a follow-up issue linking R4-9 to the stub→script swap before closing R4-9.
+`scripts/sync-snapshot.mjs` prints the update procedure above and exits 0. It is
+a pointer, not an automation — the actual generation happens in lumo-pro.
