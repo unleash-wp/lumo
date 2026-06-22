@@ -739,6 +739,70 @@ watch( () => { console.log( state.count ); } );
 });
 
 // ---------------------------------------------------------------------------
+// formatCatch — version-scoped relative line
+// ---------------------------------------------------------------------------
+
+describe('formatCatch — version-relative lines', () => {
+  it('already-broken: LOUD + project on/past breaking version → fix-now line', () => {
+    // isValidBlockContent removed in WP 7.0; project on 7.0 → already-broken
+    const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
+    const results = checkCode(code, 'js', snap);
+    const loud = results.find((r) => r.tier === 'LOUD');
+    expect(loud).toBeDefined();
+    const rendered = formatCatch(loud!, '7.0');
+    // LOUD alarm still present
+    expect(rendered).toContain('⚠️');
+    // Relative line: already past the breaking version
+    expect(rendered).toContain('fix now');
+    expect(rendered).toContain('7.0');
+  });
+
+  it('upcoming: LOUD + project before breaking version → soon-dead line', () => {
+    // apiVersion: 2 deprecated in WP 6.9; project targets 6.8 → upcoming
+    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
+    const results = checkCode(code, 'js', snap);
+    const loud = results.find((r) => r.tier === 'LOUD');
+    expect(loud).toBeDefined();
+    const rendered = formatCatch(loud!, '6.8');
+    expect(rendered).toContain('⚠️');
+    expect(rendered).toContain('soon-dead pattern');
+    expect(rendered).toContain('6.8');
+  });
+
+  it('unknown: no projectVersion arg → byte-identical to output without arg', () => {
+    const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+    const results = checkCode(code, 'php', snap);
+    const loud = results.find((r) => r.tier === 'LOUD');
+    expect(loud).toBeDefined();
+    const withoutArg = formatCatch(loud!);
+    const withUndefined = formatCatch(loud!, undefined);
+    expect(withoutArg).toBe(withUndefined);
+    // Neither should contain "fix now" or "soon-dead" without a version
+    expect(withoutArg).not.toContain('fix now');
+    expect(withoutArg).not.toContain('soon-dead');
+  });
+
+  it('no-false-LOUD: empty-version-stamp entry + a project version still no alarm', () => {
+    // When classify() returns SOFT due to no version stamp, formatCatch must stay SOFT
+    // even when a projectVersion is supplied.
+    const e = findEntry(snap, 'woocommerce-hpos-order-access')!;
+    const noStampSnap = {
+      ...snap,
+      entries: snap.entries.map((en) =>
+        en.slug === 'woocommerce-hpos-order-access' ? { ...e, versions: [] } : en,
+      ),
+    };
+    const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+    const results = checkCode(code, 'php', noStampSnap);
+    if (results.length > 0 && results[0] != null) {
+      const rendered = formatCatch(results[0], '8.5');
+      // Must remain SOFT — no alarm emoji
+      expect(rendered).not.toContain('⚠️');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // lumo_audit / sourceSignals unchanged (regression guard)
 // ---------------------------------------------------------------------------
 

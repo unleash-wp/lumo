@@ -93,12 +93,23 @@ export async function handleLookup(
 export interface CheckCodeHandlerInput {
   code: string;
   language?: 'php' | 'js' | 'auto';
+  /** The project's target WordPress version, e.g. '6.9'. Takes priority over project_root detection. */
+  wp_version?: string;
+  /** The project's target WooCommerce version, e.g. '8.5'. Takes priority over project_root detection. */
+  woo_version?: string;
+  /** Absolute path to the project root. Used to auto-detect wp/woo version when explicit versions are absent. */
+  project_root?: string;
 }
 
 /**
  * Scan a raw code blob (or unified diff) for WordPress/WooCommerce patterns that
  * broke in a specific version. Returns ranked catch results (LOUD before SOFT) or
  * a neutral line when nothing fires.
+ *
+ * When wp_version/woo_version are provided (or derivable from project_root),
+ * each LOUD result gains a relative-version line showing whether the project
+ * is already past the breaking version or heading toward it.
+ *
  * Never throws.
  */
 export async function handleCheckCode(
@@ -113,7 +124,33 @@ export async function handleCheckCode(
       return CATCH_NEUTRAL_LINE;
     }
 
-    return results.map((r) => formatCatch(r)).join('\n\n---\n\n');
+    // Resolve project versions: explicit params > auto-detect from project_root > none.
+    // Fail-open: any error leaves the versions undefined (no version line emitted).
+    let resolvedWp: string | undefined = input.wp_version?.trim() || undefined;
+    let resolvedWoo: string | undefined = input.woo_version?.trim() || undefined;
+
+    if ((!resolvedWp || !resolvedWoo) && input.project_root) {
+      try {
+        const { detectStack } = await import('../detection/index.js');
+        const detection = detectStack(input.project_root);
+        if (detection?.version) {
+          const isWoo = detection.pattern === 'woocommerce';
+          if (isWoo && !resolvedWoo) resolvedWoo = detection.version;
+          if (!isWoo && !resolvedWp) resolvedWp = detection.version;
+        }
+      } catch {
+        // fail-open — no version line for this result
+      }
+    }
+
+    return results
+      .map((r) => {
+        // Select the version that matches this result's versionFact field.
+        const projectVersion =
+          r.versionFact?.field === 'woo' ? resolvedWoo : resolvedWp;
+        return formatCatch(r, projectVersion);
+      })
+      .join('\n\n---\n\n');
   } catch {
     return CATCH_NEUTRAL_LINE;
   }

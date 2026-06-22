@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { handleAudit, handleLookup } from '../src/mcp/handlers.js';
+import { handleAudit, handleLookup, handleCheckCode } from '../src/mcp/handlers.js';
 import { loadSnapshot } from '../src/lib/snapshot.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -180,5 +180,57 @@ describe('handleLookup', () => {
     const result = await handleLookup({ slug: 'gutenberg-apiversion-2-deprecated-wp6-9' }, snap);
     expect(result).toContain('apiVersion');
     expect(result).toContain('Source:');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleCheckCode — version-scoping
+// ---------------------------------------------------------------------------
+
+describe('handleCheckCode — version-scoping', () => {
+  const snap = loadSnapshot();
+
+  it('explicit wp_version produces relative line in LOUD output', async () => {
+    // apiVersion:2 deprecated in WP 6.9; project on 6.9 → already-broken
+    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, snap);
+    expect(result).toContain('⚠️');
+    // The relative line should appear (already-broken)
+    expect(result).toContain('fix now');
+  });
+
+  it('explicit wp_version below breaking version produces upcoming line', async () => {
+    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.8' }, snap);
+    expect(result).toContain('⚠️');
+    expect(result).toContain('soon-dead pattern');
+  });
+
+  it('project_root that does not exist → never throws, output is a string', async () => {
+    const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+    await expect(
+      handleCheckCode({ code, language: 'php', project_root: '/tmp/__lumo_no_such_dir__' }, snap),
+    ).resolves.toBeTypeOf('string');
+  });
+
+  it('project_root with no version detection falls back gracefully — still emits LOUD', async () => {
+    const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+    const result = await handleCheckCode(
+      { code, language: 'php', project_root: join(fixturesDir, 'non-woo') },
+      snap,
+    );
+    // LOUD still fires; no relative line because version unknown — but no throw
+    expect(result).toContain('⚠️');
+  });
+
+  it('handleAudit byte-equal check remains green (regression guard)', async () => {
+    const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
+    const s = loadSnapshot();
+    const entry = s.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
+    if (!entry) throw new Error('HPOS entry missing — test setup broken');
+
+    const expected = formatFreeMarkdown(renderFree(entry));
+    const actual = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
+    expect(actual).toBe(expected);
   });
 });
