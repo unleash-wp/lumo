@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-22T15:00:00Z",
+  "generatedAt": "2026-06-22T18:30:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -203,6 +203,66 @@
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-0-interactivity-watch",
+      "title": "WordPress 7.0: use watch() from @wordpress/interactivity, not effect from @preact/signals",
+      "category_slug": "wordpress-7-0",
+      "summary": "WordPress 7.0 (May 20, 2026 — after your model's training cutoff) added watch() as the public reactive-callback API in @wordpress/interactivity. watch() is exported as an alias for @preact/signals's effect(), but effect itself was never a named export from @wordpress/interactivity. Code that imports effect directly from @preact/signals, or that expects import { effect } from \"@wordpress/interactivity\" to resolve, will throw a module resolution error or silently use a stale signals version. Always import watch from @wordpress/interactivity.",
+      "code_example": "// CORRECT — import watch from the public @wordpress/interactivity package.\n// Requires WordPress 7.0+ (released May 20, 2026).\nimport { store, watch } from '@wordpress/interactivity';\n\nconst { state } = store( 'my-plugin/counter', {\n  state: { count: 0 },\n} );\n\n// watch() subscribes to every reactive value read inside the callback and\n// re-runs the callback whenever any of them change.\nwatch( () => {\n  console.log( 'Count is now', state.count );\n} );",
+      "bad_pattern": "// WRONG — effect is not exported from @wordpress/interactivity.\n// This will throw a module resolution error or import a stale @preact/signals copy.\nimport { effect } from '@preact/signals';           // direct Preact dep — do not reach inside WP\nimport { store } from '@wordpress/interactivity';\n\nconst { state } = store( 'my-plugin/counter', {\n  state: { count: 0 },\n} );\n\n// This fires on every signals change but is not the public @wordpress/interactivity API.\neffect( () => {\n  console.log( 'Count changed to', state.count );\n} );",
+      "source_url": "https://github.com/WordPress/gutenberg/blob/c24e0a0770e78c26d29f7c2a5b9825e3022dee90/packages/interactivity/src/index.ts",
+      "test_step": "In your interactivity store JS, replace any direct @preact/signals effect() import with import { watch } from \"@wordpress/interactivity\". Verify no \"effect is not exported\" module errors appear in the browser console on WP 7.0+. Run `npm run build` and confirm no unresolved dependency warnings for @preact/signals.",
+      "tier": "free",
+      "updatedAt": "2026-06-22T18:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": true
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-0-router-navigation-deprecated",
+      "title": "WordPress 7.0: state.navigation.hasStarted / hasFinished deprecated in core/router",
+      "category_slug": "wordpress-7-0",
+      "summary": "WordPress 7.0 (May 20, 2026 — after your model's training cutoff) deprecated the state.navigation.hasStarted and state.navigation.hasFinished properties in the @wordpress/interactivity-router (core/router) store. These were always internal implementation details and now trigger a console warning in development mode (when SCRIPT_DEBUG is enabled) when accessed. They will stop working in WordPress 7.1. The official replacement mechanism for tracking navigation state is planned for WP 7.1. Until then, avoid reading these properties.",
+      "code_example": "// CORRECT — do not read state.navigation.hasStarted or hasFinished.\n// An official navigation-state tracking mechanism is planned for WP 7.1.\n// Until then, manage loading state locally in your own store.\nimport { store } from '@wordpress/interactivity';\n\nconst { state, actions } = store( 'my-plugin/nav-loader', {\n  state: { loading: false },\n  actions: {\n    async navigate( url: string ) {\n      state.loading = true;\n      try {\n        await actions.navigate( url ); // core/router navigate action\n      } finally {\n        state.loading = false;\n      }\n    },\n  },\n} );",
+      "bad_pattern": "// WRONG — deprecated since WP 7.0, will break in WP 7.1.\n// Accessing hasStarted or hasFinished triggers a console warning in WP 7.0 dev mode (SCRIPT_DEBUG).\nimport { store } from '@wordpress/interactivity';\n\nconst { state } = store( 'core/router', {} );\n\nfunction showLoader() {\n  if ( state.navigation.hasStarted && ! state.navigation.hasFinished ) {\n    document.getElementById( 'loader' ).style.display = 'block';\n  } else {\n    document.getElementById( 'loader' ).style.display = 'none';\n  }\n}",
+      "source_url": "https://github.com/WordPress/gutenberg/blob/1c26a4c6574e266a8a8e671f1e0420c568715f4d/packages/interactivity-router/src/index.ts",
+      "test_step": "Search your interactivity JS for state.navigation.hasStarted or state.navigation.hasFinished. If found, open the browser console in WP 7.0 — you should see a deprecation warning. Remove the reads and manage loading state locally. Verify no warnings appear after the change.",
+      "tier": "free",
+      "updatedAt": "2026-06-22T18:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-0-php-minimum-7-4",
+      "title": "WordPress 7.0 requires PHP 7.4+ — PHP 7.2 and 7.3 no longer supported",
+      "category_slug": "wordpress-7-0",
+      "summary": "WordPress 7.0 (May 20, 2026 — after your model's training cutoff) raised the minimum supported PHP version to 7.4. PHP 7.2 and 7.3 are no longer tested or supported. Any plugin or theme that declares \"Requires PHP: 7.2\" or \"Requires PHP: 7.3\" in its headers, or targets PHP 7.2/7.3 syntax in its CI matrix, is now running below the WordPress minimum. Update the Requires PHP header, composer.json platform constraint, and CI matrix to PHP 7.4+.",
+      "code_example": "# plugin-name/plugin-name.php header — updated for WP 7.0+\n/*\n * Plugin Name:  My WooCommerce Extension\n * Requires PHP: 7.4\n */\n\n# composer.json — platform constraint updated to match WP 7.0 minimum\n{\n  \"require\": {\n    \"php\": \">=7.4\"\n  },\n  \"config\": {\n    \"platform\": { \"php\": \"7.4\" }\n  }\n}\n\n# .github/workflows/tests.yml — CI matrix updated\nstrategy:\n  matrix:\n    php: ['7.4', '8.1', '8.2', '8.3', '8.4']",
+      "bad_pattern": "# plugin-name/plugin-name.php header — outdated Requires PHP value\n/*\n * Plugin Name:  My WooCommerce Extension\n * Requires PHP: 7.2\n */\n\n# composer.json — platform constraint too broad\n{\n  \"require\": {\n    \"php\": \">=7.2\"\n  },\n  \"config\": {\n    \"platform\": { \"php\": \"7.2\" }\n  }\n}",
+      "source_url": "https://make.wordpress.org/core/2026/05/22/php-support-clarification-2026/",
+      "test_step": "Check your plugin/theme file header for \"Requires PHP\". If it says 7.2 or 7.3, update to 7.4. Update composer.json require.php and config.platform.php. Update your CI PHP matrix to start at 7.4. Run composer check-platform-reqs to verify no typed-property or arrow-function syntax is guarded behind PHP_VERSION_ID checks targeting 7.2/7.3.",
+      "tier": "free",
+      "updatedAt": "2026-06-22T18:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": true
         }
       ]
     }
