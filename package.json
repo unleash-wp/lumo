@@ -29,8 +29,13 @@
     "claude-code-plugin",
     "woocommerce",
     "hpos",
-    "wordpress"
+    "wordpress",
+    "mcp",
+    "mcp-server",
+    "woocommerce-deprecation",
+    "wordpress-audit"
   ],
+  "mcpName": "io.github.unleash-wp/lumo",
   "author": "Benjamin Zekavica",
   "license": "MIT"
 }
