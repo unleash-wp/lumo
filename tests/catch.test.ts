@@ -564,6 +564,86 @@ describe('false-LOUD regressions', () => {
 });
 
 // ---------------------------------------------------------------------------
+// wp-ability-missing-mcp-public: absence-in-presence SOFT catch
+// ---------------------------------------------------------------------------
+
+describe('wp-ability-missing-mcp-public — absence-in-presence SOFT signal', () => {
+  // SOFT: call present, flag absent → fire
+  it('fires SOFT when wp_register_ability() is present but mcp.public flag is absent', () => {
+    const code = `<?php
+wp_register_ability( 'my-plugin/get-data', [
+    'label'               => 'Get Data',
+    'description'         => 'Retrieve data',
+    'execute_callback'    => fn( $input ) => get_option( 'data' ),
+    'permission_callback' => fn() => current_user_can( 'read' ),
+    'meta'                => [
+        'show_in_rest' => true,
+        'annotations'  => [ 'readonly' => true ],
+    ],
+] );`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
+  });
+
+  // SILENT: call present AND flag present → suppress
+  it('is SILENT when wp_register_ability() is present AND meta.mcp.public is set', () => {
+    const code = `<?php
+wp_register_ability( 'my-plugin/get-data', [
+    'label'               => 'Get Data',
+    'execute_callback'    => fn( $input ) => get_option( 'data' ),
+    'permission_callback' => fn() => current_user_can( 'read' ),
+    'meta'                => [
+        'show_in_rest' => true,
+        'mcp'          => [
+            'public' => true,
+            'type'   => 'tool',
+        ],
+    ],
+] );`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
+    expect(match).toBeUndefined();
+  });
+
+  // SILENT: no registration call at all → do not fire
+  it('is SILENT when there is no wp_register_ability() call in the blob', () => {
+    const code = `<?php
+function my_plugin_init() {
+    add_action( 'init', 'my_plugin_register_cpt' );
+}`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
+    expect(match).toBeUndefined();
+  });
+
+  // Verify the dated proof (source URL + summary) renders in the SOFT output
+  it('SOFT output references the source-verified SHA-pinned URL', async () => {
+    const code = `<?php
+wp_register_ability( 'my-plugin/get-data', [
+    'execute_callback' => fn( $input ) => [],
+    'permission_callback' => '__return_true',
+    'meta' => [ 'show_in_rest' => true ],
+] );`;
+    const results = checkCode(code, 'php', snap);
+    const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
+    expect(match).toBeDefined();
+    const { formatCatch } = await import('../src/lib/render.js');
+    const rendered = formatCatch(match!);
+    // Quiet SOFT lead
+    expect(rendered).toContain('🔍');
+    expect(rendered).toContain('Worth reviewing');
+    // No LOUD alarm
+    expect(rendered).not.toContain('⚠️');
+    // Condition from signal is stated
+    expect(rendered).toContain('MCP clients');
+    // Source URL from entry carries the SHA-pinned permalink
+    expect(rendered).toContain('github.com/WordPress/mcp-adapter');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // lumo_audit / sourceSignals unchanged (regression guard)
 // ---------------------------------------------------------------------------
 

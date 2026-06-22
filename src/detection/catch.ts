@@ -276,6 +276,10 @@ export function checkCode(
       const entry = findEntry(snap, signal.entrySlug);
       if (!entry) continue;
 
+      // Check suppress-guard: if the correct form is already present, fire nothing.
+      // Used for absence-in-presence signals (the flag we expect to be missing is there).
+      if (signal.suppressGuard && signal.suppressGuard.test(diffFiltered)) continue;
+
       // Check shim guard on the original (non-stripped) blob
       const shimPresent = signal.shimGuard ? signal.shimGuard.test(diffFiltered) : false;
 

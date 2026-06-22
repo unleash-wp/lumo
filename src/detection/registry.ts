@@ -30,6 +30,13 @@ export interface CatchSignal {
    * CERTAIN signal, the catch downgrades from LOUD to SOFT (shim/polyfill context).
    */
   shimGuard?: RegExp;
+  /**
+   * Optional suppress-guard: if this RegExp matches anywhere in the blob, the signal
+   * is suppressed entirely (SILENT). Used for absence-in-presence signals where a
+   * correct form of the same pattern is already present — e.g. the flag we expect
+   * to be missing is actually there.
+   */
+  suppressGuard?: RegExp;
   language: 'php' | 'js';
   /**
    * When true, test this signal against a blob with BOTH comments AND quoted string
@@ -74,6 +81,32 @@ export interface PatternDefinition {
 }
 
 export const PATTERNS: readonly PatternDefinition[] = [
+  {
+    // WordPress Abilities API — fires when wp_register_ability() is called AND
+    // the mcp.public flag is absent. Absence-in-presence: the call exists but the
+    // MCP opt-in flag does not. CONTEXT_DEPENDENT because the developer may not
+    // intend this ability to be MCP-visible — always SOFT, never LOUD.
+    //
+    // suppressGuard: if 'public' => true already appears in the mcp array of this
+    // blob, the ability is correctly configured — suppress the signal entirely.
+    // The guard pattern is intentionally broad ('public'\s*=>\s*true) so it catches
+    // both single and double quotes; false positives here are safe (suppression =
+    // conservative, the user already did the right thing or something similar).
+    pattern: 'wp-abilities-api',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /\bwp_register_ability\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-ability-missing-mcp-public',
+        condition: 'you intend this ability to be reachable by MCP clients (Claude Code, Cursor)',
+        suppressGuard: /['"]public['"]\s*=>\s*true/,
+        language: 'php',
+      },
+    ],
+  },
   {
     pattern: 'woocommerce',
     composerKeys: ['woocommerce/woocommerce', 'wpackagist-plugin/woocommerce'],
