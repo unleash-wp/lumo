@@ -249,4 +249,45 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
     ],
   },
+  {
+    // WordPress 7.0 Interactivity API changes (released May 20, 2026 — after model training cutoff).
+    //
+    // Signal 1: state.navigation.hasStarted / state.navigation.hasFinished read from
+    // the core/router store. CERTAIN because the property chain is self-evident; caps
+    // at SOFT because breakingChange is false (deprecated in 7.0, will break in 7.1).
+    // stripStrings: a mention inside a string is not a property access.
+    //
+    // Signal 2: import { effect } from '@preact/signals' alongside @wordpress/interactivity
+    // usage. CONTEXT_DEPENDENT because @preact/signals is a general-purpose library —
+    // the signal only fires when the two co-occur, but we cannot prove the caller
+    // intended this as an @wordpress/interactivity-specific pattern from the blob alone.
+    pattern: 'wordpress-7-0',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      // SOFT: deprecated state.navigation properties — breaking_change: false in entry
+      // (they deprecated in 7.0; will stop working in 7.1).
+      // stripStrings: property access inside a string is not a real access.
+      {
+        match: /\bstate\.navigation\.has(?:Started|Finished)\b/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-7-0-router-navigation-deprecated',
+        language: 'js',
+        stripStrings: true,
+      },
+      // SOFT: effect imported directly from @preact/signals alongside @wordpress/interactivity.
+      // Cannot be LOUD — CONTEXT_DEPENDENT because @preact/signals is a general library.
+      // suppressGuard: if the blob already imports watch from @wordpress/interactivity,
+      // the developer is doing the right thing — suppress entirely.
+      {
+        match: /from\s+['"]@preact\/signals['"]/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-7-0-interactivity-watch',
+        condition: 'this code is used alongside @wordpress/interactivity',
+        suppressGuard: /from\s+['"]@wordpress\/interactivity['"]/,
+        language: 'js',
+      },
+    ],
+  },
 ];
