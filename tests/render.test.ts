@@ -254,6 +254,16 @@ describe('FREE_UPGRADE_HINT — corrected copy', () => {
     const hasVersionRange = lower.includes('version range') || lower.includes('version matrix') || lower.includes('complete');
     expect(hasBreakdown || hasVersionRange).toBe(true);
   });
+
+  it('names upcoming release foresight as a Pro-only differentiator', () => {
+    const lower = FREE_UPGRADE_HINT.toLowerCase();
+    // The hint must now name the foresight angle — upcoming WP releases / before they ship.
+    const hasForesight =
+      lower.includes('upcoming') ||
+      lower.includes('before they ship') ||
+      lower.includes('pre-release');
+    expect(hasForesight).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
