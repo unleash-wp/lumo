@@ -9,7 +9,7 @@ import { detectFromDirectory } from '../src/detection/directory.js';
 import { detectFromWpCli } from '../src/detection/wp-cli.js';
 import { detectFromSource } from '../src/detection/heuristic.js';
 import { detectFromGitTracked } from '../src/detection/git.js';
-import { detectStack, auditProject } from '../src/detection/index.js';
+import { detectStack, auditProject, buildProTeaser } from '../src/detection/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, 'fixtures');
@@ -541,5 +541,100 @@ describe('auditProject — hardcoded-secrets end-to-end', () => {
     const md = formatFreeMarkdown(result.entry!);
     expect(md).toContain('API keys');
     expect(md).toContain('**Affected:** all supported versions');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pro-teaser: premium agency plugins
+// ---------------------------------------------------------------------------
+
+describe('buildProTeaser', () => {
+  it('returns a measured, factual teaser with the plugin name', () => {
+    const msg = buildProTeaser('Advanced Custom Fields Pro');
+    expect(msg).toContain('Advanced Custom Fields Pro');
+    expect(msg).toContain('Lumo Pro');
+    expect(msg).not.toContain('undefined');
+  });
+});
+
+describe('detectFromDirectory — ACF Pro fixture', () => {
+  it('detects premium-acf-pro from directory with version 6.8.4', () => {
+    const result = detectFromDirectory(join(fixturesDir, 'acf-pro'));
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('premium-acf-pro');
+    expect(result?.version).toBe('6.8.4');
+    expect(result?.source).toBe('directory');
+  });
+});
+
+describe('detectFromDirectory — Gravity Forms fixture', () => {
+  it('detects premium-gravity-forms from directory with version 2.10.4', () => {
+    const result = detectFromDirectory(join(fixturesDir, 'gravity-forms'));
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('premium-gravity-forms');
+    expect(result?.version).toBe('2.10.4');
+    expect(result?.source).toBe('directory');
+  });
+});
+
+describe('detectFromDirectory — Elementor Pro fixture', () => {
+  it('detects premium-elementor-pro from directory with version 3.35.1', () => {
+    const result = detectFromDirectory(join(fixturesDir, 'elementor-pro'));
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('premium-elementor-pro');
+    expect(result?.version).toBe('3.35.1');
+    expect(result?.source).toBe('directory');
+  });
+});
+
+describe('auditProject — Pro teaser path', () => {
+  it('detected:true, proTeaser set, no entry for ACF Pro fixture', () => {
+    const result = auditProject(join(fixturesDir, 'acf-pro'));
+    expect(result.detected).toBe(true);
+    expect(result.proTeaser).toBeDefined();
+    expect(result.proTeaser).toContain('Advanced Custom Fields Pro');
+    expect(result.proTeaser).toContain('Lumo Pro');
+    expect(result.entry).toBeUndefined();
+  });
+
+  it('detected:true, proTeaser set for Gravity Forms fixture', () => {
+    const result = auditProject(join(fixturesDir, 'gravity-forms'));
+    expect(result.detected).toBe(true);
+    expect(result.proTeaser).toBeDefined();
+    expect(result.proTeaser).toContain('Gravity Forms');
+    expect(result.entry).toBeUndefined();
+  });
+
+  it('detected:true, proTeaser set for Elementor Pro fixture', () => {
+    const result = auditProject(join(fixturesDir, 'elementor-pro'));
+    expect(result.detected).toBe(true);
+    expect(result.proTeaser).toBeDefined();
+    expect(result.proTeaser).toContain('Elementor Pro');
+    expect(result.entry).toBeUndefined();
+  });
+});
+
+describe('detectStack — Pro-teaser patterns do not shadow Free patterns (ladder precedence)', () => {
+  it('WooCommerce composer key wins over any subsequent pro-teaser directory path', () => {
+    // composer-woo has a WooCommerce composer.json — ladder stops at composer rung
+    const result = detectStack(join(fixturesDir, 'composer-woo'));
+    expect(result?.pattern).toBe('woocommerce');
+    expect(result?.source).toBe('composer');
+  });
+
+  it('classic-wp WooCommerce directory wins before pro-teaser patterns', () => {
+    // classic-wp has wp-content/plugins/woocommerce — detected at directory rung
+    const result = detectStack(join(fixturesDir, 'classic-wp'));
+    expect(result?.pattern).toBe('woocommerce');
+    expect(result?.source).toBe('directory');
+  });
+});
+
+describe('auditProject — Pro-teaser does not bleed into WooCommerce result', () => {
+  it('composer-woo fixture still returns woocommerce entry, no proTeaser', () => {
+    const result = auditProject(join(fixturesDir, 'composer-woo'));
+    expect(result.detected).toBe(true);
+    expect(result.entry?.slug).toBe('woocommerce-hpos-order-access');
+    expect(result.proTeaser).toBeUndefined();
   });
 });
