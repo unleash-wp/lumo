@@ -107,10 +107,37 @@ server.registerTool(
           'Language of the blob. "auto" (default) sniffs from syntax cues. ' +
             'Pass "php" or "js" to force a language.',
         ),
+      wp_version: z
+        .string()
+        .optional()
+        .describe(
+          "The project's target WordPress version, e.g. '6.9'. " +
+            'When provided, catch output shows whether the project is already past the breaking version.',
+        ),
+      woo_version: z
+        .string()
+        .optional()
+        .describe(
+          "The project's target WooCommerce version, e.g. '8.5'. " +
+            'Used to contextualise WooCommerce-specific catch results.',
+        ),
+      project_root: z
+        .string()
+        .optional()
+        .describe(
+          'Absolute path to the project root. Lumo will attempt to auto-detect the ' +
+            'WP/WooCommerce version from composer.json or wp-cli when explicit versions are absent.',
+        ),
     },
   },
-  async ({ code, language }) => {
-    const text = await handleCheckCode({ code, language: language as 'php' | 'js' | 'auto' | undefined });
+  async ({ code, language, wp_version, woo_version, project_root }) => {
+    const text = await handleCheckCode({
+      code,
+      language: language as 'php' | 'js' | 'auto' | undefined,
+      wp_version,
+      woo_version,
+      project_root,
+    });
     return { content: [{ type: 'text', text }] };
   },
 );
