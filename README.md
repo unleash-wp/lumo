@@ -6,9 +6,13 @@ Lumo audits your PHP code for order-data patterns that break under WooCommerce H
 
 > Your code isn't wrong yet. It will be — the moment a client upgrades past 8.2 and orders stop writing.
 
+**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · Transport: stdio · Knowledge current as of June 2026
+
 ---
 
 ## Install
+
+### Claude Code (primary)
 
 ```
 /plugin marketplace add unleash-wp/lumo
@@ -16,6 +20,24 @@ Lumo audits your PHP code for order-data patterns that break under WooCommerce H
 ```
 
 That's it. Lumo loads from the self-hosted marketplace. No separate account, no setup.
+
+### Any MCP client (Cursor, Claude Desktop, etc.)
+
+```bash
+# install once
+npm install -g @unleashwp/lumo
+
+# then add to your MCP config:
+# "command": "lumo-mcp", "args": [], "type": "stdio"
+```
+
+Or point directly at the built file without a global install:
+
+```bash
+git clone https://github.com/unleash-wp/lumo.git
+cd lumo && npm install && npm run build
+# "command": "node", "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
+```
 
 More install options: [docs/install.md](docs/install.md)
 
