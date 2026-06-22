@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.unleash-wp/lumo",
+  "description": "HPOS guardrail for WooCommerce developers — audits PHP for order-data patterns that break under WooCommerce 8.2+ HPOS and returns the correct form with source and test step.",
+  "repository": {
+    "url": "https://github.com/unleash-wp/lumo",
+    "source": "github"
+  },
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@unleashwp/lumo",
+      "version": "0.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "node",
+      "runtimeArguments": [
+        {
+          "type": "positional",
+          "value": "dist/mcp.mjs",
+          "valueHint": "entry point"
+        }
+      ]
+    }
+  ]
+}
