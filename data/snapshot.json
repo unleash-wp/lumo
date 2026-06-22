@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-21T20:00:00Z",
+  "generatedAt": "2026-06-22T09:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -77,6 +77,46 @@
       "test_step": "1. Check if .env is currently tracked in git:\n   $ git ls-files | grep -E '(^|/)\\\\.env$'\n   If empty: safe. If output shows .env: at risk.\n\n2. If tracked, remove and rotate credentials:\n   $ git rm --cached .env\n   $ echo \".env\" >> .gitignore\n   $ git commit -m \"Remove tracked .env file with secrets\"\n   $ git push\n\n3. Rotate ALL exposed credentials (DB passwords, API keys, tokens).\n\n4. Verify removal:\n   $ git ls-files | grep -E '(^|/)\\\\.env$'\n   (Should output nothing.)",
       "tier": "free",
       "updatedAt": "2026-06-21T20:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": null,
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "missing-composer-lock-file",
+      "title": "Missing composer.lock file — always commit lock file to version control",
+      "category_slug": "wordpress-dependencies",
+      "summary": "The composer.lock file captures exact dependency versions for reproducible builds. If composer.json is tracked but composer.lock is absent (or gitignored), each developer or deployment gets random dependency versions from `composer install`, causing version mismatch bugs and security gaps. Always commit composer.lock to git to ensure deterministic, repeatable builds across all environments.",
+      "code_example": "// CORRECT — .gitignore excludes vendor/ but NOT composer.lock\n// File: .gitignore\nvendor/\nnode_modules/\n.DS_Store\n# (no rule for composer.lock — it stays tracked)\n\n// CORRECT — Both files tracked in git\n// File: composer.json (tracked)\n{\n  \"name\": \"my-plugin\",\n  \"require\": {\n    \"vendor/package\": \"^2.0\"\n  }\n}\n\n// File: composer.lock (tracked — exact versions, reproducible)\n{\n  \"packages\": [\n    {\n      \"name\": \"vendor/package\",\n      \"version\": \"2.4.3\",  // Exact version, not a range\n      ...\n    }\n  ]\n}\n\n# Result: deterministic builds\n$ composer install\n# uses composer.lock; all environments get vendor/package@2.4.3\n$ git status\n# nothing to commit; lock file is already in git",
+      "bad_pattern": "# File: .gitignore (WRONG — excludes the lock file)\nvendor/\ncomposer.lock  # <-- WRONG: lock file is gitignored\n\n// File: composer.json (tracked, but lock file missing from git)\n{\n  \"name\": \"my-plugin\",\n  \"require\": {\n    \"vendor/package\": \"^2.0\"  // Open range; each install gets a different version\n  }\n}\n\n# Result: random versions installed\n$ composer install\n$ git status\n# composer.lock is NOT in git; every developer's vendor/ may differ",
+      "source_url": "https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control",
+      "test_step": "1. Check if composer.json is tracked in git but composer.lock is missing:\n   $ git ls-files | grep composer.json\n   $ git ls-files | grep composer.lock\n   \n   If composer.json is present AND composer.lock is absent → RISK.\n\n2. If missing, generate the lock file locally:\n   $ composer install\n   $ git add composer.lock\n   $ git commit -m \"Add composer.lock for reproducible builds\"\n   $ git push\n\n3. Verify lock file presence in remote:\n   $ git ls-files | grep composer.lock\n   (Should output: composer.lock)\n\n4. Confirm .gitignore does NOT exclude composer.lock:\n   $ grep \"^composer.lock\" .gitignore\n   (Should return nothing; lock file is tracked.)\n\n5. Test determinism across environments:\n   $ git clone <repo>\n   $ cd <repo>\n   $ composer install\n   $ vendor/bin/phpunit  // Uses exact versions from lock file",
+      "tier": "free",
+      "updatedAt": "2026-06-22T09:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": null,
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "hardcoded-api-keys-secrets",
+      "title": "Hardcoded API keys and secrets in code expose credentials — move to environment variables",
+      "category_slug": "hardcoded-secrets",
+      "summary": "Never hardcode API keys, database passwords, license keys, or OAuth tokens in PHP code. These credentials are readable in git history, backups, logs, and error messages, exposing accounts and data to anyone with repo access. Always load secrets from environment variables, a secrets manager (AWS Secrets Manager, Vault, 1Password), or .env files loaded via php-dotenv. Strip hardcoded credentials immediately and rotate all exposed accounts.",
+      "code_example": "// CORRECT — Load secrets from environment variables via .env\n// File: .env (local, gitignored)\nSTRIPE_SECRET_KEY=sk_live_EXAMPLE_not_a_real_key\nSENDGRID_API_KEY=SG.EXAMPLE_not_a_real_key\nGITHUB_TOKEN=ghp_EXAMPLE_not_a_real_key\nDATABASE_PASSWORD=EXAMPLE_not_a_real_password\n\n// File: wp-config.php or bootstrap (load .env)\nrequire_once __DIR__ . '/vendor/autoload.php';\n$dotenv = Dotenv\\Dotenv::createImmutable( __DIR__ );\n$dotenv->load();\n\n// CORRECT — Read secrets from environment\n// File: src/Services/PaymentGateway.php\nclass PaymentGateway {\n    public function chargeCard( $amount ) {\n        // Load secret at runtime from environment, never hardcoded\n        $stripe_key = $_ENV['STRIPE_SECRET_KEY'] ?? '';\n        if ( empty( $stripe_key ) ) {\n            throw new \\Exception( 'STRIPE_SECRET_KEY not set in environment' );\n        }\n        $stripe = new \\Stripe\\StripeClient( $stripe_key );\n        return $stripe->charges->create( [\n            'amount' => $amount,\n            'currency' => 'usd',\n        ] );\n    }\n}\n\n// CORRECT — OAuth token from environment\n// File: src/ExternalAPI.php\n$oauth_token = $_ENV['GITHUB_TOKEN'] ?? '';\nif ( empty( $oauth_token ) ) {\n    throw new \\Exception( 'GITHUB_TOKEN not set' );\n}\n$headers = [ 'Authorization' => \"Bearer {$oauth_token}\" ];\n$response = wp_remote_get( 'https://api.github.com/user', compact( 'headers' ) );",
+      "bad_pattern": "// WRONG — hardcoded API key in code (accessible to everyone with repo access)\n// File: src/Services/PaymentGateway.php\nclass PaymentGateway {\n    private const STRIPE_SECRET = 'sk_live_EXAMPLE_not_a_real_key';\n\n    public function chargeCard( $amount ) {\n        $stripe = new \\Stripe\\StripeClient( self::STRIPE_SECRET );\n        return $stripe->charges->create( [\n            'amount' => $amount,\n            'currency' => 'usd',\n        ] );\n    }\n}\n\n// WRONG — API key in configuration file committed to git\n// File: wp-config.php or config/settings.php\ndefine( 'SENDGRID_API_KEY', 'SG.EXAMPLE_not_a_real_key' );\ndefine( 'DATABASE_PASSWORD', 'EXAMPLE_not_a_real_password' );\n\n// WRONG — hardcoded OAuth token in plugin\n// File: plugins/my-plugin/src/ExternalAPI.php\n$oauth_token = 'ghp_EXAMPLE_not_a_real_key';\n$headers = [ 'Authorization' => \"Bearer {$oauth_token}\" ];\n$response = wp_remote_get( 'https://api.github.com/user', compact( 'headers' ) );",
+      "source_url": "https://owasp.org/www-project-top-ten/",
+      "test_step": "1. Search for common secret patterns in code (hardcoded keys):\n   $ grep -r \"sk_live\\|sk_test\\|ghp_\\|STRIPE_SECRET\\|API_KEY\\s*=\" \\\n     --include=\"*.php\" src/ plugins/ wp-content/\n   \n   Flag any matches that are NOT variable assignments from $_ENV or environment lookups.\n\n2. Check git history for accidentally committed secrets:\n   $ git log --all --oneline -S 'sk_live' -- '*.php'\n   $ git log --all --oneline -S 'DATABASE_PASSWORD' -- '*.php'\n   \n   If output shows commits: secrets may have been exposed.\n\n3. If hardcoded secrets found:\n   a. Identify the account/service (Stripe, SendGrid, GitHub, etc.)\n   b. Rotate the secret immediately (generate new key, disable old one)\n   c. Move secret to .env (or production secrets manager)\n   d. Remove hardcoded secret from code\n   e. Commit and push\n\n4. Verify no hardcoded secrets remain:\n   $ grep -r \"sk_live\\|api_key\\s*=\\s*['\\\"]\" --include=\"*.php\" src/ plugins/\n   (Should return no matches, or only matches from environment lookups.)\n\n5. For each secret that was rotated:\n   - Stripe: Revoke old key in Dashboard → API Keys\n   - SendGrid: Revoke in Settings → API Keys\n   - GitHub: Revoke in Settings → Developer settings → Personal access tokens\n   - Database: Change password in DB admin panel; update .env",
+      "tier": "free",
+      "updatedAt": "2026-06-22T09:00:00Z",
       "versions": [
         {
           "wp_version_min": null,

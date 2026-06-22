@@ -139,4 +139,18 @@ describe('handleLookup', () => {
     expect(result).toContain('wp_img_tag_add_decoding_attr');
     expect(result).toContain('Source:');
   });
+
+  it('returns the missing-composer-lock-file entry for category "wordpress-dependencies"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ category: 'wordpress-dependencies' }, snap);
+    expect(result).toContain('composer.lock');
+    expect(result).toContain('Source:');
+  });
+
+  it('returns the hardcoded-api-keys-secrets entry for slug "hardcoded-api-keys-secrets"', async () => {
+    const snap = loadSnapshot();
+    const result = await handleLookup({ slug: 'hardcoded-api-keys-secrets' }, snap);
+    expect(result).toContain('API keys');
+    expect(result).toContain('Source:');
+  });
 });
