@@ -31,6 +31,16 @@ export interface CatchSignal {
    */
   shimGuard?: RegExp;
   language: 'php' | 'js';
+  /**
+   * When true, test this signal against a blob with BOTH comments AND quoted string
+   * bodies stripped. Use for call-pattern signals whose match target is a function
+   * name with an open paren — a function name inside a string literal is not a call.
+   *
+   * When false/absent, only comments are stripped (default). Use for signals whose
+   * match target IS a string literal (e.g. 'shop_order', 'sk_live_') — stripping
+   * the string body would erase the very signal being detected.
+   */
+  stripStrings?: boolean;
 }
 
 export interface PatternDefinition {
@@ -122,12 +132,15 @@ export const PATTERNS: readonly PatternDefinition[] = [
       // LOUD: the deprecated function name is self-evident.
       // shimGuard: if the same blob contains a function_exists guard for this
       // symbol, the dev is writing a polyfill — downgrade to SOFT.
+      // stripStrings: the match target is a call pattern; a mention inside a
+      // string literal is not a call and must not fire.
       {
         match: /\bwp_img_tag_add_decoding_attr\s*\(/,
         class: 'CERTAIN',
         entrySlug: 'wp-img-tag-add-decoding-attr-deprecation',
         shimGuard: /function_exists\s*\(\s*['"]wp_img_tag_add_decoding_attr['"]/,
         language: 'php',
+        stripStrings: true,
       },
     ],
   },
@@ -172,26 +185,34 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: [],
     catchSignals: [
       // LOUD: isValidBlockContent was removed — self-evident JS symbol.
+      // stripStrings: a call in a string literal is not an actual call.
       {
         match: /\bisValidBlockContent\s*\(/,
         class: 'CERTAIN',
         entrySlug: 'gutenberg-isvalidblockcontent-removed',
         language: 'js',
+        stripStrings: true,
       },
-      // LOUD: apiVersion: 2 inside a registerBlockType call.
+      // LOUD: apiVersion: 2 (v2 specifically) inside a registerBlockType call.
+      // Narrowed from [12] to 2: the entry documents v2 deprecation; a v1 match
+      // would cite v2 evidence against v1 code — a factual misalignment.
+      // stripStrings: a mention inside a string comment is not a registration.
       {
-        match: /apiVersion\s*:\s*[12]\b/,
+        match: /apiVersion\s*:\s*2\b/,
         class: 'CERTAIN',
         entrySlug: 'gutenberg-apiversion-2-deprecated-wp6-9',
         language: 'js',
+        stripStrings: true,
       },
       // SOFT: useSetting — deprecated but not breaking (breaking_change: false).
       // The precision model caps this at SOFT regardless of import presence.
+      // stripStrings: a mention in a string is not an actual call.
       {
         match: /\buseSetting\s*\(/,
         class: 'CERTAIN',
         entrySlug: 'gutenberg-usesetting-deprecated-wp6-5',
         language: 'js',
+        stripStrings: true,
       },
     ],
   },
