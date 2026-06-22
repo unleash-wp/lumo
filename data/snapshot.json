@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-22T13:00:00Z",
+  "generatedAt": "2026-06-22T15:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -183,6 +183,26 @@
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": true
+        }
+      ]
+    },
+    {
+      "slug": "wp-ability-missing-mcp-public",
+      "title": "WordPress Abilities API: register with meta.mcp.public to expose to MCP clients",
+      "category_slug": "wp-abilities-api",
+      "summary": "WordPress abilities registered with wp_register_ability() are NOT visible to MCP clients (Claude Code, Cursor, agent tools) by default. The ability works inside the WordPress admin and is discoverable via REST, but MCP clients cannot see it without an explicit opt-in. Added in the WordPress MCP Adapter (February 2026 — after every major model's training cutoff), abilities require 'meta' => ['mcp' => ['public' => true]] to appear in MCP discovery. The two visibility layers are independent: show_in_rest controls the REST API; mcp.public controls the MCP server.",
+      "code_example": "// CORRECT — ability is visible to MCP clients (Claude Code, Cursor, agents)\nwp_register_ability( 'my-plugin/get-data', [\n    'label'              => 'Get Data',\n    'description'        => 'Retrieve plugin data for agent use',\n    'input_schema'       => [ 'type' => 'object' ],\n    'execute_callback'   => fn( $input ) => get_option( 'my_plugin_data' ),\n    'permission_callback'=> fn() => current_user_can( 'read' ),\n    'meta'               => [\n        'show_in_rest' => true,          // REST API visibility (unchanged)\n        'mcp'          => [\n            'public' => true,            // REQUIRED: expose to MCP server\n            'type'   => 'tool',          // Optional: 'tool' (default), 'resource', 'prompt'\n        ],\n        'annotations'  => [\n            'readonly'    => true,\n            'destructive' => false,\n            'idempotent'  => true,\n        ],\n    ],\n] );\n// Result: MCP discover-abilities now returns this ability; Claude Code / Cursor can invoke it",
+      "bad_pattern": "// WRONG — ability registers but remains invisible to MCP clients\nwp_register_ability( 'my-plugin/get-data', [\n    'label'              => 'Get Data',\n    'description'        => 'Retrieve plugin data for agent use',\n    'input_schema'       => [ 'type' => 'object' ],\n    'execute_callback'   => fn( $input ) => get_option( 'my_plugin_data' ),\n    'permission_callback'=> fn() => current_user_can( 'read' ),\n    'meta'               => [\n        'show_in_rest' => true,  // Sets REST API visibility — does NOT control MCP\n        'annotations'  => [\n            'readonly'    => true,\n            'destructive' => false,\n            'idempotent'  => true,\n        ],\n    ],\n] );\n// Result: wp-json REST endpoint works, but MCP discover-abilities returns nothing",
+      "source_url": "https://github.com/WordPress/mcp-adapter/blob/f7c0cb19f4851cff17f6e750a5460b58d935b76e/docs/guides/creating-abilities.md",
+      "test_step": "1. Register the ability without meta.mcp.public (bad pattern above).\n2. Start the MCP Adapter server: HTTP at /wp-json/mcp/mcp-adapter-default-server or STDIO via `wp mcp-adapter serve`.\n3. Run the mcp-adapter-discover-abilities tool — confirm the ability does NOT appear.\n4. Add 'mcp' => ['public' => true] to the meta array (correct pattern above).\n5. Restart the server, run discovery again — the ability now appears in results.",
+      "tier": "free",
+      "updatedAt": "2026-06-22T15:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "6.9",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
         }
       ]
     }
