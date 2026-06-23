@@ -25,7 +25,7 @@ const path = require('node:path');
 // ---------------------------------------------------------------------------
 
 const hook = require('../wp-enforce.cjs');
-const { isWordPressFile, extractContent, resolveMode } = hook;
+const { isWordPressFile, extractContent, resolveMode, resolveCatchOverrides, applyCatchOverride } = hook;
 
 const REPO_ROOT = path.join(__dirname, '..', '..', '..'); // <repo>/
 const HOOK_PATH = path.join(__dirname, '..', 'wp-enforce.cjs');
@@ -258,6 +258,142 @@ describe('resolveMode — default', () => {
 });
 
 // ---------------------------------------------------------------------------
+// resolveCatchOverrides
+// ---------------------------------------------------------------------------
+
+describe('resolveCatchOverrides — no config', () => {
+  let tmpDir;
+  before(() => { tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumo-ov-noconfig-')); });
+  after(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
+
+  it('returns empty disable set and empty downgrade map when no .lumo.json', () => {
+    const ov = resolveCatchOverrides(tmpDir);
+    assert.equal(ov.disable.size, 0);
+    assert.deepEqual(ov.downgrade, {});
+  });
+});
+
+describe('resolveCatchOverrides — with config', () => {
+  let tmpDir;
+  before(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumo-ov-cfg-'));
+    fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
+  });
+  after(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
+
+  function writeConfig(catchSection) {
+    fs.writeFileSync(
+      path.join(tmpDir, '.claude', '.lumo.json'),
+      JSON.stringify({ enforce: { mode: 'block' }, catch: catchSection }),
+    );
+  }
+
+  it('reads disable array into a Set', () => {
+    writeConfig({ disable: ['woocommerce-hpos-order-access', 'wp-img-tag-add-decoding-attr-deprecation'] });
+    const ov = resolveCatchOverrides(tmpDir);
+    assert.equal(ov.disable.has('woocommerce-hpos-order-access'), true);
+    assert.equal(ov.disable.has('wp-img-tag-add-decoding-attr-deprecation'), true);
+    assert.equal(ov.disable.size, 2);
+  });
+
+  it('reads downgrade map', () => {
+    writeConfig({ downgrade: { 'woocommerce-hpos-order-access': 'soft' } });
+    const ov = resolveCatchOverrides(tmpDir);
+    assert.equal(ov.downgrade['woocommerce-hpos-order-access'], 'soft');
+  });
+
+  it('empty catch section returns empty structures', () => {
+    writeConfig({});
+    const ov = resolveCatchOverrides(tmpDir);
+    assert.equal(ov.disable.size, 0);
+    assert.deepEqual(ov.downgrade, {});
+  });
+
+  it('missing catch key returns empty structures', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.claude', '.lumo.json'),
+      JSON.stringify({ enforce: { mode: 'block' } }),
+    );
+    const ov = resolveCatchOverrides(tmpDir);
+    assert.equal(ov.disable.size, 0);
+    assert.deepEqual(ov.downgrade, {});
+  });
+
+  it('malformed .lumo.json returns empty structures (fail-open)', () => {
+    fs.writeFileSync(path.join(tmpDir, '.claude', '.lumo.json'), '{ not valid json }');
+    const ov = resolveCatchOverrides(tmpDir);
+    assert.equal(ov.disable.size, 0);
+    assert.deepEqual(ov.downgrade, {});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyCatchOverride (hook-level single-result function)
+// ---------------------------------------------------------------------------
+
+describe('applyCatchOverride — disable', () => {
+  const slug = 'woocommerce-hpos-order-access';
+
+  it('returns null when slug is in disable set', () => {
+    const result = { tier: 'LOUD', entry: { slug }, message: 'bad' };
+    const ov = { disable: new Set([slug]), downgrade: {} };
+    assert.equal(applyCatchOverride(result, ov), null);
+  });
+
+  it('returns result unchanged when slug not in disable set', () => {
+    const result = { tier: 'LOUD', entry: { slug }, message: 'bad' };
+    const ov = { disable: new Set(['some-other-slug']), downgrade: {} };
+    const out = applyCatchOverride(result, ov);
+    assert.ok(out !== null);
+    assert.equal(out.tier, 'LOUD');
+  });
+
+  it('returns result unchanged when disable is empty', () => {
+    const result = { tier: 'LOUD', entry: { slug }, message: 'bad' };
+    const ov = { disable: new Set(), downgrade: {} };
+    const out = applyCatchOverride(result, ov);
+    assert.ok(out !== null);
+    assert.equal(out.tier, 'LOUD');
+  });
+});
+
+describe('applyCatchOverride — downgrade', () => {
+  const slug = 'woocommerce-hpos-order-access';
+
+  it('LOUD → SOFT when downgrade "soft" targets slug', () => {
+    const result = { tier: 'LOUD', entry: { slug }, message: 'bad' };
+    const ov = { disable: new Set(), downgrade: { [slug]: 'soft' } };
+    const out = applyCatchOverride(result, ov);
+    assert.ok(out !== null);
+    assert.equal(out.tier, 'SOFT');
+  });
+
+  it('SOFT stays SOFT (downgrade soft on a SOFT result)', () => {
+    const result = { tier: 'SOFT', entry: { slug }, message: 'advisory' };
+    const ov = { disable: new Set(), downgrade: { [slug]: 'soft' } };
+    const out = applyCatchOverride(result, ov);
+    assert.ok(out !== null);
+    assert.equal(out.tier, 'SOFT');
+  });
+
+  it('unknown cap value is no-op — LOUD remains LOUD', () => {
+    const result = { tier: 'LOUD', entry: { slug }, message: 'bad' };
+    const ov = { disable: new Set(), downgrade: { [slug]: 'future-unknown' } };
+    const out = applyCatchOverride(result, ov);
+    assert.ok(out !== null);
+    assert.equal(out.tier, 'LOUD');
+  });
+
+  it('returns unchanged when slug not in downgrade map', () => {
+    const result = { tier: 'LOUD', entry: { slug }, message: 'bad' };
+    const ov = { disable: new Set(), downgrade: { 'other-slug': 'soft' } };
+    const out = applyCatchOverride(result, ov);
+    assert.ok(out !== null);
+    assert.equal(out.tier, 'LOUD');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // End-to-end hook invocation (spawnSync) — only when dist/hook-catch.mjs exists
 // ---------------------------------------------------------------------------
 
@@ -430,6 +566,83 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
     });
     assert.equal(result.status, 0);
     assert.equal((result.stdout || '').trim(), '');
+  });
+
+  // --- Catch override: disable prevents block ---
+  it('disabled rule does not block — exit 0 with no output', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumo-ov-e2e-'));
+    try {
+      fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
+      fs.writeFileSync(
+        path.join(tmpDir, '.claude', '.lumo.json'),
+        JSON.stringify({
+          enforce: { mode: 'block' },
+          catch: { disable: ['woocommerce-hpos-order-access'] },
+        }),
+      );
+
+      const result = spawnSync(process.execPath, [HOOK_PATH], {
+        input: JSON.stringify({
+          tool_name: 'Write',
+          cwd: tmpDir,
+          tool_input: {
+            file_path: path.join(tmpDir, 'wp-content/plugins/bad.php'),
+            content: "<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+          },
+        }),
+        encoding: 'utf8',
+        env: { ...process.env, LUMO_ENFORCE_HOOK: 'block' },
+        cwd: REPO_ROOT,
+      });
+
+      // Disabled rule must not block
+      assert.equal(result.status, 0, `expected exit 0 (disabled), got ${result.status}\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+      // And must produce no blocking output
+      const parsed = result.stdout.trim() ? JSON.parse(result.stdout.split('\n').find((l) => l.trim())) : null;
+      assert.ok(!parsed || parsed.continue !== false, 'disabled rule must not set continue:false');
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  // --- Catch override: downgrade LOUD → no block, advisory emitted ---
+  it('downgraded rule fires as advisory (SOFT) not as a block', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumo-ov-dg-'));
+    try {
+      fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
+      fs.writeFileSync(
+        path.join(tmpDir, '.claude', '.lumo.json'),
+        JSON.stringify({
+          enforce: { mode: 'block' },
+          catch: { downgrade: { 'woocommerce-hpos-order-access': 'soft' } },
+        }),
+      );
+
+      const result = spawnSync(process.execPath, [HOOK_PATH], {
+        input: JSON.stringify({
+          tool_name: 'Write',
+          cwd: tmpDir,
+          tool_input: {
+            file_path: path.join(tmpDir, 'wp-content/plugins/bad.php'),
+            content: "<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+          },
+        }),
+        encoding: 'utf8',
+        env: { ...process.env, LUMO_ENFORCE_HOOK: 'block' },
+        cwd: REPO_ROOT,
+      });
+
+      // Downgraded LOUD must not block (exit 0)
+      assert.equal(result.status, 0, `expected exit 0 (downgraded), got ${result.status}\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+      // Should surface an advisory
+      if (result.stdout.trim()) {
+        const line = result.stdout.split('\n').find((l) => l.trim());
+        const parsed = line ? JSON.parse(line) : null;
+        assert.ok(parsed && parsed.hookSpecificOutput, 'expected advisory hookSpecificOutput for downgraded rule');
+      }
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 
   // --- Shim guard: function_exists wrapper downgrades LOUD to SOFT ---

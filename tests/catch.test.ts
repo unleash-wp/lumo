@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classify, checkCode } from '../src/detection/catch.js';
+import { classify, checkCode, applyCatchOverrides } from '../src/detection/catch.js';
 import { formatCatch, CATCH_NEUTRAL_LINE } from '../src/lib/render.js';
 import { handleCheckCode } from '../src/mcp/handlers.js';
 import { loadSnapshot, findEntry } from '../src/lib/snapshot.js';
@@ -563,6 +563,107 @@ describe('handleCheckCode — handler integration', () => {
     const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
     const result = await handleCheckCode({ code }, catchSnap);
     expect(result).toContain('isValidBlockContent');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Catch overrides — applyCatchOverrides + checkCode(overrides) integration
+// ---------------------------------------------------------------------------
+
+describe('applyCatchOverrides — pure function', () => {
+  const hposSlug = 'woocommerce-hpos-order-access';
+  const imgSlug = 'wp-img-tag-add-decoding-attr-deprecation';
+
+  function makeResult(slug: string, tier: 'LOUD' | 'SOFT') {
+    const e = entry(slug);
+    return { tier, entry: e, signal: certainSignal(slug, 'x') };
+  }
+
+  it('returns results unchanged when overrides is undefined', () => {
+    const results = [makeResult(hposSlug, 'LOUD')];
+    expect(applyCatchOverrides(results, undefined)).toHaveLength(1);
+    expect(applyCatchOverrides(results, undefined)[0]!.tier).toBe('LOUD');
+  });
+
+  it('returns results unchanged when overrides is empty object', () => {
+    const results = [makeResult(hposSlug, 'LOUD')];
+    expect(applyCatchOverrides(results, {})).toHaveLength(1);
+  });
+
+  it('disable: removes a matching slug', () => {
+    const results = [makeResult(hposSlug, 'LOUD'), makeResult(imgSlug, 'LOUD')];
+    const out = applyCatchOverrides(results, { disable: [hposSlug] });
+    expect(out).toHaveLength(1);
+    expect(out[0]!.entry.slug).toBe(imgSlug);
+  });
+
+  it('disable: non-matching slug leaves results intact', () => {
+    const results = [makeResult(hposSlug, 'LOUD')];
+    const out = applyCatchOverrides(results, { disable: ['some-other-slug'] });
+    expect(out).toHaveLength(1);
+  });
+
+  it('downgrade "soft": LOUD → SOFT for matching slug', () => {
+    const results = [makeResult(hposSlug, 'LOUD')];
+    const out = applyCatchOverrides(results, { downgrade: { [hposSlug]: 'soft' } });
+    expect(out).toHaveLength(1);
+    expect(out[0]!.tier).toBe('SOFT');
+  });
+
+  it('downgrade "soft": SOFT stays SOFT (no change)', () => {
+    const results = [makeResult(hposSlug, 'SOFT')];
+    const out = applyCatchOverrides(results, { downgrade: { [hposSlug]: 'soft' } });
+    expect(out[0]!.tier).toBe('SOFT');
+  });
+
+  it('downgrade: unknown cap value is a no-op', () => {
+    const results = [makeResult(hposSlug, 'LOUD')];
+    const out = applyCatchOverrides(results, { downgrade: { [hposSlug]: 'future-unknown-value' } });
+    // Should remain LOUD — unknown cap is safe no-op
+    expect(out[0]!.tier).toBe('LOUD');
+  });
+
+  it('disable takes effect when both disable and downgrade target same slug', () => {
+    const results = [makeResult(hposSlug, 'LOUD')];
+    const out = applyCatchOverrides(results, {
+      disable: [hposSlug],
+      downgrade: { [hposSlug]: 'soft' },
+    });
+    expect(out).toHaveLength(0);
+  });
+});
+
+describe('checkCode — overrides parameter integration', () => {
+  const hposCode = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+  const hposSlug = 'woocommerce-hpos-order-access';
+
+  it('no overrides: baseline LOUD fires unchanged (regression lock)', () => {
+    const results = checkCode(hposCode, 'php', catchSnap);
+    const hpos = results.find((r) => r.entry.slug === hposSlug);
+    expect(hpos).toBeDefined();
+    expect(hpos!.tier).toBe('LOUD');
+  });
+
+  it('disable suppresses the rule — slug absent from results', () => {
+    const results = checkCode(hposCode, 'php', catchSnap, { disable: [hposSlug] });
+    const hpos = results.find((r) => r.entry.slug === hposSlug);
+    expect(hpos).toBeUndefined();
+  });
+
+  it('downgrade caps LOUD → SOFT for the targeted slug', () => {
+    const results = checkCode(hposCode, 'php', catchSnap, {
+      downgrade: { [hposSlug]: 'soft' },
+    });
+    const hpos = results.find((r) => r.entry.slug === hposSlug);
+    expect(hpos).toBeDefined();
+    expect(hpos!.tier).toBe('SOFT');
+  });
+
+  it('undefined overrides: behaviour byte-identical to omitted parameter', () => {
+    const baseline = checkCode(hposCode, 'php', catchSnap);
+    const explicit = checkCode(hposCode, 'php', catchSnap, undefined);
+    expect(explicit.map((r) => r.entry.slug)).toEqual(baseline.map((r) => r.entry.slug));
+    expect(explicit.map((r) => r.tier)).toEqual(baseline.map((r) => r.tier));
   });
 });
 
