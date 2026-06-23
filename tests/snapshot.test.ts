@@ -104,9 +104,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has exactly 13 entries', () => {
+  it('has exactly 15 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBe(13);
+    expect(snap.entries.length).toBe(15);
   });
 
   it('every entry has tier "free"', () => {
@@ -221,9 +221,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.generatedAt).toBe(maxUpdated);
   });
 
-  it('generatedAt is 2026-06-22T18:30:00Z', () => {
+  it('generatedAt is 2026-06-23T10:00:00Z', () => {
     const snap = loadSnapshot();
-    expect(snap.generatedAt).toBe('2026-06-22T18:30:00Z');
+    expect(snap.generatedAt).toBe('2026-06-23T10:00:00Z');
   });
 
   it('env-file-committed-to-git entry is present with slug and correct category', () => {
