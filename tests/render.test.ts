@@ -210,11 +210,23 @@ describe('formatFreeMarkdown', () => {
     expect(md).toContain('**Affected:** all supported versions');
   });
 
-  it('renders gutenberg-usesetting entry with "WordPress ≥ 6.5.0" affected line', () => {
-    const snap = loadSnapshot();
-    const entry = snap.entries.find((e) => e.slug === 'gutenberg-usesetting-deprecated-wp6-5');
-    if (!entry) throw new Error('gutenberg-usesetting entry missing from snapshot');
-    const rendered = renderFree(entry);
+  it('renders version-constrained entry with "WordPress ≥ X.Y" affected line (synthetic fixture)', () => {
+    // gutenberg entries are Pro-MCP-only (freeSnapshot:false); test version rendering
+    // with a synthetic fixture that has a wp_version_min constraint, matching that render path.
+    const syntheticEntry: SnapshotEntry = {
+      slug: 'test-version-rendering',
+      title: 'Test version rendering',
+      category_slug: 'gutenberg',
+      summary: 'Synthetic entry for version-constraint rendering test.',
+      code_example: "import { useSettings } from '@wordpress/block-editor';",
+      bad_pattern: "import { useSetting } from '@wordpress/block-editor';",
+      source_url: 'https://developer.wordpress.org/block-editor/',
+      test_step: 'Replace useSetting() with useSettings().',
+      tier: 'free' as const,
+      updatedAt: '2026-06-22T13:00:00Z',
+      versions: [{ wp_version_min: '6.5.0', wp_version_max: null, woo_version_min: null, breaking_change: false }],
+    };
+    const rendered = renderFree(syntheticEntry);
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('useSettings');
     expect(md).toContain('**Affected:** WordPress ≥ 6.5.0');
