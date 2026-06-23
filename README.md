@@ -123,6 +123,67 @@ do not use the plugin, copy the rule snippet from
 
 ---
 
+## Edit-time enforcement hook
+
+The `wp-enforce` hook is a Claude Code `PreToolUse` hook that intercepts `Write`, `Edit`, and `MultiEdit` calls on WordPress/PHP/plugin files and runs the catch engine over the proposed content **before the file changes**. An instruction in `CLAUDE.md` is model-chosen; a hook fires deterministically on every qualifying write regardless of context pressure.
+
+### Precision model
+
+The hook inherits the no-false-LOUD guarantee from the catch engine:
+
+| Finding | Default action |
+|---------|---------------|
+| `LOUD` / CERTAIN (dated, breaking) | **Block** — edit rejected with the dated reason + correct pattern |
+| `SOFT` / context-dependent | **Warn** — edit allowed; advisory injected into model context |
+| No finding | Silent allow |
+
+### Enabling the hook
+
+The hook ships in this repo and is registered in `.claude/settings.json` for the `lumo` development repo itself — do not copy that registration into target projects as part of plugin install (it would block edits in a non-WordPress project). It requires the compiled catch runner:
+
+```bash
+npm run build   # produces dist/hook-catch.mjs
+```
+
+Without the build, the hook exits silently (fail-open) and logs a notice to stderr.
+
+### Configuring enforcement mode
+
+**Environment variable (per-session or CI):**
+
+```bash
+LUMO_ENFORCE_HOOK=block      # default — LOUD catches block
+LUMO_ENFORCE_HOOK=warn-only  # all findings warn; nothing blocked
+LUMO_ENFORCE_HOOK=off        # hook disabled entirely
+```
+
+**Project config (`.claude/.lumo.json`):**
+
+```json
+{
+  "enforce": {
+    "mode": "warn-only"
+  }
+}
+```
+
+Env var takes priority over the config file. The config file applies per-project; the env var is useful for CI or per-session override.
+
+### WordPress file scoping
+
+The hook only fires on files where at least one of these is true:
+
+- **Path signal:** path contains `wp-content/`, `plugins/`, `themes/`, `woocommerce`, `wp-`, `blocks/`, `mu-plugins/`
+- **Content signal:** blob contains `<?php`, `add_action`, `@wordpress/`, `wc_`, `WP_`, `get_post_meta`, etc.
+
+Non-WordPress PHP files (e.g. a Laravel controller) are not intercepted unless the content carries WordPress API calls.
+
+### Pro seam
+
+When a Lumo Pro MCP server is available, `runHookCatch()` can be replaced with a Pro-backed call that draws from the full versioned knowledge base. The interface is identical — the seam is `src/hook/catch-runner.ts`. That integration is tracked separately (requires a staging MCP endpoint).
+
+---
+
 ## Configuration
 
 Two env vars cover the most common needs. Full reference: [docs/configuration.md](docs/configuration.md)

@@ -70,6 +70,15 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/wp-enforce.cjs"
+          }
+        ]
+      },
+      {
         "matcher": "Write",
         "hooks": [
           {
