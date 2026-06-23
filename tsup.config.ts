@@ -5,6 +5,9 @@ export default defineConfig({
     mcp: 'src/mcp/server.ts',
     // GitHub Action entry point — produces dist/action.mjs referenced by action.yml.
     action: 'src/action/main.ts',
+    // Hook catch runner — called by .claude/hooks/wp-enforce.cjs via dynamic import().
+    // Bundles checkCode + formatCatch with no MCP/transport deps.
+    'hook-catch': 'src/hook/catch-runner.ts',
   },
   format: ['esm'],
   outDir: 'dist',
