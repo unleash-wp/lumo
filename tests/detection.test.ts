@@ -9,7 +9,7 @@ import { detectFromDirectory } from '../src/detection/directory.js';
 import { detectFromWpCli } from '../src/detection/wp-cli.js';
 import { detectFromSource } from '../src/detection/heuristic.js';
 import { detectFromGitTracked } from '../src/detection/git.js';
-import { detectStack, auditProject, buildProTeaser } from '../src/detection/index.js';
+import { detectStack, auditProject, buildProTeaser, buildDetectionNote } from '../src/detection/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, 'fixtures');
@@ -557,6 +557,15 @@ describe('buildProTeaser', () => {
   });
 });
 
+describe('buildDetectionNote', () => {
+  it('returns an honest note with plugin name but no upgrade promise', () => {
+    const msg = buildDetectionNote('WPBakery Page Builder');
+    expect(msg).toContain('WPBakery Page Builder');
+    expect(msg).not.toContain('Lumo Pro');
+    expect(msg).toContain('does not yet have curated knowledge');
+  });
+});
+
 describe('detectFromDirectory — ACF Pro fixture', () => {
   it('detects premium-acf-pro from directory with version 6.8.4', () => {
     const result = detectFromDirectory(join(fixturesDir, 'acf-pro'));
@@ -587,13 +596,14 @@ describe('detectFromDirectory — Elementor Pro fixture', () => {
   });
 });
 
-describe('auditProject — Pro teaser path', () => {
+describe('auditProject — Pro teaser path (covered plugins: upgrade promise is honest)', () => {
   it('detected:true, proTeaser set, no entry for ACF Pro fixture', () => {
     const result = auditProject(join(fixturesDir, 'acf-pro'));
     expect(result.detected).toBe(true);
     expect(result.proTeaser).toBeDefined();
     expect(result.proTeaser).toContain('Advanced Custom Fields Pro');
     expect(result.proTeaser).toContain('Lumo Pro');
+    expect(result.detectionNote).toBeUndefined();
     expect(result.entry).toBeUndefined();
   });
 
@@ -602,6 +612,7 @@ describe('auditProject — Pro teaser path', () => {
     expect(result.detected).toBe(true);
     expect(result.proTeaser).toBeDefined();
     expect(result.proTeaser).toContain('Gravity Forms');
+    expect(result.detectionNote).toBeUndefined();
     expect(result.entry).toBeUndefined();
   });
 
@@ -610,6 +621,21 @@ describe('auditProject — Pro teaser path', () => {
     expect(result.detected).toBe(true);
     expect(result.proTeaser).toBeDefined();
     expect(result.proTeaser).toContain('Elementor Pro');
+    expect(result.detectionNote).toBeUndefined();
+    expect(result.entry).toBeUndefined();
+  });
+});
+
+describe('auditProject — honest detection note (uncovered plugins: no upgrade promise)', () => {
+  it('detected:true, detectionNote set, no proTeaser for WPBakery fixture', () => {
+    const result = auditProject(join(fixturesDir, 'wpbakery'));
+    expect(result.detected).toBe(true);
+    // Must NOT carry an upgrade promise — no Pro coverage yet
+    expect(result.proTeaser).toBeUndefined();
+    // Must carry an honest detection note instead
+    expect(result.detectionNote).toBeDefined();
+    expect(result.detectionNote).toContain('WPBakery Page Builder');
+    expect(result.detectionNote).not.toContain('Lumo Pro');
     expect(result.entry).toBeUndefined();
   });
 });

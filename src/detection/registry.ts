@@ -90,6 +90,13 @@ export interface PatternDefinition {
    * Required when proTeaser is true.
    */
   proTeaserName?: string;
+  /**
+   * When true, Pro has curated knowledge for this plugin and the upgrade
+   * promise is honest. When false or absent on a proTeaser entry, the upgrade
+   * CTA is suppressed — detection is kept as a demand signal but no promise
+   * is made to the user that Pro has answers.
+   */
+  hasProCoverage?: true;
 }
 
 export const PATTERNS: readonly PatternDefinition[] = [
@@ -271,6 +278,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     pattern: 'premium-acf-pro',
     proTeaser: true,
     proTeaserName: 'Advanced Custom Fields Pro',
+    hasProCoverage: true,
     composerKeys: [],
     directoryPaths: [
       'wp-content/plugins/advanced-custom-fields-pro/acf.php',
@@ -295,6 +303,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     pattern: 'premium-gravity-forms',
     proTeaser: true,
     proTeaserName: 'Gravity Forms',
+    hasProCoverage: true,
     composerKeys: [],
     directoryPaths: [
       'wp-content/plugins/gravityforms/gravityforms.php',
@@ -307,6 +316,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     pattern: 'premium-meta-box',
     proTeaser: true,
     proTeaserName: 'Meta Box',
+    hasProCoverage: true,
     composerKeys: ['meta-box/meta-box'],
     directoryPaths: [
       'wp-content/plugins/meta-box/meta-box.php',
@@ -331,6 +341,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     pattern: 'premium-carbon-fields',
     proTeaser: true,
     proTeaserName: 'Carbon Fields',
+    hasProCoverage: true,
     composerKeys: ['htmlburger/carbon-fields'],
     directoryPaths: [
       'wp-content/plugins/carbon-fields/carbon-fields-plugin.php',
@@ -354,6 +365,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     pattern: 'premium-elementor-pro',
     proTeaser: true,
     proTeaserName: 'Elementor Pro',
+    hasProCoverage: true,
     composerKeys: [],
     directoryPaths: [
       'wp-content/plugins/elementor-pro/elementor-pro.php',

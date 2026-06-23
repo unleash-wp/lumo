@@ -39,6 +39,9 @@ export async function handleAudit(input: AuditHandlerInput): Promise<string> {
     if (result.detected && result.proTeaser) {
       return result.proTeaser;
     }
+    if (result.detected && result.detectionNote) {
+      return result.detectionNote;
+    }
     return result.message ?? NOT_FOUND_AUDIT;
   } catch {
     return NOT_FOUND_AUDIT;
