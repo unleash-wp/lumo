@@ -3,9 +3,58 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleAudit, handleLookup, handleCheckCode } from '../src/mcp/handlers.js';
 import { loadSnapshot } from '../src/lib/snapshot.js';
+import type { SnapshotEntry } from '../src/types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, 'fixtures');
+
+// Gutenberg entries are Pro-MCP-only (freeSnapshot:false); not in the redistributable
+// Free snapshot. Tests that verify catch-engine behavior against these entries use
+// catchSnap — an extended snapshot with synthetic entries for test-only purposes.
+const gutenbergCatchEntries: SnapshotEntry[] = [
+  {
+    slug: 'gutenberg-usesetting-deprecated-wp6-5',
+    title: 'useSetting() hook deprecated in WP 6.5 — migrate to useSettings()',
+    category_slug: 'gutenberg',
+    summary: 'The useSetting() hook was deprecated in WordPress 6.5.0 in favor of useSettings().',
+    code_example: "import { useSettings } from '@wordpress/block-editor';",
+    bad_pattern: "import { useSetting } from '@wordpress/block-editor';",
+    source_url: 'https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/',
+    test_step: "Replace useSetting() calls with useSettings().",
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T13:00:00Z',
+    versions: [{ wp_version_min: '6.5.0', wp_version_max: null, woo_version_min: null, breaking_change: false }],
+  },
+  {
+    slug: 'gutenberg-isvalidblockcontent-removed',
+    title: 'wp.blocks.isValidBlockContent() removed — use validateBlock() instead',
+    category_slug: 'gutenberg',
+    summary: 'The wp.blocks.isValidBlockContent() function was removed.',
+    code_example: 'const result = wp.blocks.validateBlock( block );',
+    bad_pattern: 'const { isValidBlockContent } = wp.blocks;',
+    source_url: 'https://developer.wordpress.org/block-editor/reference-guides/packages/packages-blocks/',
+    test_step: 'Replace isValidBlockContent() calls with validateBlock().',
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T13:00:00Z',
+    versions: [{ wp_version_min: '5.9', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+  },
+  {
+    slug: 'gutenberg-apiversion-2-deprecated-wp6-9',
+    title: 'Block API version 2 deprecated in WP 6.9 — migrate to apiVersion 3',
+    category_slug: 'gutenberg',
+    summary: 'Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings.',
+    code_example: 'wp.blocks.registerBlockType( "my-ns/my-block", { apiVersion: 3 } );',
+    bad_pattern: 'wp.blocks.registerBlockType( "my-ns/my-block", { apiVersion: 2 } );',
+    source_url: 'https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/',
+    test_step: 'Migrate registerBlockType() calls to apiVersion 3.',
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T13:00:00Z',
+    versions: [{ wp_version_min: '6.9', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+  },
+];
+
+const snapBase = loadSnapshot();
+const catchSnap = { ...snapBase, entries: [...snapBase.entries, ...gutenbergCatchEntries] };
 
 // ---------------------------------------------------------------------------
 // handleAudit
@@ -154,32 +203,30 @@ describe('handleLookup', () => {
     expect(result).toContain('Source:');
   });
 
-  it('returns Gutenberg entries for category "gutenberg"', async () => {
+  // Gutenberg entries are Pro-MCP-only (freeSnapshot:false) — they are not in the
+  // Free snapshot and return "not found" from the Free lookup handler.
+  it('gutenberg category returns "not found" — entries are Pro-MCP-only', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ category: 'gutenberg' }, snap);
-    expect(result).toContain('useSetting');
-    expect(result).toContain('Source:');
+    expect(result).toContain('No curated entry found');
   });
 
-  it('returns the useSetting entry for slug "gutenberg-usesetting-deprecated-wp6-5"', async () => {
+  it('gutenberg-usesetting slug returns "not found" — entry is Pro-MCP-only', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-usesetting-deprecated-wp6-5' }, snap);
-    expect(result).toContain('useSettings');
-    expect(result).toContain('Source:');
+    expect(result).toContain('No curated entry found');
   });
 
-  it('returns the isValidBlockContent entry for slug "gutenberg-isvalidblockcontent-removed"', async () => {
+  it('gutenberg-isvalidblockcontent slug returns "not found" — entry is Pro-MCP-only', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-isvalidblockcontent-removed' }, snap);
-    expect(result).toContain('validateBlock');
-    expect(result).toContain('Source:');
+    expect(result).toContain('No curated entry found');
   });
 
-  it('returns the apiVersion entry for slug "gutenberg-apiversion-2-deprecated-wp6-9"', async () => {
+  it('gutenberg-apiversion slug returns "not found" — entry is Pro-MCP-only', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-apiversion-2-deprecated-wp6-9' }, snap);
-    expect(result).toContain('apiVersion');
-    expect(result).toContain('Source:');
+    expect(result).toContain('No curated entry found');
   });
 });
 
@@ -188,12 +235,13 @@ describe('handleLookup', () => {
 // ---------------------------------------------------------------------------
 
 describe('handleCheckCode — version-scoping', () => {
-  const snap = loadSnapshot();
-
+  // These tests exercise version-relative LOUD output for the gutenberg apiVersion:2
+  // signal, which requires the gutenberg entry to be in the snapshot. We use catchSnap
+  // (Free + Pro-only catch entries) so the engine can resolve the entry object.
   it('explicit wp_version produces relative line in LOUD output', async () => {
     // apiVersion:2 deprecated in WP 6.9; project on 6.9 → already-broken
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, snap);
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, catchSnap);
     expect(result).toContain('⚠️');
     // The relative line should appear (already-broken)
     expect(result).toContain('fix now');
@@ -201,7 +249,7 @@ describe('handleCheckCode — version-scoping', () => {
 
   it('explicit wp_version below breaking version produces upcoming line', async () => {
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.8' }, snap);
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.8' }, catchSnap);
     expect(result).toContain('⚠️');
     expect(result).toContain('soon-dead pattern');
   });
@@ -209,7 +257,7 @@ describe('handleCheckCode — version-scoping', () => {
   it('project_root that does not exist → never throws, output is a string', async () => {
     const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     await expect(
-      handleCheckCode({ code, language: 'php', project_root: '/tmp/__lumo_no_such_dir__' }, snap),
+      handleCheckCode({ code, language: 'php', project_root: '/tmp/__lumo_no_such_dir__' }, catchSnap),
     ).resolves.toBeTypeOf('string');
   });
 
@@ -217,7 +265,7 @@ describe('handleCheckCode — version-scoping', () => {
     const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     const result = await handleCheckCode(
       { code, language: 'php', project_root: join(fixturesDir, 'non-woo') },
-      snap,
+      catchSnap,
     );
     // LOUD still fires; no relative line because version unknown — but no throw
     expect(result).toContain('⚠️');
