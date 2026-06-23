@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-23T22:00:00Z",
+  "generatedAt": "2026-06-23T22:30:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -240,6 +240,126 @@
       "versions": [
         {
           "wp_version_min": "1.5",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "global-symbol-without-plugin-prefix",
+      "title": "Global functions, classes, hooks, and options must use a unique plugin prefix to prevent naming collisions",
+      "category_slug": "wordpress-plugin-standards",
+      "summary": "WordPress Plugin Check (Prefixing_Check) requires every globally accessible symbol — functions, classes, interfaces, traits, namespaces, global variables, options, and transients — to be prefixed with a unique, plugin-specific identifier. The official rule: at least 4 characters, not a common English word, and not a reserved WP prefix (wp_, __, _). Missing prefixes cause silent naming collisions when two plugins define the same global symbol, producing fatal \"Cannot redeclare\" errors or silently overwriting each other's options. PHP namespaces are the modern alternative: they satisfy the requirement without prefixing every symbol name.",
+      "code_example": "<?php\n// CORRECT — namespace isolates all class/function symbols.\nnamespace Acme\\MyPlugin;\n\nclass Settings_Page {\n    public function register(): void {\n        add_action( 'admin_menu', [ $this, 'add_page' ] );\n    }\n    public function add_page(): void {\n        add_options_page( 'Acme Settings', 'Acme', 'manage_options', 'acme-settings', [ $this, 'render' ] );\n    }\n}\n\n// CORRECT — option key prefixed even inside a namespace.\nupdate_option( 'acme_myplugin_version', '1.0.0' );\n\n// CORRECT — global function with unique prefix (when not using namespaces).\nfunction acme_get_settings(): array {\n    return (array) get_option( 'acme_myplugin_settings', [] );\n}",
+      "bad_pattern": "<?php\n// WRONG — global functions without a prefix. Fatal \"Cannot redeclare\" if another\n// plugin defines the same function name.\nfunction save_post_data(): void { ... }\nfunction get_settings(): array { ... }\n\n// WRONG — class name that will collide with other plugins named \"Admin\".\nclass Admin { ... }\n\n// WRONG — unprefixed option key; any plugin reading 'settings' will get your data.\nupdate_option( 'settings', $my_settings );\n\n// WRONG — custom hook tag without a prefix; fires on every add_action( 'init', ... ).\ndo_action( 'init_plugin' );",
+      "source_url": "https://github.com/WordPress/plugin-check/blob/6f37e1c96cf6bd81c8597fe0335400875999bb04/includes/Checker/Checks/Plugin_Repo/Prefixing_Check.php",
+      "test_step": "1. Run Plugin Check (free plugin from wordpress.org/plugins/plugin-check) on your plugin.\n2. Alternatively, run PHPCS: phpcs --standard=WordPress --sniffs=WordPress.NamingConventions.PrefixAllGlobals --runtime-set prefixes myplugin /path/to/plugin.\n3. Review every reported symbol — function, class, constant, option name.\n4. Either add a unique plugin prefix to each global symbol, or wrap your code in a PHP namespace.\n5. Re-run the check — no PrefixAllGlobals warnings should remain.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "1.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "php-file-missing-abspath-guard",
+      "title": "PHP plugin files must include the ABSPATH direct-access guard to prevent execution when loaded directly",
+      "category_slug": "wordpress-plugin-standards",
+      "summary": "WordPress Plugin Check (Direct_File_Access_Check, since 1.8.0) flags PHP plugin files that contain procedural code or function calls but lack a guard against direct HTTP access. Without the `if ( ! defined( 'ABSPATH' ) ) { exit; }` check, a file loaded directly via a browser URL executes outside WordPress's bootstrap — exposing early-stage code to uninitialized globals, missing security filters, and potential information disclosure. Files that consist solely of a class declaration are exempt (no procedural execution risk).",
+      "code_example": "<?php\n// CORRECT — guard is the very first statement after the opening tag.\nif ( ! defined( 'ABSPATH' ) ) {\n    exit; // Exit if accessed directly.\n}\n\n// Everything below runs only when WordPress is loaded.\nfunction acme_register_post_type(): void {\n    register_post_type( 'acme_product', [\n        'public' => true,\n        'label'  => 'Products',\n    ] );\n}\nadd_action( 'init', 'acme_register_post_type' );",
+      "bad_pattern": "<?php\n// WRONG — no ABSPATH guard. Requesting /wp-content/plugins/myplugin/helpers.php\n// directly executes the following code outside WordPress.\n\nrequire_once plugin_dir_path( __FILE__ ) . 'config.php'; // fatal: plugin_dir_path undefined\nglobal $wpdb; // $wpdb is null — queries will error\n$data = $wpdb->get_results( \"SELECT * FROM wp_options LIMIT 5\" );",
+      "source_url": "https://github.com/WordPress/plugin-check/blob/6f37e1c96cf6bd81c8597fe0335400875999bb04/includes/Checker/Checks/Plugin_Repo/Direct_File_Access_Check.php",
+      "test_step": "1. Run Plugin Check on your plugin — Direct_File_Access_Check fires on each PHP file missing the ABSPATH guard.\n2. Manually: open every PHP file in your plugin that is not a pure class file.\n3. Confirm the first executable statement after <?php is: if ( ! defined( 'ABSPATH' ) ) { exit; }\n4. Add the guard to any file that lacks it.\n5. Verify: curl -I https://yoursite.com/wp-content/plugins/myplugin/your-file.php — the response should be an empty body (exit fires) rather than PHP output or a fatal error message.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "1.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "i18n-function-missing-text-domain",
+      "title": "i18n functions (__(), _e(), esc_html__() etc.) must include the plugin's text-domain — omitting it breaks translations",
+      "category_slug": "wordpress-plugin-standards",
+      "summary": "WordPress Plugin Check (I18n_Usage_Check) uses the WordPress.WP.I18n PHPCS sniff to require a correct, hardcoded text-domain string as the last argument to every i18n function: __(), _e(), _n(), _x(), esc_html__(), esc_attr__(), esc_html_e(), esc_attr_e(). Omitting the domain makes the string untranslatable — it falls through to the 'default' domain and will never be loaded from the plugin's language files. Using a dynamic variable as the domain (NonSingularStringLiteralDomain) also fails the check because WordPress loads language files at boot time based on a static domain string.",
+      "code_example": "<?php\n// CORRECT — text-domain matches the plugin slug and Plugin Header.\n// Plugin header: Text Domain: acme-forms\n\n__( 'Form submitted successfully.', 'acme-forms' )\n_e( 'Save settings', 'acme-forms' )\n_n( 'One entry', '%d entries', $count, 'acme-forms' )\nesc_html__( 'Error saving data.', 'acme-forms' )\nesc_attr__( 'Search forms', 'acme-forms' )\n\n// CORRECT — translated strings in a class method.\nclass Acme_Forms_Admin {\n    public function get_notice(): string {\n        return esc_html__( 'Settings saved.', 'acme-forms' );\n    }\n}",
+      "bad_pattern": "<?php\n// WRONG — no text-domain: string falls through to core 'default' domain.\n// Plugin Check: WordPress.WP.I18n.MissingArgDomain\n__( 'Form submitted successfully.' )\n_e( 'Save settings' )\nesc_html__( 'Error saving data.' )\n\n// WRONG — dynamic domain: cannot be resolved at load time.\n// Plugin Check: WordPress.WP.I18n.NonSingularStringLiteralDomain\n$domain = 'acme-forms';\n__( 'Settings', $domain )\n\n// WRONG — wrong domain: string will not match the plugin's .po file.\n__( 'Submit', 'some-other-plugin' )",
+      "source_url": "https://github.com/WordPress/plugin-check/blob/6f37e1c96cf6bd81c8597fe0335400875999bb04/includes/Checker/Checks/General/I18n_Usage_Check.php",
+      "test_step": "1. Run Plugin Check on your plugin — I18n_Usage_Check reports every missing or wrong text-domain.\n2. Alternatively: phpcs --standard=WordPress --sniffs=WordPress.WP.I18n --runtime-set text_domain your-plugin-slug /path/to/plugin.\n3. For each MissingArgDomain error, add your plugin slug as the final argument.\n4. For NonSingularStringLiteralDomain warnings, replace the variable with a string literal.\n5. Verify translations load: install Loco Translate or WP CLI (wp i18n make-pot) and confirm the strings appear in the generated .pot file.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "1.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "enqueue-scripts-styles-global-scope",
+      "title": "wp_enqueue_script() and wp_enqueue_style() must be scoped — loading assets on every page wastes bandwidth and hurts Core Web Vitals",
+      "category_slug": "wordpress-plugin-standards",
+      "summary": "WordPress Plugin Check (Enqueued_Scripts_Scope_Check, since 1.0.2) is a runtime check that visits multiple URL types and flags any plugin script or stylesheet that loads on EVERY page — including the homepage, archives, and post types that do not use the feature. Unconditional enqueuing increases page weight for all visitors, hurts Largest Contentful Paint (LCP) and Total Blocking Time (TBT), and is one of the most common reasons plugins are rejected from the wordpress.org repository. Scope every asset to the pages or post types that actually need it.",
+      "code_example": "<?php\n// CORRECT — enqueue scoped to single product pages only.\nadd_action( 'wp_enqueue_scripts', 'acme_enqueue_product_assets' );\n\nfunction acme_enqueue_product_assets(): void {\n    // Gate: only load on pages that actually render this feature.\n    if ( ! is_singular( 'product' ) ) {\n        return;\n    }\n    wp_enqueue_script(\n        'acme-product-gallery',\n        plugin_dir_url( __FILE__ ) . 'assets/gallery.js',\n        [ 'jquery' ],\n        '1.0.0',\n        true // load in footer\n    );\n    wp_enqueue_style(\n        'acme-product-gallery',\n        plugin_dir_url( __FILE__ ) . 'assets/gallery.css',\n        [],\n        '1.0.0'\n    );\n}\n\n// CORRECT — shortcode detection (load only when the shortcode is on the page).\nadd_action( 'wp_enqueue_scripts', 'acme_maybe_enqueue_form_assets' );\n\nfunction acme_maybe_enqueue_form_assets(): void {\n    global $post;\n    if ( ! is_a( $post, 'WP_Post' ) || ! has_shortcode( $post->post_content, 'acme_form' ) ) {\n        return;\n    }\n    wp_enqueue_script( 'acme-form', plugin_dir_url( __FILE__ ) . 'assets/form.js', [], '1.0.0', true );\n}",
+      "bad_pattern": "<?php\n// WRONG — loads on every front-end page, regardless of whether the feature is used.\nadd_action( 'wp_enqueue_scripts', 'acme_enqueue_all_assets' );\n\nfunction acme_enqueue_all_assets(): void {\n    // No conditional — 200 KB script loads on the homepage, archives, search, etc.\n    wp_enqueue_script(\n        'acme-product-gallery',\n        plugin_dir_url( __FILE__ ) . 'assets/gallery.js',\n        [ 'jquery' ],\n        '1.0.0',\n        true\n    );\n    wp_enqueue_style(\n        'acme-product-gallery',\n        plugin_dir_url( __FILE__ ) . 'assets/gallery.css',\n        [],\n        '1.0.0'\n    );\n}",
+      "source_url": "https://github.com/WordPress/plugin-check/blob/6f37e1c96cf6bd81c8597fe0335400875999bb04/includes/Checker/Checks/Performance/Enqueued_Scripts_Scope_Check.php",
+      "test_step": "1. Run Plugin Check — Enqueued_Scripts_Scope_Check visits the homepage, a single post, and an archive page and flags any script/style that appears in all responses.\n2. Manually: open your browser's network panel on the homepage and check whether plugin scripts are loaded even though the plugin feature is not visible.\n3. Wrap every wp_enqueue_script() / wp_enqueue_style() in a conditional: if ( is_singular( 'post' ) ) { ... } or equivalent.\n4. Re-run Plugin Check — no scope warnings should remain for your plugin handle.\n5. Verify: the asset is absent on the homepage (devtools → Network → filter by your script handle).",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "1.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-redirect-with-user-input-use-wp-safe-redirect",
+      "title": "Use wp_safe_redirect() instead of wp_redirect() when the URL may be user-controlled — open redirect vulnerability",
+      "category_slug": "wordpress-plugin-standards",
+      "summary": "WordPress Plugin Check (Safe_Redirect_Check, since 1.7.0) flags wp_redirect() calls and recommends wp_safe_redirect() as a security best practice. The critical vulnerability: when the URL passed to wp_redirect() originates from $_GET['redirect_to'] or similar user-controlled input without validation, an attacker can craft a link to your plugin page with a redirect_to pointing to a phishing domain — authenticated users who click the link get silently redirected. wp_safe_redirect() restricts the destination to the same host and an explicit allowlist (filtered by allowed_redirect_hosts), making open-redirect attacks impossible by default.",
+      "code_example": "<?php\n// CORRECT — wp_safe_redirect() restricts destination to same-host or allowlist.\nadd_action( 'admin_post_acme_handle_form', 'acme_handle_form' );\n\nfunction acme_handle_form(): void {\n    check_admin_referer( 'acme_form_nonce', 'security' );\n\n    if ( ! current_user_can( 'manage_options' ) ) {\n        wp_die( esc_html__( 'Not allowed.', 'acme' ) );\n    }\n\n    // User-supplied redirect_to is safe — wp_safe_redirect validates the host.\n    $redirect_to = isset( $_POST['redirect_to'] )\n        ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) )\n        : '';\n\n    wp_safe_redirect( $redirect_to ?: admin_url( 'admin.php?page=acme-settings&saved=1' ) );\n    exit; // Always exit after redirect.\n}",
+      "bad_pattern": "<?php\n// WRONG — wp_redirect() with user-controlled URL is an open redirect.\n// Attacker crafts: /wp-admin/admin-post.php?action=acme_handle_form&redirect_to=https://evil.com\nadd_action( 'admin_post_acme_handle_form', 'acme_handle_form' );\n\nfunction acme_handle_form(): void {\n    // esc_url_raw validates format but does NOT restrict the host.\n    $redirect_to = esc_url_raw( $_GET['redirect_to'] ?? admin_url() );\n    wp_redirect( $redirect_to ); // Open redirect: any external URL works.\n    // Missing exit — page renders anyway even when redirect fires.\n}",
+      "source_url": "https://github.com/WordPress/plugin-check/blob/6f37e1c96cf6bd81c8597fe0335400875999bb04/includes/Checker/Checks/Security/Safe_Redirect_Check.php",
+      "test_step": "1. Run Plugin Check — Safe_Redirect_Check flags every wp_redirect() call.\n2. Search your codebase for wp_redirect(: grep -r 'wp_redirect(' /path/to/plugin.\n3. For each hit, check whether the URL argument could come from $_GET, $_POST, or any user-controlled variable.\n4. Replace wp_redirect() with wp_safe_redirect() — the function signature is identical.\n5. Ensure exit; follows immediately after wp_safe_redirect().\n6. Test: craft a URL with redirect_to=https://evil.com and confirm wp_safe_redirect() sends the user to admin_url() instead (fallback behavior when host is not allowed).",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "2.3",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "register-setting-missing-sanitize-callback",
+      "title": "register_setting() must include a sanitize_callback — missing sanitisation stores raw user input in wp_options",
+      "category_slug": "wordpress-plugin-standards",
+      "summary": "WordPress Plugin Check (Setting_Sanitization_Check, since 1.4.0) flags register_setting() calls that omit a sanitize_callback or provide an invalid one (empty string, false). Without sanitisation, WordPress stores the raw $_POST value directly in the wp_options table when the Settings API processes a form submission. An attacker with settings-page access (subscriber with custom capabilities, or after exploiting a CSRF gap) can store arbitrary data including XSS payloads that fire when an admin later views the settings page. The sanitize_callback is the last defense before persistence.",
+      "code_example": "<?php\n// CORRECT — sanitize_callback provided for each registered setting.\nadd_action( 'admin_init', 'acme_register_settings' );\n\nfunction acme_register_settings(): void {\n    register_setting(\n        'acme_options_group',\n        'acme_api_key',\n        [\n            'type'              => 'string',\n            'sanitize_callback' => 'sanitize_text_field',\n            'default'           => '',\n            'show_in_rest'      => false,\n        ]\n    );\n\n    register_setting(\n        'acme_options_group',\n        'acme_max_results',\n        [\n            'type'              => 'integer',\n            'sanitize_callback' => 'absint',\n            'default'           => 10,\n        ]\n    );\n}",
+      "bad_pattern": "<?php\n// WRONG — no sanitize_callback; raw $_POST is stored in wp_options.\n// Plugin Check: PluginCheck.CodeAnalysis.SettingSanitization.register_settingMissing\nadd_action( 'admin_init', 'acme_register_settings' );\n\nfunction acme_register_settings(): void {\n    register_setting( 'acme_options_group', 'acme_api_key' );\n    register_setting( 'acme_options_group', 'acme_max_results' );\n}\n\n// WRONG — invalid callback (empty string).\n// Plugin Check: PluginCheck.CodeAnalysis.SettingSanitization.register_settingInvalid\nregister_setting( 'acme_options_group', 'acme_setting', [\n    'sanitize_callback' => '',\n] );",
+      "source_url": "https://github.com/WordPress/plugin-check/blob/6f37e1c96cf6bd81c8597fe0335400875999bb04/includes/Checker/Checks/Plugin_Repo/Setting_Sanitization_Check.php",
+      "test_step": "1. Run Plugin Check — Setting_Sanitization_Check flags every register_setting() missing a valid sanitize_callback with severity 7.\n2. Search your codebase: grep -r 'register_setting(' /path/to/plugin.\n3. For each call, confirm the $args array contains a valid, callable 'sanitize_callback'.\n4. Add the appropriate sanitise function (sanitize_text_field, absint, sanitize_email, or a custom function) to each registration.\n5. Test: submit a settings form with a payload containing <script>alert(1)</script> in a text field — verify the stored value in wp_options is stripped of the tag.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:30:00Z",
+      "versions": [
+        {
+          "wp_version_min": "4.7",
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": false
