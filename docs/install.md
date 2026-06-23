@@ -132,12 +132,50 @@ The skill loads automatically the next time Claude Code starts in that project.
 
 ---
 
+## (e) Advisory binding — consult Lumo before writing WordPress code
+
+The binding adds an instruction layer on top of the MCP tools: Claude checks
+every WordPress/WooCommerce code suggestion through `lumo_check_code` before
+presenting it, and leads every API question with `lumo_lookup`. It is the
+`wp-binding` skill that makes this happen automatically.
+
+**Plugin install (primary path):** the skill ships with the plugin and activates
+when the plugin loads — no extra step.
+
+**Manual install (if you copy the skill directly):**
+
+Copy `skills/wp-binding/SKILL.md` from this repo into the same path in your
+project:
+
+```
+your-project/
+  skills/
+    wp-binding/
+      SKILL.md
+```
+
+Claude Code picks it up on next start.
+
+**CLAUDE.md rule (no-plugin fallback):** for projects that cannot use the plugin
+or the skill directory, copy the ready-to-paste block from
+`skills/wp-binding/claude-rule-snippet.md` into the project's `CLAUDE.md` or
+`.claude/rules/lumo-wp-binding.md`.
+
+**Cursor:** `.cursor/rules/lumo.mdc` (ships in this repo) covers the same
+instruction for Cursor users.
+
+In all cases the MCP server must be reachable — the binding is an instruction
+layer, not a local offline check. Use path (b) or (c) above to add the server.
+
+---
+
 ## Choosing a path
 
 | | Marketplace | Local MCP (stdio) | Pro MCP (HTTP) | Manual |
 |---|---|---|---|---|
 | Free agent | Yes (primary) | Yes | Fallback | Fallback |
 | Lumo Pro endpoint | No | No | Yes | Yes (`.mcp.json` only) |
+| Advisory binding | Auto (plugin) | Manual (skill dir) | Manual (skill dir) | CLAUDE.md snippet |
 | Shared team config | Via repo | Yes (`.mcp.json`) | Yes (`--scope project`) | Yes |
 | No internet at install | No | Yes | No | Yes |
 | No license required | Yes | Yes | No | Yes |
