@@ -1,0 +1,40 @@
+name: 'Lumo WP Code Review'
+description: >
+  Run Lumo's WordPress/WooCommerce catch on PR-changed PHP/JS files.
+  Posts a review comment per finding (propose + cite, never auto-fix).
+  LOUD (CERTAIN + breaking version) → fails the check when fail_on_loud is true.
+  SOFT (CONTEXT_DEPENDENT) → comment only, never fails.
+
+author: 'UnleashWP'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  fail_on_loud:
+    description: >
+      Fail the check (exit 1) when at least one LOUD catch fires.
+      Set to "false" to comment-only on every finding without blocking the PR.
+    required: false
+    default: 'true'
+
+  lumo_pro_url:
+    description: >
+      Base URL of a licensed Lumo Pro MCP server
+      (e.g. https://lumo.yourdomain.com). When provided together with
+      lumo_license_key, the runner calls the Pro catch instead of the free one.
+      MVP: Pro path is a stub that errors gracefully if the server is unreachable.
+    required: false
+    default: ''
+
+  lumo_license_key:
+    description: >
+      Lemon Squeezy license key for Lumo Pro. Required when lumo_pro_url is set.
+      Pass as a secret: ${{ secrets.LUMO_LICENSE_KEY }}.
+    required: false
+    default: ''
+
+runs:
+  using: 'node20'
+  main: 'dist/action.mjs'
