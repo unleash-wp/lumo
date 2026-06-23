@@ -90,6 +90,39 @@ Lumo tracks the current standard and answers with proof: source, affected versio
 
 ---
 
+## The binding — consult Lumo before writing WordPress code
+
+The commands above audit a project on demand. The binding makes Lumo the **first
+source before any WordPress code is written**, not a tool you remember to run.
+
+When the `wp-binding` skill is active, Claude checks every WordPress or
+WooCommerce code suggestion through `lumo_check_code` before presenting it. If
+Lumo flags a pattern, the correct form is surfaced with the source URL and the
+exact version it broke — not the stale suggestion. This is the mechanism behind
+the "keeps your AI current" promise.
+
+**One-command install (plugin path):**
+
+```
+/plugin marketplace add unleash-wp/lumo
+/plugin install lumo@lumo
+```
+
+The `wp-binding` skill activates automatically once the plugin loads.
+
+**Activate manually (if the plugin is already installed):**
+
+```
+/wp-binding
+```
+
+**Teams using Cursor or a bare MCP config** get the same behaviour via
+`.cursor/rules/lumo.mdc` (ships in this repo). For Claude Code projects that
+do not use the plugin, copy the rule snippet from
+`skills/wp-binding/claude-rule-snippet.md` into the project's `CLAUDE.md`.
+
+---
+
 ## Configuration
 
 Two env vars cover the most common needs. Full reference: [docs/configuration.md](docs/configuration.md)
