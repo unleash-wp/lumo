@@ -1,7 +1,11 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: { mcp: 'src/mcp/server.ts' },
+  entry: {
+    mcp: 'src/mcp/server.ts',
+    // GitHub Action entry point — produces dist/action.mjs referenced by action.yml.
+    action: 'src/action/main.ts',
+  },
   format: ['esm'],
   outDir: 'dist',
   outExtension: () => ({ js: '.mjs' }),
@@ -9,7 +13,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   clean: true,
-  // Bundle all deps into the single output file so IDEs can spawn the bin
-  // without a node_modules install in the dist directory.
-  noExternal: ['@modelcontextprotocol/sdk', 'zod'],
+  // Bundle all deps so the MCP bin works without a node_modules install and
+  // the Action entry point is a single self-contained file for GitHub's runner.
+  noExternal: ['@modelcontextprotocol/sdk', 'zod', '@actions/core', '@actions/github'],
 });

@@ -1,0 +1,45 @@
+## ---------------------------------------------------------------------------
+## USAGE SNIPPET — copy this file into your WordPress/WooCommerce repo at
+## .github/workflows/lumo-wp-review.yml
+##
+## What it does:
+##   On every PR, Lumo scans changed PHP/JS files for WordPress/WooCommerce
+##   patterns that break in a specific version (e.g. HPOS, WP 7.0 removals).
+##   Each finding is posted as a PR comment with the dated source and the
+##   correct pattern. LOUD (certain + breaking) fails the check by default;
+##   SOFT (context-dependent) is advisory only.
+## ---------------------------------------------------------------------------
+
+name: Lumo WP Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write   # post review comments
+  contents: read         # checkout
+
+jobs:
+  lumo-review:
+    name: WordPress/WooCommerce catch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Lumo WP code review
+        uses: unleash-wp/lumo@v1  # pin to a released tag; @main is unstable (tag v1 at release)
+        with:
+          ## fail_on_loud: "true" (default) — fails the PR check when Lumo finds
+          ## a CERTAIN breaking-version pattern. Set to "false" for advisory-only mode.
+          fail_on_loud: 'true'
+
+          ## Pro mode (optional) — requires a Lumo Pro license.
+          ## When set, the runner calls the licensed Pro MCP for deeper plugin-specific
+          ## catches (WooCommerce premium plugins, ACF, Polylang, etc.).
+          ## Leave empty to use the free catch (HPOS + WP/Woo core patterns).
+          # lumo_pro_url: 'https://your-lumo-pro-server.example.com'
+          # lumo_license_key: ${{ secrets.LUMO_LICENSE_KEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
