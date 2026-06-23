@@ -450,27 +450,10 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'woocommerce-subscriptions',
     sourceSignals: ['WC_Subscriptions::', 'wcs_get_subscription('],
-    catchSignals: [
-      // SOFT: WC_Subscriptions class reference — CONTEXT_DEPENDENT because the call
-      // could be a feature check rather than a subscription data access pattern.
-      {
-        match: /\bWC_Subscriptions\s*::/,
-        class: 'CONTEXT_DEPENDENT',
-        entrySlug: 'wc-subscriptions-api',
-        condition: 'this code runs in a WooCommerce Subscriptions context',
-        language: 'php',
-        stripStrings: true,
-      },
-      // SOFT: wcs_get_subscription() call — CONTEXT_DEPENDENT for the same reason.
-      {
-        match: /\bwcs_get_subscription\s*\(/,
-        class: 'CONTEXT_DEPENDENT',
-        entrySlug: 'wc-subscriptions-api',
-        condition: 'this code runs in a WooCommerce Subscriptions context',
-        language: 'php',
-        stripStrings: true,
-      },
-    ],
+    // Detection + teaser only, like the other Pro-covered premium plugins
+    // (acf-pro, elementor-pro): the WooCommerce Subscriptions knowledge lives in
+    // Lumo Pro, so there is no Free-snapshot entry to render a catch against here.
+    // The subscription get_post_meta footgun is caught Pro-side via wcs-content.ts.
   },
 
   {
