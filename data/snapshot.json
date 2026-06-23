@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-22T18:30:00Z",
+  "generatedAt": "2026-06-23T10:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -170,7 +170,7 @@
       "slug": "gutenberg-apiversion-2-deprecated-wp6-9",
       "title": "Block API version 2 deprecated in WP 6.9 — migrate to apiVersion 3",
       "category_slug": "gutenberg",
-      "summary": "Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings. In WordPress 7.1, the post editor will always run as an iframe regardless of apiVersion, making API v2 blocks non-compliant. Migration to apiVersion 3 requires using useBlockProps() hook in edit and save functions to ensure proper styling and class handling.",
+      "summary": "Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings. A future WordPress version is expected to run the post editor as an iframe regardless of apiVersion (no specific version has been announced), which would make API v2 blocks non-compliant. Migration to apiVersion 3 requires using useBlockProps() hook in edit and save functions to ensure proper styling and class handling.",
       "code_example": "// CORRECT — apiVersion 3 with useBlockProps\nconst { useBlockProps } = wp.blockEditor;\n\nwp.blocks.registerBlockType( 'my-namespace/my-block', {\n  apiVersion: 3,\n  edit: function( props ) {\n    const blockProps = useBlockProps();\n    return <div { ...blockProps }>Content</div>;\n  },\n  save: function( props ) {\n    const blockProps = useBlockProps.save();\n    return <div { ...blockProps }>{ props.attributes.content }</div>;\n  },\n} );",
       "bad_pattern": "// WRONG — apiVersion 2 (or omitted, defaults to 2 in older blocks)\nwp.blocks.registerBlockType( 'my-namespace/my-block', {\n  apiVersion: 2,\n  edit: function( props ) {\n    return <div { ...props.attributes }>Content</div>;\n  },\n  save: function( props ) {\n    return <div>{ props.attributes.content }</div>;\n  },\n} );",
       "source_url": "https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/",
@@ -263,6 +263,46 @@
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": true
+        }
+      ]
+    },
+    {
+      "slug": "reference-block-json-scaffold",
+      "title": "block.json scaffold — minimal, spec-compliant block registration template",
+      "category_slug": "reference-artifacts",
+      "summary": "A spec-compliant block.json skeleton for WordPress 6.x and Gutenberg. Covers the required fields (name, version, title, category, icon, description, attributes, supports) and the $schema reference so editors get autocompletion. Copy this, rename the namespace/slug, and register via register_block_type_from_metadata().",
+      "code_example": "{\n  \"$schema\": \"https://schemas.wp.org/trunk/block.json\",\n  \"apiVersion\": 3,\n  \"name\": \"my-plugin/my-block\",\n  \"version\": \"0.1.0\",\n  \"title\": \"My Block\",\n  \"category\": \"common\",\n  \"icon\": \"smiley\",\n  \"description\": \"A minimal block scaffold.\",\n  \"keywords\": [\"example\"],\n  \"textdomain\": \"my-plugin\",\n  \"editorScript\": \"file:./index.js\",\n  \"editorStyle\": \"file:./index.css\",\n  \"style\": \"file:./style-index.css\",\n  \"attributes\": {\n    \"content\": {\n      \"type\": \"string\",\n      \"default\": \"\"\n    }\n  },\n  \"supports\": {\n    \"html\": false,\n    \"align\": [\"wide\", \"full\"]\n  }\n}",
+      "bad_pattern": "// Missing $schema, wrong apiVersion, hard-coded script URL\n{\n  \"name\": \"my-plugin/My Block\",       // spaces / uppercase not allowed in name\n  \"apiVersion\": 1,                     // deprecated; blocks lose inner-blocks support\n  \"script\": \"https://cdn.example.com/block.js\"  // never use external URLs here\n}",
+      "source_url": "https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/",
+      "test_step": "Run the @wordpress/scripts linter: `npx wp-scripts lint-js .` — block.json schema errors surface as lint failures. Also open the Block Editor and confirm the block appears in the inserter with the correct category.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T10:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "6.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "reference-wp-deploy-checklist",
+      "title": "WordPress production deploy checklist — 12 gates before you push",
+      "category_slug": "reference-artifacts",
+      "summary": "A 12-gate pre-deploy checklist for WordPress agency projects. Covers backups, database migration, cache warming, HTTP redirects, PHP error log, and smoke tests. Run this before every production push — not just major releases.",
+      "code_example": "# Quick smoke via WP-CLI\nwp option get siteurl\nwp option get home\nwp db check\nwp cache flush\nwp cron event list\nwp plugin list --status=inactive  # confirm nothing unintentionally deactivated",
+      "bad_pattern": "# Common anti-patterns\nwp db export > backup.sql && rsync -av . user@prod:/var/www/html  # no restore test, no cache flush\nwp plugin update --all --skip-plugins --skip-themes  # runs during traffic; no maintenance mode",
+      "source_url": "https://developer.wordpress.org/advanced-administration/wordpress/moving-wordpress/",
+      "test_step": "After deploy: open the site URL directly (no browser cache), log in to wp-admin, navigate to WooCommerce > Orders (if present), run `wp cron event run --due-now`, and tail `debug.log` for 60 s. Zero PHP errors = gate passed.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T10:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "6.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
         }
       ]
     }
