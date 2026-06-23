@@ -12,9 +12,8 @@ import type { FreeRenderedEntry, Snapshot } from '../types.js';
 export type { PluginDetection, DetectionSource } from './types.js';
 
 /**
- * Honest, founder-tunable Pro teaser shown when a premium plugin is detected
- * but Free has no knowledge entry for it. Intentionally measured — no bluff,
- * no invented checks.
+ * Upgrade-promising teaser — only shown when Pro has real curated knowledge for
+ * the plugin (hasProCoverage: true on the registry entry). No bluff, no invented checks.
  */
 export function buildProTeaser(pluginName: string): string {
   return (
@@ -24,15 +23,32 @@ export function buildProTeaser(pluginName: string): string {
   );
 }
 
+/**
+ * Honest detection note for plugins Lumo has detected but Pro does not yet cover.
+ * Surfaces detection as a demand signal without making a promise that would be broken.
+ */
+export function buildDetectionNote(pluginName: string): string {
+  return (
+    `Detected ${pluginName} in this project. ` +
+    `Lumo does not yet have curated knowledge for ${pluginName} — no checks to run here.`
+  );
+}
+
 export interface AuditResult {
   detected: boolean;
   detection?: PluginDetection;
   entry?: FreeRenderedEntry;
   /**
-   * Set when a Pro-teaser pattern was detected but Free has no knowledge entry.
-   * Callers should surface this to the user as the result.
+   * Set when a Pro-teaser pattern was detected AND Pro has curated knowledge
+   * (hasProCoverage: true). The upgrade promise is honest — callers surface
+   * this as the result.
    */
   proTeaser?: string;
+  /**
+   * Set when a plugin is detected but Pro has no curated knowledge for it yet.
+   * Surfaces detection without making an upgrade promise. No upgrade CTA shown.
+   */
+  detectionNote?: string;
   message?: string;
 }
 
@@ -70,10 +86,15 @@ export function auditProject(projectRoot: string, snapshot?: Snapshot): AuditRes
     }
 
     // Pro-teaser path: plugin detected but Free has no knowledge for it.
+    // Only promise an upgrade when Pro actually has coverage (hasProCoverage: true).
+    // Plugins without coverage get an honest detection note — no upgrade CTA.
     const def = PATTERNS.find((p) => p.pattern === detection.pattern);
     if (def?.proTeaser) {
       const name = def.proTeaserName ?? detection.pattern;
-      return { detected: true, detection, proTeaser: buildProTeaser(name) };
+      if (def.hasProCoverage) {
+        return { detected: true, detection, proTeaser: buildProTeaser(name) };
+      }
+      return { detected: true, detection, detectionNote: buildDetectionNote(name) };
     }
 
     const snap = snapshot ?? loadSnapshot();
