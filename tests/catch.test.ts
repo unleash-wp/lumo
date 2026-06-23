@@ -26,9 +26,103 @@ import type { SnapshotEntry } from '../src/types.js';
 
 const snap = loadSnapshot();
 
+// Catch tests exercise the catch engine against entries that are now Pro-MCP-only
+// (gutenberg, abilities API, WP 7.0 interactivity).  Those entries are excluded from
+// the redistributable Free snapshot but their catch signals still live in registry.ts.
+// We build a test-only extended snapshot so classify() and checkCode() tests have the
+// entry objects they need without pulling the Pro entries back into the public artifact.
+const proOnlyCatchEntries: SnapshotEntry[] = [
+  {
+    slug: 'gutenberg-usesetting-deprecated-wp6-5',
+    title: 'useSetting() hook deprecated in WP 6.5 — migrate to useSettings()',
+    category_slug: 'gutenberg',
+    summary: 'The useSetting() hook was deprecated in WordPress 6.5.0 in favor of useSettings().',
+    code_example: "import { useSettings } from '@wordpress/block-editor';",
+    bad_pattern: "import { useSetting } from '@wordpress/block-editor';",
+    source_url: 'https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/',
+    test_step: "Replace useSetting() calls with useSettings().",
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T13:00:00Z',
+    versions: [{ wp_version_min: '6.5.0', wp_version_max: null, woo_version_min: null, breaking_change: false }],
+  },
+  {
+    slug: 'gutenberg-isvalidblockcontent-removed',
+    title: 'wp.blocks.isValidBlockContent() removed — use validateBlock() instead',
+    category_slug: 'gutenberg',
+    summary: 'The wp.blocks.isValidBlockContent() function was removed.',
+    code_example: 'const result = wp.blocks.validateBlock( block );',
+    bad_pattern: 'const { isValidBlockContent } = wp.blocks;',
+    source_url: 'https://developer.wordpress.org/block-editor/reference-guides/packages/packages-blocks/',
+    test_step: 'Replace isValidBlockContent() calls with validateBlock().',
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T13:00:00Z',
+    versions: [{ wp_version_min: '5.9', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+  },
+  {
+    slug: 'gutenberg-apiversion-2-deprecated-wp6-9',
+    title: 'Block API version 2 deprecated in WP 6.9 — migrate to apiVersion 3',
+    category_slug: 'gutenberg',
+    summary: 'Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings.',
+    code_example: 'wp.blocks.registerBlockType( "my-ns/my-block", { apiVersion: 3, ... } );',
+    bad_pattern: 'wp.blocks.registerBlockType( "my-ns/my-block", { apiVersion: 2, ... } );',
+    source_url: 'https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/',
+    test_step: 'Migrate registerBlockType() calls to apiVersion 3.',
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T13:00:00Z',
+    versions: [{ wp_version_min: '6.9', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+  },
+  {
+    slug: 'wp-ability-missing-mcp-public',
+    title: 'WordPress Abilities API: register with meta.mcp.public to expose to MCP clients',
+    category_slug: 'wp-abilities-api',
+    summary: "WordPress abilities registered with wp_register_ability() are NOT visible to MCP clients by default.",
+    code_example: "wp_register_ability( 'my-plugin/get-data', [ 'meta' => [ 'mcp' => [ 'public' => true ] ] ] );",
+    bad_pattern: "wp_register_ability( 'my-plugin/get-data', [ 'meta' => [ 'show_in_rest' => true ] ] );",
+    source_url: 'https://github.com/WordPress/mcp-adapter/blob/f7c0cb19f4851cff17f6e750a5460b58d935b76e/docs/guides/creating-abilities.md',
+    test_step: "Add 'mcp' => ['public' => true] to the meta array.",
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T15:00:00Z',
+    versions: [{ wp_version_min: '6.9', wp_version_max: null, woo_version_min: null, breaking_change: false }],
+  },
+  {
+    slug: 'wp-7-0-interactivity-watch',
+    title: 'WordPress 7.0: use watch() from @wordpress/interactivity, not effect from @preact/signals',
+    category_slug: 'wordpress-7-0',
+    summary: 'WordPress 7.0 added watch() as the public reactive-callback API in @wordpress/interactivity.',
+    code_example: "import { store, watch } from '@wordpress/interactivity';",
+    bad_pattern: "import { effect } from '@preact/signals';",
+    source_url: 'https://github.com/WordPress/gutenberg/blob/c24e0a0770e78c26d29f7c2a5b9825e3022dee90/packages/interactivity/src/index.ts',
+    test_step: "Replace effect() from @preact/signals with watch() from @wordpress/interactivity.",
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T18:30:00Z',
+    versions: [{ wp_version_min: '7.0', wp_version_max: null, woo_version_min: null, breaking_change: true }],
+  },
+  {
+    slug: 'wp-7-0-router-navigation-deprecated',
+    title: 'WordPress 7.0: state.navigation.hasStarted / hasFinished deprecated in core/router',
+    category_slug: 'wordpress-7-0',
+    summary: 'WordPress 7.0 deprecated state.navigation.hasStarted and state.navigation.hasFinished.',
+    code_example: "// Manage loading state locally in your own store.",
+    bad_pattern: "if ( state.navigation.hasStarted && ! state.navigation.hasFinished ) {",
+    source_url: 'https://github.com/WordPress/gutenberg/blob/1c26a4c6574e266a8a8e671f1e0420c568715f4d/packages/interactivity-router/src/index.ts',
+    test_step: "Remove reads of state.navigation.hasStarted/hasFinished.",
+    tier: 'free' as const,
+    updatedAt: '2026-06-22T18:30:00Z',
+    versions: [{ wp_version_min: '7.0', wp_version_max: null, woo_version_min: null, breaking_change: false }],
+  },
+];
+
+/**
+ * Extended snapshot for catch engine tests that cover Pro-only signals.
+ * The Free snapshot excludes Gutenberg/Abilities/WP-7.0 entries (freeSnapshot:false);
+ * these synthetic entries let catch tests verify signal firing without pulling
+ * Pro content back into the redistributable artifact.
+ */
+const catchSnap = { ...snap, entries: [...snap.entries, ...proOnlyCatchEntries] };
+
 function entry(slug: string): SnapshotEntry {
-  const e = findEntry(snap, slug);
-  if (!e) throw new Error(`Missing entry "${slug}" in snapshot — test setup broken`);
+  const e = findEntry(catchSnap, slug);
+  if (!e) throw new Error(`Missing entry "${slug}" in catchSnap — test setup broken`);
   return e;
 }
 
@@ -141,7 +235,7 @@ describe('checkCode — tier oracle over all 9 entries', () => {
     const code = `
 $orders = get_posts( array( 'post_type' => 'shop_order', 'numberposts' => 10 ) );
 `;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     expect(loud?.entry.slug).toBe('woocommerce-hpos-order-access');
@@ -151,7 +245,7 @@ $orders = get_posts( array( 'post_type' => 'shop_order', 'numberposts' => 10 ) )
     const code = `
 $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
 `;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     expect(loud?.entry.slug).toBe('woocommerce-hpos-order-access');
@@ -160,7 +254,7 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
   // get_post_meta with order-ish var → SOFT
   it('get_post_meta($order_id, ...) fires SOFT (context-dependent)', () => {
     const code = `$email = get_post_meta( $order_id, '_billing_email', true );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const soft = results.find((r) => r.entry.slug === 'woocommerce-hpos-order-access');
     expect(soft).toBeDefined();
     expect(soft?.tier).toBe('SOFT');
@@ -169,7 +263,7 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
   // wp_img_tag_add_decoding_attr → LOUD
   it('wp_img_tag_add_decoding_attr() fires LOUD', () => {
     const code = `$img = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     expect(loud?.entry.slug).toBe('wp-img-tag-add-decoding-attr-deprecation');
@@ -184,7 +278,7 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
     const code = imgEntry.bad_pattern;
     expect(code).toContain('function_exists');
     expect(code).toContain('wp_img_tag_add_decoding_attr');
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
     // Must not be LOUD — the shim guard must have fired
     expect(match?.tier).not.toBe('LOUD');
@@ -196,7 +290,7 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
 const { isValidBlockContent } = wp.blocks;
 if ( isValidBlockContent( blockType, attrs, blocks, html ) ) { }
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     expect(loud?.entry.slug).toBe('gutenberg-isvalidblockcontent-removed');
@@ -211,7 +305,7 @@ wp.blocks.registerBlockType( 'my-ns/my-block', {
   edit: function( props ) { return <div>Content</div>; },
 } );
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     expect(loud?.entry.slug).toBe('gutenberg-apiversion-2-deprecated-wp6-9');
@@ -238,7 +332,7 @@ wp.blocks.registerBlockType( 'my-ns/my-block', {
     // has NO registerBlockType context — we test that a JSON config file with version:2
     // at the top-level does NOT fire because the language sniff returns 'php' or the
     // signal is scoped to 'js' only.
-    const results = checkCode(code, 'php', snap); // force PHP — JS signals won't run
+    const results = checkCode(code, 'php', catchSnap); // force PHP — JS signals won't run
     const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
     expect(match).toBeUndefined();
   });
@@ -249,7 +343,7 @@ wp.blocks.registerBlockType( 'my-ns/my-block', {
 import { useSetting } from '@wordpress/block-editor';
 const fontSize = useSetting( 'typography.fontSize' );
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'gutenberg-usesetting-deprecated-wp6-5');
     expect(match).toBeDefined();
     expect(match?.tier).toBe('SOFT');
@@ -261,7 +355,7 @@ const fontSize = useSetting( 'typography.fontSize' );
 // Referencing some env config
 $db_pass = getenv('DB_PASSWORD');
 `;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     // env-file-committed-to-git and missing-composer-lock-file have no catchSignals → no results
     const envMatch = results.find(
       (r) =>
@@ -280,14 +374,14 @@ $email = $order->get_billing_email();
 $order->update_meta_data( '_plan', 'pro' );
 $order->save();
 `;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     expect(results).toHaveLength(0);
   });
 
   // (e) Unknown blob → neutral line (via handleCheckCode)
   it('(e) completely unknown blob returns the neutral line', async () => {
     const code = `console.log('Hello, world!');`;
-    const result = await handleCheckCode({ code, language: 'js' }, snap);
+    const result = await handleCheckCode({ code, language: 'js' }, catchSnap);
     expect(result).toBe(CATCH_NEUTRAL_LINE);
   });
 
@@ -302,7 +396,7 @@ $order->save();
       '+$order = wc_get_order( $order_id );',                      // added correct pattern
     ].join('\n');
 
-    const results = checkCode(diff, 'php', snap);
+    const results = checkCode(diff, 'php', catchSnap);
     // The removed line had the bad pattern; the added line has the correct one.
     // If diff mode is working, nothing should fire.
     expect(results).toHaveLength(0);
@@ -319,7 +413,7 @@ $order->save();
       " // another context line",
     ].join('\n');
 
-    const results = checkCode(diff, 'php', snap);
+    const results = checkCode(diff, 'php', catchSnap);
     expect(results.length).toBeGreaterThan(0);
     const hpos = results.find((r) => r.entry.slug === 'woocommerce-hpos-order-access');
     expect(hpos).toBeDefined();
@@ -335,7 +429,7 @@ const { isValidBlockContent } = wp.blocks;
 isValidBlockContent( blockType, attrs, [], html );
 `;
     // Run as 'auto' so both PHP and JS don't fight; force php to stay clean
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     expect(results.length).toBeLessThanOrEqual(3);
   });
 });
@@ -349,7 +443,7 @@ describe('formatCatch — render layer', () => {
     const results = checkCode(
       `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`,
       'php',
-      snap,
+      catchSnap,
     );
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
@@ -370,7 +464,7 @@ describe('formatCatch — render layer', () => {
     const results = checkCode(
       `$img = wp_img_tag_add_decoding_attr( $img_html, 'ctx' );`,
       'php',
-      snap,
+      catchSnap,
     );
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
@@ -385,7 +479,7 @@ describe('formatCatch — render layer', () => {
     const results = checkCode(
       `$email = get_post_meta( $order_id, '_billing_email', true );`,
       'php',
-      snap,
+      catchSnap,
     );
     const soft = results.find((r) => r.tier === 'SOFT');
     expect(soft).toBeDefined();
@@ -408,8 +502,8 @@ describe('formatCatch — render layer', () => {
       'php',
       // Inject a fake snapshot with no version stamp
       {
-        ...snap,
-        entries: snap.entries.map((en) =>
+        ...catchSnap,
+        entries: catchSnap.entries.map((en) =>
           en.slug === 'woocommerce-hpos-order-access' ? noStampEntry : en,
         ),
       },
@@ -427,7 +521,7 @@ describe('formatCatch — render layer', () => {
     const results = checkCode(
       `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`,
       'php',
-      snap,
+      catchSnap,
     );
     if (results.length > 0 && results[0] != null) {
       const rendered = formatCatch(results[0]);
@@ -443,7 +537,7 @@ describe('formatCatch — render layer', () => {
 describe('handleCheckCode — handler integration', () => {
   it('HPOS bad pattern → LOUD output containing the dated version', async () => {
     const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
-    const result = await handleCheckCode({ code, language: 'php' }, snap);
+    const result = await handleCheckCode({ code, language: 'php' }, catchSnap);
     expect(result).toContain('⚠️');
     expect(result).toContain('8.2');
     expect(result).toContain('wc_get_order');
@@ -451,23 +545,23 @@ describe('handleCheckCode — handler integration', () => {
 
   it('clean snippet → neutral line', async () => {
     const code = `$order = wc_get_order( $order_id ); $email = $order->get_billing_email();`;
-    const result = await handleCheckCode({ code, language: 'php' }, snap);
+    const result = await handleCheckCode({ code, language: 'php' }, catchSnap);
     expect(result).toBe(CATCH_NEUTRAL_LINE);
   });
 
   it('never throws on empty input', async () => {
-    await expect(handleCheckCode({ code: '' }, snap)).resolves.toBeTypeOf('string');
+    await expect(handleCheckCode({ code: '' }, catchSnap)).resolves.toBeTypeOf('string');
   });
 
   it('auto language detection works for PHP blob', async () => {
     const code = `<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
-    const result = await handleCheckCode({ code }, snap); // no language → auto
+    const result = await handleCheckCode({ code }, catchSnap); // no language → auto
     expect(result).toContain('⚠️');
   });
 
   it('auto language detection works for JS blob', async () => {
     const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
-    const result = await handleCheckCode({ code }, snap);
+    const result = await handleCheckCode({ code }, catchSnap);
     expect(result).toContain('isValidBlockContent');
   });
 });
@@ -485,7 +579,7 @@ describe('false-LOUD regressions', () => {
   // C1: wp_img_tag_add_decoding_attr( in single-quoted PHP string
   it('C1: wp_img_tag_add_decoding_attr( inside single-quoted string does NOT fire LOUD', () => {
     const code = `<?php\n$error = 'You called wp_img_tag_add_decoding_attr( incorrectly.';`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
     expect(match?.tier).not.toBe('LOUD');
   });
@@ -493,7 +587,7 @@ describe('false-LOUD regressions', () => {
   // C1: wp_img_tag_add_decoding_attr( in double-quoted PHP string
   it('C1: wp_img_tag_add_decoding_attr( inside double-quoted string does NOT fire LOUD', () => {
     const code = `<?php\n$log = "The function wp_img_tag_add_decoding_attr( is deprecated";`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
     expect(match?.tier).not.toBe('LOUD');
   });
@@ -501,7 +595,7 @@ describe('false-LOUD regressions', () => {
   // C1: isValidBlockContent( in a JS string literal
   it('C1: isValidBlockContent( inside JS string literal does NOT fire LOUD', () => {
     const code = `const msg = 'isValidBlockContent( is no longer supported';`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'gutenberg-isvalidblockcontent-removed');
     expect(match?.tier).not.toBe('LOUD');
   });
@@ -509,7 +603,7 @@ describe('false-LOUD regressions', () => {
   // C1: real call still fires correctly after the fix
   it('C1: actual wp_img_tag_add_decoding_attr() call still fires LOUD', () => {
     const code = `<?php\n$img = wp_img_tag_add_decoding_attr( $img_html, 'ctx' );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
     expect(match?.tier).toBe('LOUD');
   });
@@ -517,7 +611,7 @@ describe('false-LOUD regressions', () => {
   // C1: HPOS 'shop_order' literal must still fire — string stripping must NOT erase it
   it("C1: 'shop_order' in array value still fires LOUD (literal-content signal unaffected)", () => {
     const code = `$q = new WP_Query( [ 'post_type' => 'shop_order' ] );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'woocommerce-hpos-order-access');
     expect(match?.tier).toBe('LOUD');
   });
@@ -530,7 +624,7 @@ describe('false-LOUD regressions', () => {
       '+$order = wc_get_order( $order_id );',
       ' // context',
     ].join('\n');
-    const results = checkCode(hunk, 'php', snap);
+    const results = checkCode(hunk, 'php', catchSnap);
     expect(results).toHaveLength(0);
   });
 
@@ -541,7 +635,7 @@ describe('false-LOUD regressions', () => {
       ' // context',
       "+$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
     ].join('\n');
-    const results = checkCode(hunk, 'php', snap);
+    const results = checkCode(hunk, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'woocommerce-hpos-order-access');
     expect(match?.tier).toBe('LOUD');
   });
@@ -549,7 +643,7 @@ describe('false-LOUD regressions', () => {
   // H1: apiVersion: 1 must NOT fire the v2-specific entry
   it('H1: apiVersion: 1 does NOT fire gutenberg-apiversion-2-deprecated-wp6-9', () => {
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 1, edit: () => null } );`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
     expect(match).toBeUndefined();
   });
@@ -557,7 +651,7 @@ describe('false-LOUD regressions', () => {
   // H1: apiVersion: 2 still fires
   it('H1: apiVersion: 2 still fires gutenberg-apiversion-2-deprecated-wp6-9', () => {
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
     expect(match?.tier).toBe('LOUD');
   });
@@ -581,7 +675,7 @@ wp_register_ability( 'my-plugin/get-data', [
         'annotations'  => [ 'readonly' => true ],
     ],
 ] );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
     expect(match).toBeDefined();
     expect(match?.tier).toBe('SOFT');
@@ -602,7 +696,7 @@ wp_register_ability( 'my-plugin/get-data', [
         ],
     ],
 ] );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
     expect(match).toBeUndefined();
   });
@@ -613,7 +707,7 @@ wp_register_ability( 'my-plugin/get-data', [
 function my_plugin_init() {
     add_action( 'init', 'my_plugin_register_cpt' );
 }`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
     expect(match).toBeUndefined();
   });
@@ -626,7 +720,7 @@ wp_register_ability( 'my-plugin/get-data', [
     'permission_callback' => '__return_true',
     'meta' => [ 'show_in_rest' => true ],
 ] );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-ability-missing-mcp-public');
     expect(match).toBeDefined();
     const { formatCatch } = await import('../src/lib/render.js');
@@ -658,7 +752,7 @@ if ( state.navigation.hasStarted ) {
   showLoader();
 }
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
     expect(match).toBeDefined();
     expect(match?.tier).toBe('SOFT');
@@ -668,7 +762,7 @@ if ( state.navigation.hasStarted ) {
     const code = `
 const done = state.navigation.hasFinished;
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
     expect(match).toBeDefined();
     expect(match?.tier).toBe('SOFT');
@@ -677,7 +771,7 @@ const done = state.navigation.hasFinished;
   // state.navigation.hasStarted inside a string → must NOT fire
   it('state.navigation.hasStarted inside a string literal does NOT fire', () => {
     const code = `const msg = 'do not use state.navigation.hasStarted anymore';`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
     expect(match?.tier).not.toBe('LOUD');
   });
@@ -688,7 +782,7 @@ const done = state.navigation.hasFinished;
 import { effect } from '@preact/signals';
 effect( () => { console.log( state.count ); } );
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-7-0-interactivity-watch');
     expect(match).toBeDefined();
     expect(match?.tier).toBe('SOFT');
@@ -701,7 +795,7 @@ effect( () => { console.log( state.count ); } );
 import { store, watch } from '@wordpress/interactivity';
 import { effect } from '@preact/signals';
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-7-0-interactivity-watch');
     expect(match).toBeUndefined();
   });
@@ -713,7 +807,7 @@ import { store, watch } from '@wordpress/interactivity';
 const { state } = store( 'my-plugin/counter', { state: { count: 0 } } );
 watch( () => { console.log( state.count ); } );
 `;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const wp7matches = results.filter(
       (r) =>
         r.entry.slug === 'wp-7-0-interactivity-watch' ||
@@ -725,7 +819,7 @@ watch( () => { console.log( state.count ); } );
   // SOFT output for state.navigation deprecation includes the dated WP 7.0 claim
   it('SOFT render for state.navigation includes dated WP 7.0 claim in summary', async () => {
     const code = `const done = state.navigation.hasFinished;`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-7-0-router-navigation-deprecated');
     expect(match).toBeDefined();
     const { formatCatch } = await import('../src/lib/render.js');
@@ -746,7 +840,7 @@ describe('formatCatch — version-relative lines', () => {
   it('already-broken: LOUD + project on/past breaking version → fix-now line', () => {
     // isValidBlockContent removed in WP 7.0; project on 7.0 → already-broken
     const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     const rendered = formatCatch(loud!, '7.0');
@@ -760,7 +854,7 @@ describe('formatCatch — version-relative lines', () => {
   it('upcoming: LOUD + project before breaking version → soon-dead line', () => {
     // apiVersion: 2 deprecated in WP 6.9; project targets 6.8 → upcoming
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const results = checkCode(code, 'js', snap);
+    const results = checkCode(code, 'js', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     const rendered = formatCatch(loud!, '6.8');
@@ -771,7 +865,7 @@ describe('formatCatch — version-relative lines', () => {
 
   it('unknown: no projectVersion arg → byte-identical to output without arg', () => {
     const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
-    const results = checkCode(code, 'php', snap);
+    const results = checkCode(code, 'php', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     const withoutArg = formatCatch(loud!);
@@ -785,10 +879,10 @@ describe('formatCatch — version-relative lines', () => {
   it('no-false-LOUD: empty-version-stamp entry + a project version still no alarm', () => {
     // When classify() returns SOFT due to no version stamp, formatCatch must stay SOFT
     // even when a projectVersion is supplied.
-    const e = findEntry(snap, 'woocommerce-hpos-order-access')!;
+    const e = findEntry(catchSnap, 'woocommerce-hpos-order-access')!;
     const noStampSnap = {
-      ...snap,
-      entries: snap.entries.map((en) =>
+      ...catchSnap,
+      entries: catchSnap.entries.map((en) =>
         en.slug === 'woocommerce-hpos-order-access' ? { ...e, versions: [] } : en,
       ),
     };
