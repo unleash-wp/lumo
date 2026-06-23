@@ -438,6 +438,40 @@ export const PATTERNS: readonly PatternDefinition[] = [
     wpCliSlug: 'wordfence',
     sourceSignals: ['wfBlock::', 'wordfence::liveTraf('],
   },
+  {
+    pattern: 'premium-wc-subscriptions',
+    proTeaser: true,
+    proTeaserName: 'WooCommerce Subscriptions',
+    hasProCoverage: true,
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/woocommerce-subscriptions/woocommerce-subscriptions.php',
+      'web/app/plugins/woocommerce-subscriptions/woocommerce-subscriptions.php',
+    ],
+    wpCliSlug: 'woocommerce-subscriptions',
+    sourceSignals: ['WC_Subscriptions::', 'wcs_get_subscription('],
+    catchSignals: [
+      // SOFT: WC_Subscriptions class reference — CONTEXT_DEPENDENT because the call
+      // could be a feature check rather than a subscription data access pattern.
+      {
+        match: /\bWC_Subscriptions\s*::/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wc-subscriptions-api',
+        condition: 'this code runs in a WooCommerce Subscriptions context',
+        language: 'php',
+        stripStrings: true,
+      },
+      // SOFT: wcs_get_subscription() call — CONTEXT_DEPENDENT for the same reason.
+      {
+        match: /\bwcs_get_subscription\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wc-subscriptions-api',
+        condition: 'this code runs in a WooCommerce Subscriptions context',
+        language: 'php',
+        stripStrings: true,
+      },
+    ],
+  },
 
   {
     // WordPress 7.0 Interactivity API changes (released May 20, 2026 — after model training cutoff).

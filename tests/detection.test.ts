@@ -640,6 +640,28 @@ describe('auditProject — honest detection note (uncovered plugins: no upgrade 
   });
 });
 
+describe('detectFromDirectory — WC Subscriptions fixture', () => {
+  it('detects premium-wc-subscriptions from directory with version 6.3.0', () => {
+    const result = detectFromDirectory(join(fixturesDir, 'wc-subscriptions'));
+    expect(result).not.toBeNull();
+    expect(result?.pattern).toBe('premium-wc-subscriptions');
+    expect(result?.version).toBe('6.3.0');
+    expect(result?.source).toBe('directory');
+  });
+});
+
+describe('auditProject — WC Subscriptions Pro teaser (covered: upgrade promise is honest)', () => {
+  it('detected:true, proTeaser set, no Free entry for wc-subscriptions fixture', () => {
+    const result = auditProject(join(fixturesDir, 'wc-subscriptions'));
+    expect(result.detected).toBe(true);
+    expect(result.proTeaser).toBeDefined();
+    expect(result.proTeaser).toContain('WooCommerce Subscriptions');
+    expect(result.proTeaser).toContain('Lumo Pro');
+    expect(result.detectionNote).toBeUndefined();
+    expect(result.entry).toBeUndefined();
+  });
+});
+
 describe('detectStack — Pro-teaser patterns do not shadow Free patterns (ladder precedence)', () => {
   it('WooCommerce composer key wins over any subsequent pro-teaser directory path', () => {
     // composer-woo has a WooCommerce composer.json — ladder stops at composer rung
