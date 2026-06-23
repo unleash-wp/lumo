@@ -50,9 +50,13 @@ Before presenting any WordPress / WooCommerce code to the user, call
 lumo_check_code(
   code:         <your proposed code blob>,
   language:     "php"  | "js"  | "auto",
-  project_root: <cwd, if known>
+  project_root: <cwd, if known>,
+  wp_version:   <target WP version, if known>,    // optional — lets the catch say "already past the breaking version"
+  woo_version:  <target WooCommerce version, if known>   // optional — same, for WooCommerce
 )
 ```
+
+Pass `wp_version` / `woo_version` whenever the project's target versions are known (e.g. from `readme.txt` "Tested up to" or `composer.json`): they let the catch contextualise a finding against the version you actually target.
 
 **Reading the result:**
 
