@@ -10,6 +10,12 @@ Lumo audits your PHP code for order-data patterns that break under WooCommerce H
 
 ---
 
+## Always current
+
+The knowledge base is kept current with each WordPress and WooCommerce release. Entries are added when a core or plugin API change is verified against real source — always with a source URL, the affected version range, and a tested code example. See the [CHANGELOG](CHANGELOG.md) for what landed per release.
+
+---
+
 ## Install
 
 ### Claude Code (primary)
