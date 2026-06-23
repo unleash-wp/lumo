@@ -17,7 +17,7 @@ import { join, dirname } from 'node:path';
 import { checkCode } from '../detection/catch.js';
 import { formatCatch, CATCH_NEUTRAL_LINE } from '../lib/render.js';
 import { validateEntry } from '../lib/snapshot.js';
-import type { CatchTier } from '../detection/catch.js';
+import type { CatchTier, CatchOverrides } from '../detection/catch.js';
 import type { Snapshot } from '../types.js';
 
 export interface HookCatchResult {
@@ -73,10 +73,16 @@ const SNAPSHOT: Snapshot | null = loadSnapshotForHook();
  * Language is auto-detected when not provided. Fail-open: any uncaught error
  * returns a null-tier result so the hook never blocks on an internal crash.
  * Also null-tier when the snapshot could not be loaded.
+ *
+ * overrides: per-project catch config from .claude/.lumo.json (optional).
+ * When provided, disabled rules are filtered out and downgraded rules are
+ * capped before the tier decision is made. Omitting overrides keeps the
+ * baseline behaviour byte-identical to the previous behaviour.
  */
 export function runHookCatch(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
+  overrides?: CatchOverrides,
 ): HookCatchResult {
   if (!SNAPSHOT) {
     return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
@@ -84,7 +90,9 @@ export function runHookCatch(
 
   try {
     // Inject the pre-loaded snapshot so checkCode() does not re-resolve paths.
-    const results = checkCode(code, language, SNAPSHOT);
+    // Thread overrides so disabled/downgraded rules are applied before the
+    // tier decision reaches the hook.
+    const results = checkCode(code, language, SNAPSHOT, overrides);
 
     if (results.length === 0) {
       return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };

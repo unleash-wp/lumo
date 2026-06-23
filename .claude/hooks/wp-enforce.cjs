@@ -71,6 +71,59 @@ function resolveMode(projectDir) {
 }
 
 // ---------------------------------------------------------------------------
+// Catch overrides
+// ---------------------------------------------------------------------------
+
+/**
+ * Read per-project catch overrides from .claude/.lumo.json.
+ *
+ * Schema (catch section):
+ *   { "catch": { "disable": ["<slug>"], "downgrade": { "<slug>": "soft" } } }
+ *
+ * Returns { disable: Set<string>, downgrade: Record<string,string> }.
+ * When the file is absent, malformed, or the catch key is missing, returns
+ * empty structures — the caller gets baseline behaviour unchanged.
+ */
+function resolveCatchOverrides(projectDir) {
+  try {
+    const cfgPath = path.join(projectDir, '.claude', '.lumo.json');
+    if (!fs.existsSync(cfgPath)) return { disable: new Set(), downgrade: {} };
+
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    const catchCfg = cfg?.catch;
+    if (!catchCfg || typeof catchCfg !== 'object') return { disable: new Set(), downgrade: {} };
+
+    const disable = new Set(Array.isArray(catchCfg.disable) ? catchCfg.disable : []);
+    const downgrade =
+      catchCfg.downgrade && typeof catchCfg.downgrade === 'object' && !Array.isArray(catchCfg.downgrade)
+        ? catchCfg.downgrade
+        : {};
+
+    return { disable, downgrade };
+  } catch {
+    return { disable: new Set(), downgrade: {} };
+  }
+}
+
+/**
+ * Apply catch overrides to a single hook catch result.
+ *
+ * - disabled slug → return null (caller skips processing)
+ * - downgrade "soft" + current LOUD → return mutated copy with tier SOFT
+ * - anything else → return unchanged
+ */
+function applyCatchOverride(catchResult, overrides) {
+  const { disable, downgrade } = overrides;
+  const slug = catchResult?.entry?.slug ?? catchResult?.slug ?? null;
+
+  if (slug && disable.has(slug)) return null;
+  if (slug && downgrade[slug] === 'soft' && catchResult.tier === 'LOUD') {
+    return { ...catchResult, tier: 'SOFT' };
+  }
+  return catchResult;
+}
+
+// ---------------------------------------------------------------------------
 // WordPress file detection
 // ---------------------------------------------------------------------------
 
@@ -268,17 +321,29 @@ async function main() {
     process.exit(0);
   }
 
+  // Read per-project catch overrides before invoking the catch engine.
+  // Overrides are threaded into runHookCatch() so disabled/downgraded rules
+  // are applied inside checkCode() — the tier returned already reflects them.
+  const catchOverrides = resolveCatchOverrides(projectDir);
+  const overridesArg =
+    catchOverrides.disable.size > 0 || Object.keys(catchOverrides.downgrade).length > 0
+      ? {
+          disable: [...catchOverrides.disable],
+          downgrade: catchOverrides.downgrade,
+        }
+      : undefined;
+
   // Run the catch engine (ESM module via dynamic import)
   let catchResult;
   try {
     const { runHookCatch } = await import(catchRunnerPath);
-    catchResult = runHookCatch(content);
+    catchResult = runHookCatch(content, 'auto', overridesArg);
   } catch {
     // Fail-open: catch engine error must never block the developer
     process.exit(0);
   }
 
-  // No finding — allow silently
+  // No finding (or all findings suppressed by overrides) — allow silently
   if (!catchResult.tier) {
     process.exit(0);
   }
@@ -313,4 +378,4 @@ if (require.main === module) {
 }
 
 // Export pure functions for unit testing
-module.exports = { isWordPressFile, extractContent, resolveMode, resolveCatchRunnerPath };
+module.exports = { isWordPressFile, extractContent, resolveMode, resolveCatchRunnerPath, resolveCatchOverrides, applyCatchOverride };

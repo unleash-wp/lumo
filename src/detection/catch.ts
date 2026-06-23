@@ -216,6 +216,56 @@ function capInput(code: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Per-project catch overrides — loaded from .claude/.lumo.json catch section.
+//
+// Schema:
+//   { "catch": { "disable": ["<slug>", ...], "downgrade": { "<slug>": "soft" } } }
+//
+//   disable  — slugs that must not appear in results at all.
+//   downgrade — slug → "soft": caps a LOUD result to SOFT. Unknown values are
+//               treated as no-op so future additions are safe with old code.
+//
+// No config / missing catch key = behaviour is byte-identical to baseline.
+// ---------------------------------------------------------------------------
+
+export interface CatchOverrides {
+  /** Entry slugs that are completely suppressed — removed from results. */
+  disable?: string[];
+  /**
+   * Per-slug tier cap. Currently only "soft" is meaningful: a LOUD finding for
+   * that slug is downgraded to SOFT. Unknown values are treated as a no-op.
+   */
+  downgrade?: Record<string, string>;
+}
+
+/**
+ * Apply project-level catch overrides to a finished results list.
+ *
+ * Called after the full catch pipeline so the baseline contracts (shim guards,
+ * version facts, deduplication) are unaffected. Override logic runs at the
+ * result boundary only.
+ */
+export function applyCatchOverrides(
+  results: CatchResult[],
+  overrides: CatchOverrides | undefined,
+): CatchResult[] {
+  if (!overrides) return results;
+
+  const disabled = new Set(overrides.disable ?? []);
+  const downgrade = overrides.downgrade ?? {};
+
+  return results
+    .filter((r) => !disabled.has(r.entry.slug))
+    .map((r) => {
+      const cap = downgrade[r.entry.slug];
+      if (cap === 'soft' && r.tier === 'LOUD') {
+        return { ...r, tier: 'SOFT' as CatchTier };
+      }
+      return r;
+    });
+}
+
+// ---------------------------------------------------------------------------
 // Phase 01: checkCode() — pure, snapshot-injectable
 // ---------------------------------------------------------------------------
 
@@ -225,6 +275,7 @@ export function checkCode(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
   snapshot?: Snapshot,
+  overrides?: CatchOverrides,
 ): CatchResult[] {
   try {
     const snap = snapshot ?? loadSnapshot();
@@ -303,10 +354,12 @@ export function checkCode(
       }
     }
 
-    // 3. Sort LOUD before SOFT, cap at CATCH_CAP
-    return [...seen.values()]
+    // 3. Sort LOUD before SOFT, cap at CATCH_CAP, then apply project overrides
+    const raw = [...seen.values()]
       .sort((a, b) => tierRank(b.tier) - tierRank(a.tier))
       .slice(0, CATCH_CAP);
+
+    return applyCatchOverrides(raw, overrides);
   } catch {
     return [];
   }
