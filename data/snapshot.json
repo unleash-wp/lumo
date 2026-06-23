@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-23T10:00:00Z",
+  "generatedAt": "2026-06-23T22:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -120,6 +120,126 @@
       "versions": [
         {
           "wp_version_min": null,
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wpdb-query-without-prepare-sql-injection",
+      "title": "$wpdb queries must use $wpdb->prepare() — direct variable interpolation is SQL injection",
+      "category_slug": "wordpress-security-fundamentals",
+      "summary": "Passing PHP variables directly into $wpdb query methods (get_results, query, get_var, get_row) via string interpolation or concatenation creates SQL injection vulnerabilities. Always use $wpdb->prepare() with %d/%s/%f placeholders to parameterise the query. WordPress will throw a doing_it_wrong() notice on unprepared queries in WP 3.6+.",
+      "code_example": "global $wpdb;\n\n// CORRECT — prepare() parameterises every user-controlled value.\n$user_id  = (int) $_GET['user_id'];\n$status   = sanitize_text_field( $_GET['status'] ?? '' );\n\n$results = $wpdb->get_results(\n    $wpdb->prepare(\n        'SELECT * FROM %i WHERE user_id = %d AND status = %s',\n        $wpdb->prefix . 'my_plugin_table',\n        $user_id,\n        $status\n    )\n);\n\n// CORRECT — static table name is fine inline, only the dynamic value is bound.\n$count = $wpdb->get_var(\n    $wpdb->prepare( \"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = %s\", 'publish' )\n);",
+      "bad_pattern": "global $wpdb;\n\n// WRONG — $user_id comes from $_GET; direct interpolation is SQL injection.\n$user_id = $_GET['user_id'];\n$results = $wpdb->get_results( \"SELECT * FROM wp_my_table WHERE user_id = $user_id\" );\n\n// WRONG — concatenation without prepare() — equally injectable.\n$status = $_GET['status'];\n$sql    = \"SELECT * FROM {$wpdb->posts} WHERE post_status = '\" . $status . \"'\";\n$posts  = $wpdb->get_results( $sql );",
+      "source_url": "https://developer.wordpress.org/apis/database/",
+      "test_step": "1. Enable WP_DEBUG = true and WP_DEBUG_LOG = true in wp-config.php.\n2. Search plugin/theme code for calls to $wpdb->query, $wpdb->get_results, $wpdb->get_var, $wpdb->get_row, $wpdb->get_col.\n3. For each call, check whether the argument is $wpdb->prepare(...) — if not, flag it.\n4. Replace direct variable interpolation with $wpdb->prepare() placeholders (%d, %s, %f).\n5. Check debug.log for \"Unprepared queries\" or \"doing_it_wrong\" notices after saving.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "3.5",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "rest-route-missing-permission-callback",
+      "title": "register_rest_route() without permission_callback exposes the endpoint to unauthenticated requests",
+      "category_slug": "wordpress-security-fundamentals",
+      "summary": "Since WordPress 5.5, every REST route must declare a permission_callback. Omitting it causes a doing_it_wrong() notice and defaults to no permission check — anyone can call the endpoint. For public read-only routes use __return_true explicitly and document why. For mutating routes (POST/PUT/PATCH/DELETE) or routes that return private data, always check current_user_can() inside the callback.",
+      "code_example": "// CORRECT — read-only public endpoint: __return_true is documented and intentional.\nregister_rest_route(\n    'myplugin/v1',\n    '/products',\n    [\n        'methods'             => WP_REST_Server::READABLE,\n        'callback'            => 'myplugin_get_products',\n        'permission_callback' => '__return_true', // intentionally public\n    ]\n);\n\n// CORRECT — mutating endpoint: capability check in permission_callback.\nregister_rest_route(\n    'myplugin/v1',\n    '/settings',\n    [\n        'methods'             => WP_REST_Server::EDITABLE,\n        'callback'            => 'myplugin_update_settings',\n        'permission_callback' => function () {\n            return current_user_can( 'manage_options' );\n        },\n    ]\n);",
+      "bad_pattern": "// WRONG — no permission_callback at all (WP 5.5+ emits doing_it_wrong notice;\n// access behaviour is the same as __return_true — anyone can call this).\nregister_rest_route(\n    'myplugin/v1',\n    '/settings',\n    [\n        'methods'  => WP_REST_Server::EDITABLE,\n        'callback' => 'myplugin_update_settings',\n    ]\n);\n\n// WRONG — __return_true on a mutating route exposes the operation to any visitor.\nregister_rest_route(\n    'myplugin/v1',\n    '/delete-item',\n    [\n        'methods'             => WP_REST_Server::DELETABLE,\n        'callback'            => 'myplugin_delete_item',\n        'permission_callback' => '__return_true',\n    ]\n);",
+      "source_url": "https://developer.wordpress.org/rest-api/extending-the-rest-api/adding-custom-routes-endpoints/",
+      "test_step": "1. Search plugin/theme code for register_rest_route( calls.\n2. For each registration, verify the options array contains a permission_callback key.\n3. If permission_callback is __return_true, confirm the route only reads public data — flag it if it mutates state or returns private content.\n4. Test with WP_DEBUG = true: a missing permission_callback emits a doing_it_wrong() notice in WP 5.5+.\n5. For mutating routes, test that unauthenticated requests receive a 401/403 REST error.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "5.5",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-ajax-handler-without-nonce",
+      "title": "AJAX and form handlers must verify a nonce — missing wp_verify_nonce() / check_ajax_referer() enables CSRF",
+      "category_slug": "wordpress-security-fundamentals",
+      "summary": "WordPress AJAX handlers (wp_ajax_{action} / wp_ajax_nopriv_{action}) and admin-post.php form handlers that mutate state without verifying a nonce are vulnerable to Cross-Site Request Forgery (CSRF). An attacker can trick an authenticated user's browser into triggering the action on their behalf. Always call wp_verify_nonce() or check_ajax_referer() at the top of any handler that performs a write operation.",
+      "code_example": "// ── Server side: register the AJAX action ───────────────────────────────────\nadd_action( 'wp_ajax_myplugin_delete_record', 'myplugin_delete_record_handler' );\n\nfunction myplugin_delete_record_handler(): void {\n    // CORRECT — verify nonce before touching anything.\n    check_ajax_referer( 'myplugin_delete_nonce', 'security' );\n\n    // CORRECT — capability check after nonce (defence in depth).\n    if ( ! current_user_can( 'manage_options' ) ) {\n        wp_send_json_error( 'Forbidden', 403 );\n    }\n\n    $record_id = absint( $_POST['record_id'] ?? 0 );\n    // … perform the deletion …\n    wp_send_json_success();\n}\n\n// ── Client side: pass the nonce with the request ─────────────────────────────\n// In PHP (enqueue + localize):\nwp_localize_script(\n    'myplugin-admin',\n    'MyPlugin',\n    [ 'nonce' => wp_create_nonce( 'myplugin_delete_nonce' ) ]\n);",
+      "bad_pattern": "// WRONG — no nonce check; any authenticated request can trigger this.\nadd_action( 'wp_ajax_myplugin_delete_record', 'myplugin_delete_record_handler' );\n\nfunction myplugin_delete_record_handler(): void {\n    $record_id = absint( $_POST['record_id'] ?? 0 );\n    // Immediately deletes without verifying the request is intentional.\n    $wpdb->delete( $wpdb->prefix . 'myplugin_records', [ 'id' => $record_id ] );\n    wp_send_json_success();\n}",
+      "source_url": "https://developer.wordpress.org/apis/security/nonces/",
+      "test_step": "1. Find all add_action( 'wp_ajax_' and add_action( 'wp_ajax_nopriv_' registrations in the codebase.\n2. Open each handler function and check for a check_ajax_referer() or wp_verify_nonce() call at the top.\n3. If missing, add wp_create_nonce( 'action_name' ) in the localize/form output and check_ajax_referer( 'action_name', 'nonce_field' ) at the handler start.\n4. Test: send an AJAX request without the nonce field — it should fail with a -1 or wp_die() response.\n5. Test: send a valid request with the correct nonce — it should succeed.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "2.0.3",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "superglobal-without-sanitize",
+      "title": "$_POST / $_GET / $_REQUEST values must be sanitised with a sanitize_*() function before use",
+      "category_slug": "wordpress-security-fundamentals",
+      "summary": "Every value read from $_POST, $_GET, or $_REQUEST is user-controlled and must be sanitised before being used in database queries, option updates, file operations, or any logic that affects system state. WordPress provides context-specific sanitise functions: sanitize_text_field(), sanitize_email(), sanitize_url(), absint(), wp_kses() etc. Using raw superglobals without sanitisation exposes the code to stored XSS, SQL injection (when $wpdb->prepare() is also missing), and arbitrary data corruption.",
+      "code_example": "// CORRECT — sanitise every superglobal read at the point of retrieval.\n$post_id  = absint( $_POST['post_id'] ?? 0 );\n$username = sanitize_text_field( wp_unslash( $_POST['username'] ?? '' ) );\n$email    = sanitize_email( $_POST['email'] ?? '' );\n$url      = sanitize_url( $_POST['redirect_url'] ?? '' );\n\n// CORRECT — integer cast is sufficient for known-numeric fields.\n$page = (int) ( $_GET['paged'] ?? 1 );\n\n// CORRECT — wp_unslash() before sanitize_text_field() to strip magic-quote slashes.\n$comment = sanitize_textarea_field( wp_unslash( $_POST['comment'] ?? '' ) );",
+      "bad_pattern": "// WRONG — raw superglobal assigned without sanitisation.\n$username = $_POST['username'];      // Could be anything; used in queries below.\n$post_id  = $_GET['id'];             // String; not cast to int.\n$message  = $_REQUEST['message'];    // Used unfiltered in update_option().\n\n// These then get passed downstream:\nupdate_option( 'my_plugin_username', $username );   // Stores arbitrary input.\n$wpdb->get_results( \"SELECT * FROM ... WHERE id = $post_id\" ); // SQL injection.",
+      "source_url": "https://developer.wordpress.org/apis/security/sanitizing/",
+      "test_step": "1. Search for $var = $_POST[ / $var = $_GET[ / $var = $_REQUEST[ assignments.\n2. For each, trace $var to its first use — check whether it passes through a sanitize_*() function or a type cast before use.\n3. For numeric IDs: wrap with absint().\n4. For text: wrap with sanitize_text_field( wp_unslash( ... ) ).\n5. Verify: attempt to submit a value containing <script>alert(1)</script> via the affected field — confirm it is stripped before storage or output.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "2.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "admin-action-without-capability-check",
+      "title": "Admin and mutating actions must check current_user_can() before executing privileged operations",
+      "category_slug": "wordpress-security-fundamentals",
+      "summary": "Any action that creates, updates, or deletes data — whether triggered via wp_ajax_, admin_post_, admin_action_, or a direct page callback — must verify the current user holds the required capability with current_user_can() before executing. Without this check, any logged-in (or even logged-out, for nopriv routes) user can trigger the operation regardless of their role. Combine with nonce verification: the nonce proves the request is intentional; the capability check proves the user is authorised.",
+      "code_example": "// CORRECT — capability check at the top, before any mutation.\nadd_action( 'admin_post_myplugin_delete_record', 'myplugin_handle_delete_record' );\n\nfunction myplugin_handle_delete_record(): void {\n    // 1. Verify nonce.\n    check_admin_referer( 'myplugin_delete_nonce', 'security' );\n\n    // 2. Verify capability.\n    if ( ! current_user_can( 'manage_options' ) ) {\n        wp_die( esc_html__( 'You do not have permission to perform this action.', 'myplugin' ) );\n    }\n\n    $record_id = absint( $_POST['record_id'] ?? 0 );\n    // … delete the record …\n    wp_safe_redirect( admin_url( 'admin.php?page=myplugin&deleted=1' ) );\n    exit;\n}\n\n// CORRECT — post-specific capability using map_meta_cap.\nfunction myplugin_can_edit_post( int $post_id ): bool {\n    return current_user_can( 'edit_post', $post_id );\n}",
+      "bad_pattern": "// WRONG — no capability check; any logged-in user can delete any record.\nadd_action( 'admin_post_myplugin_delete_record', 'myplugin_handle_delete_record' );\n\nfunction myplugin_handle_delete_record(): void {\n    check_admin_referer( 'myplugin_delete_nonce', 'security' ); // nonce only\n    $record_id = absint( $_POST['record_id'] ?? 0 );\n    $wpdb->delete( $wpdb->prefix . 'myplugin_records', [ 'id' => $record_id ] );\n    wp_safe_redirect( admin_url( 'admin.php?page=myplugin' ) );\n    exit;\n}",
+      "source_url": "https://developer.wordpress.org/apis/security/checking-user-capabilities/",
+      "test_step": "1. Find all add_action( 'wp_ajax_', add_action( 'admin_post_', and add_action( 'admin_action_' registrations.\n2. Open each handler and confirm a current_user_can() call appears before any write operation.\n3. Test: log in as a Subscriber, send a crafted POST to admin-ajax.php?action={your_action} or admin-post.php?action={your_action}.\n4. Without the capability check, the operation succeeds — with it, the user receives a wp_die() or error response.\n5. Also verify: the nonce check comes BEFORE the capability check (fail fast, avoid timing attacks).",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "2.0",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "the-content-filter-without-loop-guard",
+      "title": "the_content filter callbacks need an is_main_query() + in_the_loop() guard to avoid firing in admin, feeds, and secondary queries",
+      "category_slug": "wordpress-security-fundamentals",
+      "summary": "The the_content filter fires in many contexts: the main loop, secondary WP_Query loops, REST API responses, widget areas, feeds (RSS/Atom), and wp-admin. A callback that always modifies content will inject unwanted output in feeds, duplicate content in pages with multiple queries, and corrupt admin editor previews. Guard with in_the_loop() && is_main_query() — or with a more specific condition (is_singular(), !is_admin(), !is_feed()) — so the modification only runs where it is intended.",
+      "code_example": "// CORRECT — only fires in the main front-end single post/page loop.\nadd_filter( 'the_content', 'myplugin_append_cta' );\n\nfunction myplugin_append_cta( string $content ): string {\n    // Guard: main query, in the loop, front-end single post only.\n    if ( ! in_the_loop() || ! is_main_query() || ! is_singular() ) {\n        return $content;\n    }\n\n    return $content . '<div class=\"myplugin-cta\">Sign up now</div>';\n}",
+      "bad_pattern": "// WRONG — fires in RSS feeds, secondary queries, and admin previews too.\nadd_filter( 'the_content', 'myplugin_append_cta' );\n\nfunction myplugin_append_cta( string $content ): string {\n    // No guard — runs everywhere the_content filter fires.\n    return $content . '<div class=\"myplugin-cta\">Sign up now</div>';\n}",
+      "source_url": "https://developer.wordpress.org/reference/hooks/the_content/",
+      "test_step": "1. Find all add_filter( 'the_content', ... ) registrations in the codebase.\n2. Open each callback and check whether it returns $content unchanged when in_the_loop() is false or is_main_query() is false.\n3. Test on a page that has a secondary WP_Query (e.g. a related-posts widget) — verify the callback does not fire twice.\n4. Test the RSS feed (/feed/) — verify the extra content does not appear in the feed if that is not intended.\n5. Test in wp-admin post preview — verify no corruption appears.",
+      "tier": "free",
+      "updatedAt": "2026-06-23T22:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "1.5",
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": false
