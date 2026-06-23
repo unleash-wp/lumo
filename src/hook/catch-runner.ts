@@ -1,0 +1,104 @@
+/**
+ * Hook catch runner — thin ESM bridge called by the PreToolUse hook.
+ *
+ * Exposes runHookCatch() through a stable import surface so the CJS hook can
+ * call it via dynamic import() without pulling in MCP/transport deps.
+ *
+ * Snapshot loading: this module loads the snapshot using its own import.meta.url
+ * so the path is correct whether the module runs from source (src/hook/) or from
+ * the compiled bundle (dist/hook-catch.mjs). It injects the loaded snapshot into
+ * checkCode() to avoid the double-load that would happen if checkCode() called
+ * loadSnapshot() with its own (different) relative path.
+ */
+
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { join, dirname } from 'node:path';
+import { checkCode } from '../detection/catch.js';
+import { formatCatch, CATCH_NEUTRAL_LINE } from '../lib/render.js';
+import { validateEntry } from '../lib/snapshot.js';
+import type { CatchTier } from '../detection/catch.js';
+import type { Snapshot } from '../types.js';
+
+export interface HookCatchResult {
+  /** Highest tier seen across all results (LOUD > SOFT > none). */
+  tier: CatchTier | null;
+  /** Formatted Markdown for the first finding (or the neutral line if none). */
+  message: string;
+  /** Raw result count per tier. */
+  loudCount: number;
+  softCount: number;
+}
+
+// ---------------------------------------------------------------------------
+// Snapshot loading — relative to THIS module's location at bundle time.
+//
+// When bundled: import.meta.url = dist/hook-catch.mjs → ../data/snapshot.json
+// When in src:  import.meta.url = src/hook/catch-runner.ts → ../../data/snapshot.json
+//
+// We try ../data first (bundle layout), then ../../data (source layout), then
+// fail-open so the hook never crashes the developer's session.
+// ---------------------------------------------------------------------------
+
+function loadSnapshotForHook(): Snapshot | null {
+  const base = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    join(base, '../data/snapshot.json'),    // dist/hook-catch.mjs → dist/../data
+    join(base, '../../data/snapshot.json'), // src/hook/catch-runner.ts → src/hook/../../data
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const raw = JSON.parse(readFileSync(candidate, 'utf8')) as Record<string, unknown>;
+      if (raw['schemaVersion'] !== 1 || !Array.isArray(raw['entries'])) continue;
+      (raw['entries'] as unknown[]).forEach((e, i) => validateEntry(e, i));
+      return raw as unknown as Snapshot;
+    } catch {
+      // Try next candidate
+    }
+  }
+  return null;
+}
+
+// Loaded once at module-init time; null means fail-open (no snapshot available).
+const SNAPSHOT: Snapshot | null = loadSnapshotForHook();
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Scan a code blob for WordPress/WooCommerce issues.
+ *
+ * Language is auto-detected when not provided. Fail-open: any uncaught error
+ * returns a null-tier result so the hook never blocks on an internal crash.
+ * Also null-tier when the snapshot could not be loaded.
+ */
+export function runHookCatch(
+  code: string,
+  language: 'php' | 'js' | 'auto' = 'auto',
+): HookCatchResult {
+  if (!SNAPSHOT) {
+    return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
+  }
+
+  try {
+    // Inject the pre-loaded snapshot so checkCode() does not re-resolve paths.
+    const results = checkCode(code, language, SNAPSHOT);
+
+    if (results.length === 0) {
+      return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
+    }
+
+    const loudCount = results.filter((r) => r.tier === 'LOUD').length;
+    const softCount = results.filter((r) => r.tier === 'SOFT').length;
+
+    // checkCode() already sorts LOUD before SOFT
+    const top = results[0]!;
+    const message = formatCatch(top);
+
+    return { tier: top.tier, message, loudCount, softCount };
+  } catch {
+    return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
+  }
+}
