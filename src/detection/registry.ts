@@ -438,6 +438,23 @@ export const PATTERNS: readonly PatternDefinition[] = [
     wpCliSlug: 'wordfence',
     sourceSignals: ['wfBlock::', 'wordfence::liveTraf('],
   },
+  {
+    pattern: 'premium-wc-subscriptions',
+    proTeaser: true,
+    proTeaserName: 'WooCommerce Subscriptions',
+    hasProCoverage: true,
+    composerKeys: [],
+    directoryPaths: [
+      'wp-content/plugins/woocommerce-subscriptions/woocommerce-subscriptions.php',
+      'web/app/plugins/woocommerce-subscriptions/woocommerce-subscriptions.php',
+    ],
+    wpCliSlug: 'woocommerce-subscriptions',
+    sourceSignals: ['WC_Subscriptions::', 'wcs_get_subscription('],
+    // Detection + teaser only, like the other Pro-covered premium plugins
+    // (acf-pro, elementor-pro): the WooCommerce Subscriptions knowledge lives in
+    // Lumo Pro, so there is no Free-snapshot entry to render a catch against here.
+    // The subscription get_post_meta footgun is caught Pro-side via wcs-content.ts.
+  },
 
   {
     // WordPress 7.0 Interactivity API changes (released May 20, 2026 — after model training cutoff).
