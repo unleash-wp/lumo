@@ -246,11 +246,11 @@ describe('resolveMode — default', () => {
   before(() => { tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumo-def-test-')); });
   after(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
 
-  it('defaults to "block" with no env and no config', () => {
+  it('defaults to "warn-only" with no env and no config (safe default)', () => {
     const orig = process.env.LUMO_ENFORCE_HOOK;
     delete process.env.LUMO_ENFORCE_HOOK;
     try {
-      assert.equal(resolveMode(tmpDir), 'block');
+      assert.equal(resolveMode(tmpDir), 'warn-only');
     } finally {
       if (orig !== undefined) process.env.LUMO_ENFORCE_HOOK = orig;
     }
@@ -662,6 +662,80 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
     });
     // Shim guard fires → SOFT → no block (exit 0)
     assert.equal(result.status, 0);
+  });
+
+  // --- Default-safe: no config → advisory, never blocks (regression lock) ---
+  it('no .lumo.json config → advisory (warn-only), never blocks — default-safe', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumo-default-safe-'));
+    try {
+      // No .lumo.json written, no LUMO_ENFORCE_HOOK env — pure default
+      const result = spawnSync(process.execPath, [HOOK_PATH], {
+        input: JSON.stringify({
+          tool_name: 'Write',
+          cwd: tmpDir,
+          tool_input: {
+            file_path: '/wp-content/plugins/bad.php',
+            content: "<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+          },
+        }),
+        encoding: 'utf8',
+        // No LUMO_ENFORCE_HOOK env — default resolveMode() kicks in
+        env: { ...process.env, LUMO_ENFORCE_HOOK: undefined },
+        cwd: REPO_ROOT,
+      });
+
+      // Default must NEVER block (exit 0)
+      assert.equal(result.status, 0, `default mode must not block; got ${result.status}\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+      // Blocking output must not appear
+      const parsed = result.stdout.trim()
+        ? JSON.parse(result.stdout.split('\n').find((l) => l.trim()) ?? '{}')
+        : null;
+      assert.ok(!parsed || parsed.continue !== false, 'default must not set continue:false');
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  // --- SOFT never blocks even in block mode (FP-immunity) ---
+  it('SOFT catch never blocks even when mode=block', () => {
+    // get_post_meta on an order_id variable → CONTEXT_DEPENDENT → SOFT, never LOUD
+    const result = invokeHook({
+      tool_name: 'Write',
+      tool_input: {
+        file_path: '/wp-content/plugins/my-plugin/orders.php',
+        content: [
+          '<?php',
+          '// Reading order billing email via post meta API',
+          "$email = get_post_meta( \$order_id, '_billing_email', true );",
+        ].join('\n'),
+      },
+      // block mode set via env in invokeHook — SOFT must still not block
+    });
+    // SOFT → must allow (exit 0)
+    assert.equal(result.status, 0, `SOFT must not block; got ${result.status}\nstdout: ${result.stdout}`);
+    const parsed = result.stdout.trim()
+      ? JSON.parse(result.stdout.split('\n').find((l) => l.trim()) ?? '{}')
+      : null;
+    assert.ok(!parsed || parsed.continue !== false, 'SOFT must never set continue:false');
+  });
+
+  // --- Correct code never blocks (FP-immunity) ---
+  it('correct wc_get_order() code never blocks in block mode', () => {
+    const result = invokeHook({
+      tool_name: 'Write',
+      tool_input: {
+        file_path: '/wp-content/plugins/my-plugin/includes/class-orders.php',
+        content: [
+          '<?php',
+          '$order = wc_get_order( $order_id );',
+          'if ( ! $order ) { return; }',
+          '$status = $order->get_status();',
+          '$total = $order->get_total();',
+        ].join('\n'),
+      },
+    });
+    assert.equal(result.status, 0, `correct code must not block; got ${result.status}\nstdout: ${result.stdout}`);
+    assert.ok(!result.parsed || result.parsed.continue !== false, 'correct code: continue must not be false');
   });
 });
 
