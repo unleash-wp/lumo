@@ -57,23 +57,42 @@ export function validateEntry(entry: unknown, index: number): asserts entry is S
 /**
  * Load and validate data/snapshot.json.
  *
- * Resolves the path relative to this file so the loader works regardless of
- * the process cwd (plugin can be installed anywhere).
+ * Resolves the path relative to import.meta.url so the loader works regardless
+ * of the process cwd (plugin can be installed anywhere).
+ *
+ * Path strategy — two candidates are tried in order:
+ *   1. '../data/snapshot.json'  — bundle layout (dist/mcp.mjs → <pkg>/data/)
+ *   2. '../../data/snapshot.json' — source layout (src/lib/snapshot.ts → <pkg>/data/)
+ *
+ * tsup inlines this module into each dist/*.mjs bundle, so at runtime
+ * import.meta.url is the bundle file (e.g. <pkg>/dist/mcp.mjs).
+ * dirname = <pkg>/dist/, and candidate 1 resolves to <pkg>/data/snapshot.json.
+ * Candidate 2 would walk above the package root and is only correct when
+ * running directly from source (vitest, ts-node).
  *
  * Throws on any schema violation — the caller must not silently swallow the
  * error; a broken snapshot means no Free answers, which is a startup failure.
  */
 export function loadSnapshot(): Snapshot {
-  const snapshotPath = join(
-    dirname(fileURLToPath(import.meta.url)),
-    '../../data/snapshot.json',
-  );
+  const base = dirname(fileURLToPath(import.meta.url));
+  // Bundle layout first: <pkg>/dist/*.mjs → <pkg>/data/
+  // Source layout fallback: <pkg>/src/lib/snapshot.ts → <pkg>/data/
+  const candidates = [
+    join(base, '../data/snapshot.json'),
+    join(base, '../../data/snapshot.json'),
+  ];
 
+  let snapshotPath = candidates[0]!;
   let raw: unknown;
   try {
     raw = JSON.parse(readFileSync(snapshotPath, 'utf8'));
-  } catch (err) {
-    throw new Error(`Failed to read snapshot at ${snapshotPath}: ${String(err)}`);
+  } catch {
+    snapshotPath = candidates[1]!;
+    try {
+      raw = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+    } catch (err) {
+      throw new Error(`Failed to read snapshot at ${snapshotPath}: ${String(err)}`);
+    }
   }
 
   if (typeof raw !== 'object' || raw === null) {

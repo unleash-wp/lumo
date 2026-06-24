@@ -6,9 +6,25 @@
   "engines": {
     "node": ">=22"
   },
+  "files": [
+    "dist/",
+    "data/",
+    "commands/",
+    "skills/",
+    "server.json",
+    "action.yml",
+    ".cursor/"
+  ],
+  "main": "dist/mcp.mjs",
+  "exports": {
+    ".": "./dist/mcp.mjs"
+  },
   "bin": {
     "lumo-mcp": "dist/mcp.mjs",
     "lumo-scan": "dist/scan.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",
