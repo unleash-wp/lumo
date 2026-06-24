@@ -27,6 +27,14 @@ The knowledge base is kept current with each WordPress and WooCommerce release. 
 
 That's it. Lumo loads from the self-hosted marketplace. No separate account, no setup.
 
+After install, run this once in your WooCommerce project to catch outdated WordPress patterns in your current changes:
+
+```bash
+npx @unleashwp/lumo scan
+```
+
+Lumo scans your uncommitted diff and prints either the flagged patterns (LOUD first) or an honest "scanned N files — clean as of {date}".
+
 ### Any MCP client (Cursor, Claude Desktop, etc.)
 
 ```bash
