@@ -17,6 +17,7 @@ import { describe, it, expect } from 'vitest';
 import { runCatch } from '../src/action/catch-runner.js';
 import { parseDiff } from '../src/action/diff-parser.js';
 import { loadSnapshot } from '../src/lib/snapshot.js';
+import { orderFindingsLoudFirst } from '../src/scan/order-findings.js';
 
 // ---------------------------------------------------------------------------
 // Diff fixtures — same HPOS patterns used in action-catch-runner tests.
@@ -68,11 +69,15 @@ describe('proactive scan: LOUD pattern', () => {
     expect(loud?.body).toMatch(/WooCommerce|WordPress/);
   });
 
-  it('LOUD findings come first in the findings array (runCatch ordering)', async () => {
-    const result = await runCatch({ diff: loudDiff });
-    if (result.findings.length > 1) {
-      expect(result.findings[0]!.tier).toBe('LOUD');
-    }
+  it('orderFindingsLoudFirst puts LOUD before SOFT regardless of input order', () => {
+    const mixed = [
+      { tier: 'SOFT', filename: 'a.php' },
+      { tier: 'LOUD', filename: 'b.php' },
+      { tier: 'SOFT', filename: 'c.php' },
+    ];
+    const ordered = orderFindingsLoudFirst(mixed);
+    expect(ordered[0]!.tier).toBe('LOUD');
+    expect(ordered.map((f) => f.tier)).toEqual(['LOUD', 'SOFT', 'SOFT']);
   });
 });
 

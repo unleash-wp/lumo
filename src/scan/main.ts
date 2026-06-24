@@ -17,6 +17,7 @@ import { spawnSync } from 'node:child_process';
 import { parseDiff } from '../action/diff-parser.js';
 import { runCatch } from '../action/catch-runner.js';
 import { loadSnapshot } from '../lib/snapshot.js';
+import { orderFindingsLoudFirst } from './order-findings.js';
 
 // ---------------------------------------------------------------------------
 // Git diff — staged + unstaged working changes against HEAD.
@@ -118,7 +119,7 @@ async function main(): Promise<void> {
   const date = knowledgeDate();
   const dateNote = date ? ` as of ${date}` : '';
 
-  // 5a. Findings present — print them (LOUD first, already sorted by runCatch).
+  // 5a. Findings present — print them, LOUD first (runCatch returns file order, so sort below).
   if (result.findings.length > 0) {
     const loudCount = result.loudCount;
     const softCount = result.softCount;
@@ -133,7 +134,7 @@ async function main(): Promise<void> {
 
     console.log(`lumo scan: ${parts.join(', ')} finding${result.findings.length === 1 ? '' : 's'} in your current changes.\n`);
 
-    for (const finding of result.findings) {
+    for (const finding of orderFindingsLoudFirst(result.findings)) {
       console.log(`--- ${finding.filename} ---`);
       console.log(finding.body);
       console.log('');
