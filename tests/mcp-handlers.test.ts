@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleAudit, handleLookup, handleCheckCode } from '../src/mcp/handlers.js';
@@ -280,5 +280,47 @@ describe('handleCheckCode — version-scoping', () => {
     const expected = formatFreeMarkdown(renderFree(entry));
     const actual = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
     expect(actual).toBe(expected);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleCheckCode — upgrade prompt wiring
+// ---------------------------------------------------------------------------
+
+describe('handleCheckCode — upgrade prompt wiring', () => {
+  const hposBlob = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+
+  afterEach(() => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    delete process.env['LUMO_UPGRADE_PROMPT'];
+  });
+
+  it('no checkout URL configured → LOUD fires but no upgrade prompt (dead default never shown)', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).toContain('⚠️');
+    expect(result).not.toContain('Get it:');
+  });
+
+  it('real checkout URL set → appends the prompt with the gated count and attributed link', async () => {
+    process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).toContain('Lumo caught 1 HPOS risks');
+    expect(result).toContain('Get it: https://buy.example.com/pro?ref=catch&gated=1&v=block');
+  });
+
+  it('kill-switch off → no prompt even with a real URL set', async () => {
+    process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
+    process.env['LUMO_UPGRADE_PROMPT'] = 'off';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).not.toContain('Get it:');
+  });
+
+  it('non-WooCommerce LOUD catch → no prompt (copy is HPOS-specific)', async () => {
+    process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
+    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, catchSnap);
+    expect(result).toContain('⚠️');
+    expect(result).not.toContain('Get it:');
   });
 });
