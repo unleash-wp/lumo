@@ -4,8 +4,16 @@
  */
 
 import { loadSnapshot, findEntry, findByCategory } from '../lib/snapshot.js';
-import { renderFree, formatFreeMarkdown, formatCatch, CATCH_NEUTRAL_LINE } from '../lib/render.js';
+import {
+  renderFree,
+  formatFreeMarkdown,
+  formatCatch,
+  CATCH_NEUTRAL_LINE,
+  UPGRADE_PROMPT_BLOCK,
+} from '../lib/render.js';
+import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
 import type { Snapshot } from '../types.js';
+import type { CatchResult } from '../detection/catch.js';
 
 const NOT_FOUND_AUDIT =
   'No known WordPress risk patterns detected in this project — nothing to check here.';
@@ -149,7 +157,7 @@ export async function handleCheckCode(
       }
     }
 
-    return results
+    const body = results
       .map((r) => {
         // Select the version that matches this result's versionFact field.
         const projectVersion =
@@ -157,7 +165,41 @@ export async function handleCheckCode(
         return formatCatch(r, projectVersion);
       })
       .join('\n\n---\n\n');
+
+    return appendUpgradePrompt(body, results);
   } catch {
     return CATCH_NEUTRAL_LINE;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Upgrade prompt — appended to a catch response only at the highest-intent
+// moment: a LOUD WooCommerce/HPOS catch fired. Gated three ways so it never
+// surfaces a dead buy-link or an unwanted nag:
+//   1. at least one LOUD WooCommerce result (the prompt copy is HPOS-framed),
+//   2. the upgrade prompt is enabled (kill-switch, default on),
+//   3. a real checkout URL is configured — the built-in default does not
+//      resolve, so an unset URL must never print a "Get it: <url>" line.
+// Until a real LUMO_CHECKOUT_URL is set, output is byte-identical to before.
+// ---------------------------------------------------------------------------
+function appendUpgradePrompt(body: string, results: CatchResult[]): string {
+  const hposLoud = results.filter(
+    (r) => r.tier === 'LOUD' && r.entry.category_slug === 'woocommerce',
+  );
+  const checkoutConfigured = (process.env['LUMO_CHECKOUT_URL'] ?? '').trim().length > 0;
+
+  if (hposLoud.length === 0 || !isUpgradePromptEnabled() || !checkoutConfigured) {
+    return body;
+  }
+
+  const checkoutUrl = buildCheckoutUrl(getCheckoutUrl(), {
+    source: 'catch',
+    gatedCount: hposLoud.length,
+    promptVariant: 'block',
+  });
+  const prompt = UPGRADE_PROMPT_BLOCK.replace('{N}', String(hposLoud.length)).replace(
+    '{checkout_url}',
+    checkoutUrl,
+  );
+  return `${body}\n\n---\n\n${prompt}`;
 }
