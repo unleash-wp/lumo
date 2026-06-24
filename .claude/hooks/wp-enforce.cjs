@@ -16,8 +16,8 @@
  *   No finding       → allow silently
  *
  * Mode (configurable via .claude/.lumo.json or env):
- *   block     (default) — LOUD blocks, SOFT warns
- *   warn-only           — all findings warn; nothing blocked
+ *   warn-only (default) — all findings warn; nothing blocked (advisory-only, safe default)
+ *   block               — LOUD blocks, SOFT warns (requires explicit opt-in via .lumo.json)
  *
  * The hook is a no-op (exit 0) when:
  *   - The file is not a WordPress/PHP/plugin file
@@ -42,8 +42,8 @@ const path = require('path');
 /**
  * Resolve enforcement mode from:
  *   1. Env var  LUMO_ENFORCE_HOOK=off / warn-only / block
- *   2. .claude/.lumo.json  { "enforce": { "mode": "warn-only" } }
- *   3. Default: "block"
+ *   2. .claude/.lumo.json  { "enforce": { "mode": "block" } }
+ *   3. Default: "warn-only"   ← safe default; opt-in only
  *
  * Accepted mode values: "block" | "warn-only" | "off"
  */
@@ -67,7 +67,7 @@ function resolveMode(projectDir) {
     // Ignore config read errors — fall through to default
   }
 
-  return 'block';
+  return 'warn-only';
 }
 
 // ---------------------------------------------------------------------------

@@ -5,14 +5,51 @@
  * findings as PR review comments. Fails the check (exit 1) when LOUD
  * catches fire and fail_on_loud is true (the default).
  *
+ * Enforcement ladder — gated on .claude/.lumo.json enforce.mode in the
+ * checked-out workspace (GITHUB_WORKSPACE):
+ *   block     → LOUD fires = non-zero exit (fails the PR build)
+ *   warn-only → comment-only on every finding; no non-zero exit
+ *   off       → no comments, no exit signal
+ *   (absent)  → advisory/comment only — byte-identical to warn-only
+ *
+ * The fail_on_loud action input remains for backwards compatibility and
+ * is OR-combined with enforce.mode:block — either can trigger failure.
+ *
  * Block/advise model (no-false-LOUD):
- *   LOUD  → comment + fail when fail_on_loud=true.
+ *   LOUD  → comment + fail when fail_on_loud=true OR enforce.mode=block.
  *   SOFT  → comment only, never blocks.
  */
 
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { runCatch } from './catch-runner.js';
+
+// ---------------------------------------------------------------------------
+// Enforcement mode from workspace .lumo.json
+// ---------------------------------------------------------------------------
+
+/**
+ * Read enforce.mode from .claude/.lumo.json in the checked-out workspace.
+ * Returns 'warn-only' when absent, malformed, or set to any unknown value.
+ * Only an explicit "block" or "off" overrides the default advisory behaviour.
+ *
+ * Exported for unit testing; not part of the public action API surface.
+ */
+export function resolveActionEnforceMode(workspaceDir: string): 'block' | 'warn-only' | 'off' {
+  try {
+    const cfgPath = path.join(workspaceDir, '.claude', '.lumo.json');
+    if (!fs.existsSync(cfgPath)) return 'warn-only';
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8')) as Record<string, unknown>;
+    const mode = (cfg?.enforce as Record<string, unknown> | undefined)?.mode;
+    if (mode === 'block') return 'block';
+    if (mode === 'off') return 'off';
+  } catch {
+    // Fail-open: malformed config → advisory
+  }
+  return 'warn-only';
+}
 
 async function main(): Promise<void> {
   const failOnLoud = core.getInput('fail_on_loud').trim().toLowerCase() !== 'false';
@@ -21,6 +58,19 @@ async function main(): Promise<void> {
   // Mask the license key so it never surfaces in logs, even with ACTIONS_STEP_DEBUG enabled.
   if (licenseKey) {
     core.setSecret(licenseKey);
+  }
+
+  // Enforcement ladder: read enforce.mode from workspace .lumo.json.
+  // Default-safe: absent config → 'warn-only' (advisory only, never blocks).
+  // Only enforce.mode:"block" enables non-zero exit on LOUD catches.
+  const workspaceDir = process.env['GITHUB_WORKSPACE'] ?? process.cwd();
+  const enforceMode = resolveActionEnforceMode(workspaceDir);
+  const blockOnLoud = failOnLoud || enforceMode === 'block';
+
+  // When enforce.mode is "off", skip comments entirely.
+  if (enforceMode === 'off') {
+    core.info('[lumo] enforce.mode=off — skipping all catch output');
+    return;
   }
 
   const token = process.env.GITHUB_TOKEN;
@@ -77,7 +127,7 @@ async function main(): Promise<void> {
     '',
   ];
 
-  if (loudCount > 0 && failOnLoud) {
+  if (loudCount > 0 && blockOnLoud) {
     summaryLines.push(
       `**${loudCount} LOUD catch${loudCount > 1 ? 'es' : ''}** — certain breaking changes; this check will fail.`,
     );
@@ -127,7 +177,7 @@ async function main(): Promise<void> {
     `[lumo] Posted ${findings.length} finding(s) — ${loudCount} LOUD, ${softCount} advisory`,
   );
 
-  if (loudCount > 0 && failOnLoud) {
+  if (loudCount > 0 && blockOnLoud) {
     core.setFailed(
       `Lumo caught ${loudCount} LOUD WordPress/WooCommerce pattern${loudCount > 1 ? 's' : ''} — review the PR comments and fix before merging.`,
     );
