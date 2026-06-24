@@ -1,0 +1,74 @@
+name: QA Matrix
+
+# Cross-OS validation: ubuntu / macOS / Windows x typecheck + tests + build + smoke.
+# Runs on PRs and main pushes. Mirrors the ci.yml job set but adds the OS matrix
+# and explicit shell: bash on every run: step so Windows gets bash (not cmd.exe).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  matrix:
+    name: "${{ matrix.os }}"
+    runs-on: "${{ matrix.os }}"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Typecheck
+        shell: bash
+        run: npm run typecheck
+
+      # Runs all 16 test files including detection-fixture tests (classic-wp /
+      # bedrock-woo / composer-woo layouts) on every OS.
+      - name: Test
+        shell: bash
+        run: npm test
+
+      - name: Build
+        shell: bash
+        run: npm run build
+
+      # Spawns dist/mcp.mjs over stdio, asserts lumo_audit + lumo_lookup register.
+      - name: Smoke test MCP server
+        shell: bash
+        run: node scripts/mcp-smoke-test.mjs
+
+      # Verify the published bin entries resolve from the built dist/ output.
+      # Uses node --eval so it works on Windows without shell tricks.
+      - name: Verify bin entries resolve from dist
+        shell: bash
+        run: |
+          node --eval "
+            const fs = require('fs');
+            const bins = { 'lumo-mcp': 'dist/mcp.mjs', 'lumo-scan': 'dist/scan.mjs' };
+            let ok = true;
+            for (const [name, p] of Object.entries(bins)) {
+              if (fs.existsSync(p)) {
+                console.log('  ok  ' + name + ' -> ' + p);
+              } else {
+                console.error('MISSING ' + name + ' -> ' + p);
+                ok = false;
+              }
+            }
+            if (!ok) process.exit(1);
+          "

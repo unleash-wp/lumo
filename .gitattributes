@@ -1,0 +1,9 @@
+# Normalise line endings: repo stores LF, checkout preserves LF on all OSes.
+# This prevents Windows git autocrlf from converting source files to CRLF,
+# which would break split('\n') in events.ts and any byte-level assertions.
+* text=auto eol=lf
+
+# Binary files — no conversion.
+*.png binary
+*.jpg binary
+*.ico binary
