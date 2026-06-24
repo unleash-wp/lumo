@@ -8,6 +8,9 @@ export default defineConfig({
     // Hook catch runner — called by .claude/hooks/wp-enforce.cjs via dynamic import().
     // Bundles checkCode + formatCatch with no MCP/transport deps.
     'hook-catch': 'src/hook/catch-runner.ts',
+    // One-shot proactive scan CLI — `npx @unleashwp/lumo scan` / `lumo-scan`.
+    // Runs git diff → diff-parser → catch → prints findings or dated-clean message.
+    scan: 'src/scan/main.ts',
   },
   format: ['esm'],
   outDir: 'dist',
