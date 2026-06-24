@@ -1,0 +1,29 @@
+# The "files" allowlist in package.json controls what ships to npm.
+# This file is a defence-in-depth guard for anything not covered by the
+# allowlist — particularly dotfiles that npm publishes by default.
+
+# Source and dev
+src/
+tests/
+scripts/
+plans/
+docs/
+.claude/
+tsup.config.ts
+tsconfig.json
+vitest.config.ts
+package-lock.json
+
+# Secrets and env
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
+
+# CI
+.github/
