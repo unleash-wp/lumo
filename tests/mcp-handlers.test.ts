@@ -348,3 +348,86 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
     expect(promptSection).not.toContain('HPOS');
   });
 });
+
+// ---------------------------------------------------------------------------
+// handleCheckCode — freshness-gap reveal (C4)
+//
+// Appears only on gated (catch) answers, only when the upgrade prompt block did
+// NOT fire on the same response. Kill-switch gates both. Never on lumo_audit.
+// ---------------------------------------------------------------------------
+
+describe('handleCheckCode — freshness-gap reveal (C4)', () => {
+  const hposBlob = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+
+  afterEach(() => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    delete process.env['LUMO_UPGRADE_PROMPT'];
+  });
+
+  it('reveal fires on a LOUD catch when no checkout URL is set (upgrade prompt suppressed)', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).toContain('verified as of');
+    expect(result).toContain('claude mcp add');
+  });
+
+  it('reveal does NOT fire when the upgrade prompt block already fired (no double-printing)', async () => {
+    process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    // Upgrade prompt fires (Get it:) → reveal must not also appear
+    expect(result).toContain('Get it:');
+    expect(result).not.toContain('verified as of');
+    expect(result).not.toContain('claude mcp add');
+  });
+
+  it('reveal is suppressed when kill-switch is off', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    process.env['LUMO_UPGRADE_PROMPT'] = 'off';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).not.toContain('verified as of');
+    expect(result).not.toContain('claude mcp add');
+  });
+
+  it('reveal fires on a SOFT catch (any gated result, not just LOUD)', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    // useSetting() call — breaking_change:false → SOFT signal (not a call-free import)
+    const code = `const fontSize = useSetting( 'typography.fontSize' );`;
+    const result = await handleCheckCode({ code, language: 'js' }, catchSnap);
+    expect(result).toContain('verified as of');
+    expect(result).toContain('claude mcp add');
+  });
+
+  it('reveal contains the snapshot generatedAt date (YYYY-MM-DD shape)', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    // The date from snapshot.generatedAt is substituted; catchSnap uses the real snapshot.
+    expect(result).toMatch(/verified as of \d{4}-\d{2}-\d{2}/);
+  });
+
+  it('reveal says "verified as of" — never "out of date" or "stale"', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const lower = result.toLowerCase();
+    expect(lower).not.toContain('out of date');
+    expect(lower).not.toContain('is stale');
+    expect(lower).not.toContain('is outdated');
+  });
+
+  it('lumo_audit output is byte-equal to formatFreeMarkdown (reveal never touches audit path)', async () => {
+    const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
+    const s = loadSnapshot();
+    const entry = s.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
+    if (!entry) throw new Error('HPOS entry missing — test setup broken');
+
+    const expected = formatFreeMarkdown(renderFree(entry));
+    const actual = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
+    // lumo_audit must be byte-identical regardless of C4 changes
+    expect(actual).toBe(expected);
+  });
+
+  it('no catch results → reveal does not fire (neutral line returned unchanged)', async () => {
+    const result = await handleCheckCode({ code: 'echo "hello";', language: 'php' }, catchSnap);
+    expect(result).not.toContain('verified as of');
+    expect(result).not.toContain('claude mcp add');
+  });
+});

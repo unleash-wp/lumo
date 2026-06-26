@@ -13,6 +13,34 @@ export const FREE_UPGRADE_HINT =
   'Lumo Pro has the full breakdown, the complete version range, and what breaks in upcoming WP releases before they ship.';
 
 // ---------------------------------------------------------------------------
+// C4 — Freshness-gap reveal line
+//
+// Shown once per session on gated (catch) answers, frequency-capped by the same
+// kill-switch as the upgrade prompt. Never shown on lumo_audit (that path ends
+// at formatFreeMarkdown — no append). Never shown when the upgrade prompt block
+// already fired on the same response (avoids double-printing).
+//
+// The MCP add command is always inert-safe: it points at the Pro MCP server,
+// which requires a valid license key — the free-to-add instruction costs the
+// founder nothing to ship before go-live.
+//
+// Honesty constraints (hard):
+//   - "{date}" = snapshot.generatedAt date (a verifiable claim)
+//   - Never says "your snapshot is out of date" (unprovable per-entry claim)
+//   - Never implies Free stays current on its own
+// ---------------------------------------------------------------------------
+
+/**
+ * Freshness-gap reveal line template.
+ *
+ * Runtime substitutes `{date}` with the snapshot's generatedAt date (YYYY-MM-DD)
+ * before appending. Not shown when the upgrade prompt block already fired.
+ */
+export const FRESHNESS_REVEAL_LINE =
+  '_This snapshot is verified as of {date}. Lumo Pro re-checks against every WordPress release — it is the live layer._\n\n' +
+  '_Add the Pro MCP: `claude mcp add lumo-pro --transport http https://p-w8t2yy.project.space/mcp`_';
+
+// ---------------------------------------------------------------------------
 // W4 upgrade-prompt copy constants — single tested source of truth.
 // Markdown surfaces import and print verbatim; runtime fills {N}/{checkout_url}.
 // ---------------------------------------------------------------------------
