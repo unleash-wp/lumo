@@ -173,33 +173,58 @@ export async function handleCheckCode(
 }
 
 // ---------------------------------------------------------------------------
-// Upgrade prompt — appended to a catch response only at the highest-intent
-// moment: a LOUD WooCommerce/HPOS catch fired. Gated three ways so it never
-// surfaces a dead buy-link or an unwanted nag:
-//   1. at least one LOUD WooCommerce result (the prompt copy is HPOS-framed),
+// Upgrade prompt — appended to a catch response at the highest-intent moment:
+// at least one LOUD result fired. Gated three ways so it never surfaces a dead
+// buy-link or an unwanted nag:
+//   1. at least one LOUD result (any domain — WooCommerce, Block Editor, Core),
 //   2. the upgrade prompt is enabled (kill-switch, default on),
 //   3. a real checkout URL is configured — the built-in default does not
-//      resolve, so an unset URL must never print a "Get it: <url>" line.
-// Until a real LUMO_CHECKOUT_URL is set, output is byte-identical to before.
+//      resolve, so an unset LUMO_CHECKOUT_URL must never print a "Get it: <url>"
+//      line. Output is byte-identical to baseline when the URL is unset.
 // ---------------------------------------------------------------------------
+
+/**
+ * Map a snapshot category_slug to the human-readable label used in the upgrade
+ * prompt copy. Falls back to a generic "WordPress" label for unmapped slugs so
+ * new catch categories never break the prompt.
+ */
+function domainLabel(categorySlug: string): string {
+  const labels: Record<string, string> = {
+    woocommerce: 'WooCommerce',
+    gutenberg: 'Block Editor',
+    'wordpress-core': 'WordPress Core',
+    'wordpress-7-0': 'WordPress Core',
+    'wp-abilities-api': 'WordPress Core',
+    'hardcoded-secrets': 'WordPress',
+    'env-in-git': 'WordPress',
+    'wordpress-dependencies': 'WordPress',
+  };
+  return labels[categorySlug] ?? 'WordPress';
+}
+
 function appendUpgradePrompt(body: string, results: CatchResult[]): string {
-  const hposLoud = results.filter(
-    (r) => r.tier === 'LOUD' && r.entry.category_slug === 'woocommerce',
-  );
+  const loudResults = results.filter((r) => r.tier === 'LOUD');
   const checkoutConfigured = (process.env['LUMO_CHECKOUT_URL'] ?? '').trim().length > 0;
 
-  if (hposLoud.length === 0 || !isUpgradePromptEnabled() || !checkoutConfigured) {
+  if (loudResults.length === 0 || !isUpgradePromptEnabled() || !checkoutConfigured) {
     return body;
   }
 
+  // Derive a domain label from the first LOUD result. When multiple domains are
+  // present we use the first (LOUD results are already sorted highest-tier first).
+  const primarySlug = loudResults[0]!.entry.category_slug;
+  const domain = domainLabel(primarySlug);
+  const risks = loudResults.length === 1 ? 'risk' : 'risks';
+
   const checkoutUrl = buildCheckoutUrl(getCheckoutUrl(), {
     source: 'catch',
-    gatedCount: hposLoud.length,
+    gatedCount: loudResults.length,
     promptVariant: 'block',
   });
-  const prompt = UPGRADE_PROMPT_BLOCK.replace('{N}', String(hposLoud.length)).replace(
-    '{checkout_url}',
-    checkoutUrl,
-  );
+  const prompt = UPGRADE_PROMPT_BLOCK
+    .replace('{N}', String(loudResults.length))
+    .replace('{risks}', risks)
+    .replace('{domain}', domain)
+    .replace('{checkout_url}', checkoutUrl);
   return `${body}\n\n---\n\n${prompt}`;
 }

@@ -22,13 +22,14 @@ export const UPGRADE_REVEAL_LINE =
   'Pro has the full breakdown and the complete version range for this.';
 
 /**
- * Upgrade-prompt block. `{N}` = live gated_count. `{checkout_url}` = getCheckoutUrl().
- * Runtime substitutes both before printing.
+ * Upgrade-prompt block. `{N}` = live gated_count. `{domain}` = human-readable catch domain
+ * (e.g. "WooCommerce", "Block Editor", "WordPress Core"). `{checkout_url}` = getCheckoutUrl().
+ * Runtime substitutes all three before printing.
  */
 export const UPGRADE_PROMPT_BLOCK =
-  'Lumo caught {N} HPOS risks in your code.\n\n' +
-  'The version range across your WP/Woo stack — which exact versions break the old\n' +
-  'pattern and which do not — is in Pro, along with the full written breakdown.\n\n' +
+  'Lumo caught {N} stale-pattern {risks} in your {domain} code.\n\n' +
+  'The exact version range — which releases break the old pattern and which do not —\n' +
+  'plus the full written fix is in Pro.\n\n' +
   'Get it: {checkout_url}';
 
 /**

@@ -14,12 +14,17 @@ export type { PluginDetection, DetectionSource } from './types.js';
 /**
  * Upgrade-promising teaser — only shown when Pro has real curated knowledge for
  * the plugin (hasProCoverage: true on the registry entry). No bluff, no invented checks.
+ *
+ * Named plugins in the closing line are those with hasProCoverage: true in registry.ts.
+ * Keep the list honest — only add a plugin here once Pro has a published entry for it.
  */
 export function buildProTeaser(pluginName: string): string {
   return (
     `Detected ${pluginName} in this project. ` +
-    `Lumo Pro extends Lumo's current-knowledge checks to your premium plugins — ` +
-    `${pluginName} support is part of the Pro layer.`
+    `Your AI's training data is stale on ${pluginName}'s current hooks and APIs — ` +
+    `Lumo Free can't check it because ${pluginName} isn't covered by any free or official WordPress skill set. ` +
+    `Lumo Pro extends the catch to your premium plugins: ACF Pro, Gravity Forms, Elementor Pro, ` +
+    `Meta Box, Carbon Fields, and WooCommerce Subscriptions.`
   );
 }
 
