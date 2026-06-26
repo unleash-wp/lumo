@@ -4,16 +4,16 @@
     "name": "UnleashWP",
     "url": "https://github.com/unleash-wp"
   },
-  "description": "Self-hosted marketplace for the UnleashWP Lumo Claude Code plugin — the HPOS guardrail for WooCommerce developers.",
+  "description": "Self-hosted marketplace for the UnleashWP Lumo Claude Code plugin — catches stale AI-written WordPress code the moment it's written.",
   "plugins": [
     {
       "name": "lumo",
       "displayName": "UnleashWP Lumo",
-      "description": "HPOS guardrail for WooCommerce developers — audits order-data patterns, shows the wrong-vs-correct contrast with a verified source, and upgrades to Lumo Pro for the full evidence layer.",
+      "description": "Catches stale or wrong AI-written WordPress the moment it's generated — block.json/apiVersion, theme.json, Core APIs, WooCommerce — and shows the wrong-vs-correct fix with a dated source. The official WordPress skills are the manual; Lumo is the watcher. Upgrade to Lumo Pro for the live currency layer, pre-release Core briefings, and premium-plugin coverage.",
       "version": "0.2.0",
       "author": { "name": "Benjamin Zekavica" },
       "source": ".",
-      "tags": ["woocommerce", "hpos", "wordpress", "audit"]
+      "tags": ["wordpress", "gutenberg", "block-themes", "ai-code-review", "woocommerce"]
     }
   ]
 }
