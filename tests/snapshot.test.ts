@@ -104,9 +104,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has exactly 20 entries', () => {
+  it('has at least 100 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBe(20);
+    expect(snap.entries.length).toBeGreaterThanOrEqual(100);
   });
 
   it('every entry has tier "free"', () => {
@@ -221,9 +221,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.generatedAt).toBe(maxUpdated);
   });
 
-  it('generatedAt is 2026-06-23T22:30:00Z', () => {
+  it('generatedAt is 2026-06-25T14:00:00Z', () => {
     const snap = loadSnapshot();
-    expect(snap.generatedAt).toBe('2026-06-23T22:30:00Z');
+    expect(snap.generatedAt).toBe('2026-06-25T14:00:00Z');
   });
 
   it('env-file-committed-to-git entry is present with slug and correct category', () => {
@@ -332,23 +332,25 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(() => validateEntry(entry, snap.entries.indexOf(entry))).not.toThrow();
   });
 
-  // Gutenberg (block dev), Abilities API, and WP 7.0 Interactivity-API entries
-  // are Pro-MCP-only (freeSnapshot:false) — not present in the Free snapshot.
-  it('gutenberg-usesetting-deprecated-wp6-5 is NOT in the Free snapshot (Pro-only)', () => {
+  // Gutenberg (block dev) entries are now in the Free snapshot (freeSnapshot:true).
+  it('gutenberg-usesetting-deprecated-wp6-5 is in the Free snapshot', () => {
     const snap = loadSnapshot();
     const entry = snap.entries.find((e) => e.slug === 'gutenberg-usesetting-deprecated-wp6-5');
-    expect(entry).toBeUndefined();
+    expect(entry).toBeDefined();
+    expect(entry?.tier).toBe('free');
   });
 
-  it('gutenberg-isvalidblockcontent-removed is NOT in the Free snapshot (Pro-only)', () => {
+  it('gutenberg-isvalidblockcontent-removed is in the Free snapshot', () => {
     const snap = loadSnapshot();
     const entry = snap.entries.find((e) => e.slug === 'gutenberg-isvalidblockcontent-removed');
-    expect(entry).toBeUndefined();
+    expect(entry).toBeDefined();
+    expect(entry?.tier).toBe('free');
   });
 
-  it('gutenberg-apiversion-2-deprecated-wp6-9 is NOT in the Free snapshot (Pro-only)', () => {
+  it('gutenberg-apiversion-2-deprecated-wp6-9 is in the Free snapshot', () => {
     const snap = loadSnapshot();
     const entry = snap.entries.find((e) => e.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
-    expect(entry).toBeUndefined();
+    expect(entry).toBeDefined();
+    expect(entry?.tier).toBe('free');
   });
 });
