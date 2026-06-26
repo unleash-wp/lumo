@@ -1,18 +1,32 @@
 # UnleashWP Lumo
 
-**The HPOS guardrail for WooCommerce developers.**
+**The WordPress watcher for AI-assisted development.**
 
-Lumo audits your PHP code for order-data patterns that break under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) and shows you the wrong-vs-correct contrast with a verified source, in Claude Code, Cursor, or any MCP client.
+The official WordPress/agent-skills make your AI write WordPress correctly when you ask. Lumo Free tells you when your AI just wrote something stale — without being asked. Run both.
 
-> Your code isn't wrong yet. It will be — the moment a client upgrades past 8.2 and orders stop writing.
+Pairs with WordPress/agent-skills — they are the manual, Lumo is the watcher.
 
-**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · Transport: stdio · Knowledge current as of June 2026
+> Your AI froze at its training cutoff. WordPress did not. Lumo catches the delta in the moment the code is written — not after you ship it.
+
+**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · Transport: stdio · Snapshot verified as of June 2026
 
 ---
 
-## Always current
+## What makes Lumo different from the official WordPress skills
 
-The knowledge base is kept current with each WordPress and WooCommerce release. Entries are added when a core or plugin API change is verified against real source — always with a source URL, the affected version range, and a tested code example. See the [CHANGELOG](CHANGELOG.md) for what landed per release.
+The official WordPress/agent-skills are a reference the AI reads when routed to a WordPress task. Lumo Free is a watcher that flags stale AI output the moment it is written, with a dated source, without being asked.
+
+That difference is the reason to run both:
+
+| | Official WordPress/agent-skills | Lumo Free |
+|---|---|---|
+| **Verb** | Instruct (AI reads on request) | Watch (fires unprompted on AI output) |
+| **When it fires** | When you route a task to a WP skill | When the AI writes any covered WP pattern |
+| **Coverage** | Core and theme (GPL, official) | Core/Block/Theme snapshot + commercial plugin detection |
+| **Third-party plugins** | None (by design — GPL) | ACF Pro, Gravity Forms, Elementor Pro, Meta Box, Carbon Fields |
+| **Knowledge type** | STOCK — handbook on request | STOCK catch + FLOW in Pro |
+
+**One clear line:** Lumo Free is a snapshot (verified, frozen between releases). The live currency — re-checked on every WordPress release — is Lumo Pro.
 
 ---
 
@@ -25,9 +39,9 @@ The knowledge base is kept current with each WordPress and WooCommerce release. 
 /plugin install lumo@lumo
 ```
 
-That's it. Lumo loads from the self-hosted marketplace. No separate account, no setup.
+That is it. Lumo loads from the self-hosted marketplace. No separate account, no setup.
 
-After install, run this once in your WooCommerce project to catch outdated WordPress patterns in your current changes:
+After install, run this once in your project to catch outdated WordPress patterns in your current changes:
 
 ```bash
 npx @unleashwp/lumo scan
@@ -57,50 +71,65 @@ More install options: [docs/install.md](docs/install.md)
 
 ---
 
-## What it does
+## What it catches
 
-When you open a WooCommerce project, Lumo watches for the classic pre-HPOS pattern:
+When your AI writes WordPress code, Lumo checks it against a curated snapshot of Core/Block/Theme patterns that changed or broke in a specific version. For each hit it shows:
+
+- The wrong pattern (what the AI suggested)
+- The correct replacement
+- The source URL
+- The affected version range
+- A test step to verify before shipping
+
+Example — the AI suggesting a pre-HPOS order-data pattern:
 
 ```php
-// current (outdated under HPOS)
+// outdated under WooCommerce ≥ 8.2
 $email = get_post_meta( $order_id, '_billing_email', true );
 update_post_meta( $order_id, '_subscription_plan', 'pro' );
 ```
 
-And shows you what it should look like instead:
+Lumo flags it and shows the correct form:
 
 ```php
-// current
 $order = wc_get_order( $order_id );
 $email = $order->get_billing_email();
 $order->update_meta_data( '_subscription_plan', 'pro' );
 $order->save();
 ```
 
-With the source, a verification step, and the exact WooCommerce version the old pattern breaks on.
+With the source and the exact WooCommerce version the old pattern breaks on.
+
+The same mechanism covers Block Editor API changes (`apiVersion 2→3`, `useSetting()` deprecation, `isValidBlockContent()` removal), Core function deprecations (`get_page_by_title()`, `wp_img_tag_add_decoding_attr()`), and security patterns.
 
 ---
 
-## The WordPress agent with receipts
+## The precision model
 
-AI coding tools freeze at their training cutoff. WordPress does not. Every Core release, every WooCommerce major, can shift which patterns are safe and which ones silently break production — and most of the time the AI you are using does not know yet.
+Three catch tiers — no false alarms:
 
-Lumo tracks the current standard and answers with proof: source, affected version range, and a test step you can run before the code ships. It proposes and cites, it does not silently edit your files. Whatever AI editor you use — Claude Code, Cursor, or any MCP client — Lumo gives it a reference point that stays current.
+| Tier | Meaning | Default action |
+|---|---|---|
+| **LOUD** | A dated, breaking, CERTAIN signal — version fact verified against source | Blocked in the enforce hook; flagged in the catch |
+| **SOFT** | Worth reviewing if a condition holds — honest when the break is context-dependent | Warned; advisory surfaced |
+| **SILENT** | Repository-state noise that does not reach the developer | Suppressed |
+
+False-LOUD rate is held at zero by design. A LOUD catch requires a verified version fact; without one it structurally degrades to SOFT.
 
 ---
 
 ## Usage
 
 ```
-/lumo:wp-onboard      # first run: see the HPOS contrast on a sample, then your own repo
-/lumo:wp-check        # audit the current project for HPOS order-access risks
+/lumo:wp-onboard      # first run: see a catch on a sample, then your own repo
+/lumo:wp-check        # audit the current project for WordPress risk patterns
 ```
 
 **`/lumo:wp-check` demo** — what happens when Lumo finds a risk:
 
-1. Lumo scans the current project for `get_post_meta`, `update_post_meta`, `get_posts`, and `WP_Query` calls on order data.
-2. For each hit, it shows the wrong pattern, the correct replacement, the source, and a test step.
-3. A scoreboard tracks how many HPOS-unsafe patterns it has caught across the session.
+1. Lumo scans the current project for patterns covered in the snapshot.
+2. For each hit it shows the wrong pattern, the correct replacement, the source, and a test step.
+3. A scoreboard tracks how many patterns it has caught across the session.
 
 ---
 
@@ -112,8 +141,7 @@ source before any WordPress code is written**, not a tool you remember to run.
 When the `wp-binding` skill is active, Claude checks every WordPress or
 WooCommerce code suggestion through `lumo_check_code` before presenting it. If
 Lumo flags a pattern, the correct form is surfaced with the source URL and the
-exact version it broke — not the stale suggestion. This is the mechanism behind
-the "keeps your AI current" promise.
+exact version it broke — not the stale suggestion.
 
 **One-command install (plugin path):**
 
@@ -192,10 +220,6 @@ The hook only fires on files where at least one of these is true:
 
 Non-WordPress PHP files (e.g. a Laravel controller) are not intercepted unless the content carries WordPress API calls.
 
-### Pro seam
-
-When a Lumo Pro MCP server is available, `runHookCatch()` can be replaced with a Pro-backed call that draws from the full versioned knowledge base. The interface is identical — the seam is `src/hook/catch-runner.ts`. That integration is tracked separately (requires a staging MCP endpoint).
-
 ---
 
 ## Configuration
@@ -204,7 +228,7 @@ Two env vars cover the most common needs. Full reference: [docs/configuration.md
 
 ### `LUMO_UPGRADE_PROMPT`
 
-Controls the upgrade reveal line and prompt block shown after a Free answer.
+Controls the upgrade reveal line and prompt block shown after a Free catch.
 
 - **Default:** on
 - **Opt out:** `LUMO_UPGRADE_PROMPT=off`
@@ -222,11 +246,19 @@ The base URL used when the upgrade prompt fires.
 
 ## Lumo Pro
 
-Lumo Pro adds the full written breakdown and the complete version/breaking-change matrix across the WP/Woo version range — not just the single "≥ 8.2" line the Free agent ships.
+Free ships a snapshot — verified, static between WordPress releases. Pro is the live layer.
 
-Free gives you a correct, shippable answer. Pro gives you the depth to understand why, and the coverage to know which exact versions are affected on your client's stack.
+| | Lumo Free | Lumo Pro |
+|---|---|---|
+| The catch | Over the Core/Block/Theme snapshot | Over the full, live catalog |
+| Commercial plugins | Detection only (note shown) | Full curated coverage (ACF Pro, GF, Elementor, Meta Box, Carbon Fields) |
+| Version matrix | Single constraint row per entry | Full multi-version breakdown |
+| Freshness | Snapshot — verified as of last release | Re-checked on every WordPress release |
+| Pre-release briefings | Tease shown | Full briefing — what breaks before it ships |
 
-Install Pro via the MCP endpoint once you have a license. See [docs/install.md](docs/install.md) for the `claude mcp add` command.
+Free gives you a correct, shippable answer with a dated source. Pro gives you depth, commercial-plugin coverage, and the foresight layer.
+
+Add Pro: `claude mcp add lumo-pro --transport http https://p-w8t2yy.project.space/mcp`
 
 ---
 

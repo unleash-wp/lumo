@@ -5,6 +5,7 @@ import {
   FREE_UPGRADE_HINT,
   UPGRADE_REVEAL_LINE,
   UPGRADE_PROMPT_BLOCK,
+  FRESHNESS_REVEAL_LINE,
 } from '../src/lib/render.js';
 import { loadSnapshot, findEntry } from '../src/lib/snapshot.js';
 import type { SnapshotEntry } from '../src/types.js';
@@ -314,5 +315,48 @@ describe('UPGRADE_PROMPT_BLOCK', () => {
     const lower = UPGRADE_PROMPT_BLOCK.toLowerCase();
     expect(lower).not.toContain('test step');
     expect(lower).not.toContain('≥ 8.2');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FRESHNESS_REVEAL_LINE — C4 honesty + wiring constraints
+// ---------------------------------------------------------------------------
+
+describe('FRESHNESS_REVEAL_LINE', () => {
+  it('is a non-empty string', () => {
+    expect(typeof FRESHNESS_REVEAL_LINE).toBe('string');
+    expect(FRESHNESS_REVEAL_LINE.length).toBeGreaterThan(0);
+  });
+
+  it('contains the {date} placeholder for runtime substitution', () => {
+    expect(FRESHNESS_REVEAL_LINE).toContain('{date}');
+  });
+
+  it('contains the MCP add command (always-inert destination)', () => {
+    expect(FRESHNESS_REVEAL_LINE).toContain('claude mcp add');
+  });
+
+  it('says "verified as of" — honest claim about snapshot date, not a staleness verdict', () => {
+    expect(FRESHNESS_REVEAL_LINE).toContain('verified as of');
+  });
+
+  it('does not say "out of date" or "stale" — those are unprovable per-entry verdicts', () => {
+    const lower = FRESHNESS_REVEAL_LINE.toLowerCase();
+    expect(lower).not.toContain('out of date');
+    expect(lower).not.toContain('is stale');
+    expect(lower).not.toContain('is outdated');
+  });
+
+  it('does not claim Free "stays current" or "keeps current" — Free is a static snapshot', () => {
+    const lower = FRESHNESS_REVEAL_LINE.toLowerCase();
+    expect(lower).not.toContain('stays current');
+    expect(lower).not.toContain('keeps current');
+  });
+
+  it('names Pro as the live layer', () => {
+    const lower = FRESHNESS_REVEAL_LINE.toLowerCase();
+    expect(lower).toContain('pro');
+    const hasLive = lower.includes('live') || lower.includes('re-check') || lower.includes('re-checks');
+    expect(hasLive).toBe(true);
   });
 });

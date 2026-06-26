@@ -10,6 +10,7 @@ import {
   formatCatch,
   CATCH_NEUTRAL_LINE,
   UPGRADE_PROMPT_BLOCK,
+  FRESHNESS_REVEAL_LINE,
 } from '../lib/render.js';
 import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
 import type { Snapshot } from '../types.js';
@@ -132,7 +133,8 @@ export async function handleCheckCode(
 ): Promise<string> {
   try {
     const { checkCode } = await import('../detection/catch.js');
-    const results = checkCode(input.code ?? '', input.language ?? 'auto', snapshot);
+    const snap = snapshot ?? loadSnapshot();
+    const results = checkCode(input.code ?? '', input.language ?? 'auto', snap);
 
     if (results.length === 0) {
       return CATCH_NEUTRAL_LINE;
@@ -166,7 +168,14 @@ export async function handleCheckCode(
       })
       .join('\n\n---\n\n');
 
-    return appendUpgradePrompt(body, results);
+    // Upgrade prompt fires first (LOUD + URL configured); freshness reveal fires
+    // when the upgrade prompt does NOT (avoids double-printing on the same response).
+    const withPrompt = appendUpgradePrompt(body, results);
+    const upgradePromptFired = withPrompt !== body;
+    if (upgradePromptFired) {
+      return withPrompt;
+    }
+    return appendFreshnessReveal(withPrompt, results, snap?.generatedAt);
   } catch {
     return CATCH_NEUTRAL_LINE;
   }
@@ -227,4 +236,37 @@ function appendUpgradePrompt(body: string, results: CatchResult[]): string {
     .replace('{domain}', domain)
     .replace('{checkout_url}', checkoutUrl);
   return `${body}\n\n---\n\n${prompt}`;
+}
+
+// ---------------------------------------------------------------------------
+// Freshness-gap reveal — C4
+//
+// Appended when a catch fires (any tier) BUT the upgrade prompt block did not
+// fire on the same response (no double-printing). Gated on the same kill-switch
+// so `LUMO_UPGRADE_PROMPT=off` suppresses both.
+//
+// The MCP add instruction is always inert-safe: it is a reference to the Pro
+// server, which validates the license key at query time. No URL gate required —
+// nothing breaks if the server is not yet live.
+// ---------------------------------------------------------------------------
+
+/**
+ * Append the freshness-gap reveal line when: catch results are present, the
+ * kill-switch is on, and the upgrade prompt block did NOT already fire.
+ *
+ * `snapshotDate` — the ISO generatedAt from the loaded snapshot. Substituted
+ * into the template; falls back to "June 2025" if unavailable (extremely rare).
+ */
+function appendFreshnessReveal(
+  body: string,
+  results: CatchResult[],
+  snapshotDate: string | undefined,
+): string {
+  if (results.length === 0 || !isUpgradePromptEnabled()) {
+    return body;
+  }
+
+  const dateStr = snapshotDate ? snapshotDate.slice(0, 10) : 'June 2025';
+  const reveal = FRESHNESS_REVEAL_LINE.replace('{date}', dateStr);
+  return `${body}\n\n---\n\n${reveal}`;
 }
