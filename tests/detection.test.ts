@@ -555,6 +555,36 @@ describe('buildProTeaser', () => {
     expect(msg).toContain('Lumo Pro');
     expect(msg).not.toContain('undefined');
   });
+
+  it('names the consequence — stale training data — before the upgrade pitch', () => {
+    const msg = buildProTeaser('Gravity Forms');
+    expect(msg).toContain('stale');
+    // The stale-data consequence must appear before the "Lumo Pro extends" sentence.
+    const staleIdx = msg.indexOf('stale');
+    const proIdx = msg.indexOf('Lumo Pro extends');
+    expect(staleIdx).toBeGreaterThan(-1);
+    expect(proIdx).toBeGreaterThan(-1);
+    expect(staleIdx).toBeLessThan(proIdx);
+  });
+
+  it('states Free cannot check the plugin — honest scope of the Free agent', () => {
+    const msg = buildProTeaser('Elementor Pro');
+    expect(msg).toContain("can't check it");
+  });
+
+  it('lists the Pro-covered commercial plugin stack', () => {
+    const msg = buildProTeaser('Meta Box');
+    // The closing list names the actual Pro-covered plugins
+    expect(msg).toContain('ACF Pro');
+    expect(msg).toContain('Gravity Forms');
+    expect(msg).toContain('Elementor Pro');
+    expect(msg).toContain('Carbon Fields');
+  });
+
+  it('names the "no free or official skill" fact — the structural wedge', () => {
+    const msg = buildProTeaser('Carbon Fields');
+    expect(msg.toLowerCase()).toContain('official');
+  });
 });
 
 describe('buildDetectionNote', () => {

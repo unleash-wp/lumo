@@ -302,10 +302,11 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
     expect(result).not.toContain('Get it:');
   });
 
-  it('real checkout URL set → appends the prompt with the gated count and attributed link', async () => {
+  it('real checkout URL set → appends the prompt with the gated count, domain label, and attributed link', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
-    expect(result).toContain('Lumo caught 1 HPOS risks');
+    // Domain label for woocommerce slug is "WooCommerce"
+    expect(result).toContain('Lumo caught 1 stale-pattern risk in your WooCommerce code.');
     expect(result).toContain('Get it: https://buy.example.com/pro?ref=catch&gated=1&v=block');
   });
 
@@ -316,11 +317,29 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
     expect(result).not.toContain('Get it:');
   });
 
-  it('non-WooCommerce LOUD catch → no prompt (copy is HPOS-specific)', async () => {
+  it('Block Editor LOUD catch → prompt fires with "Block Editor" domain label', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
     const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, catchSnap);
     expect(result).toContain('⚠️');
-    expect(result).not.toContain('Get it:');
+    // Domain-aware prompt fires on any LOUD catch when a real URL is configured.
+    expect(result).toContain('Get it:');
+    expect(result).toContain('Block Editor');
+  });
+
+  it('WooCommerce LOUD catch → prompt uses singular "risk" for a single result', async () => {
+    process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    // Single LOUD result → "risk" not "risks"
+    expect(result).toContain('stale-pattern risk in your');
+    expect(result).not.toContain('stale-pattern risks in your');
+  });
+
+  it('prompt copy does not contain "HPOS" — wedge is now domain-neutral', async () => {
+    process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    // The upgrade prompt block must not re-introduce the old HPOS framing
+    const promptSection = result.split('---').slice(-1)[0] ?? '';
+    expect(promptSection).not.toContain('HPOS');
   });
 });
