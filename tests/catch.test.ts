@@ -297,8 +297,8 @@ if ( isValidBlockContent( blockType, attrs, blocks, html ) ) { }
     expect(loud?.versionFact?.field).toBe('wp');
   });
 
-  // apiVersion: 2 → LOUD
-  it('apiVersion: 2 in registerBlockType fires LOUD', () => {
+  // apiVersion: 2 → SOFT (breaking_change: false — deprecated not hard-removed yet)
+  it('apiVersion: 2 in registerBlockType fires SOFT (deprecation warning, not hard break)', () => {
     const code = `
 wp.blocks.registerBlockType( 'my-ns/my-block', {
   apiVersion: 2,
@@ -306,9 +306,9 @@ wp.blocks.registerBlockType( 'my-ns/my-block', {
 } );
 `;
     const results = checkCode(code, 'js', catchSnap);
-    const loud = results.find((r) => r.tier === 'LOUD');
-    expect(loud).toBeDefined();
-    expect(loud?.entry.slug).toBe('gutenberg-apiversion-2-deprecated-wp6-9');
+    const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
   });
 
   // (b) apiVersion: 2 negative fixture — unrelated JSON must NOT fire
@@ -749,12 +749,13 @@ describe('false-LOUD regressions', () => {
     expect(match).toBeUndefined();
   });
 
-  // H1: apiVersion: 2 still fires
-  it('H1: apiVersion: 2 still fires gutenberg-apiversion-2-deprecated-wp6-9', () => {
+  // H1: apiVersion: 2 still fires (as SOFT — breaking_change:false, deprecated not hard-removed)
+  it('H1: apiVersion: 2 still fires gutenberg-apiversion-2-deprecated-wp6-9 as SOFT', () => {
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
     const results = checkCode(code, 'js', catchSnap);
     const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
-    expect(match?.tier).toBe('LOUD');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
   });
 });
 
@@ -952,16 +953,16 @@ describe('formatCatch — version-relative lines', () => {
     expect(rendered).toContain('7.0');
   });
 
-  it('upcoming: LOUD + project before breaking version → soon-dead line', () => {
-    // apiVersion: 2 deprecated in WP 6.9; project targets 6.8 → upcoming
-    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
+  it('upcoming: isValidBlockContent LOUD + project before breaking version → soon-dead line', () => {
+    // isValidBlockContent removed in WP 5.9; project on 5.8 → upcoming (breaking_change:true)
+    const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
     const results = checkCode(code, 'js', catchSnap);
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
-    const rendered = formatCatch(loud!, '6.8');
+    const rendered = formatCatch(loud!, '5.8');
     expect(rendered).toContain('⚠️');
     expect(rendered).toContain('soon-dead pattern');
-    expect(rendered).toContain('6.8');
+    expect(rendered).toContain('5.8');
   });
 
   it('unknown: no projectVersion arg → byte-identical to output without arg', () => {

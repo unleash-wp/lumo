@@ -203,30 +203,34 @@ describe('handleLookup', () => {
     expect(result).toContain('Source:');
   });
 
-  // Gutenberg entries are Pro-MCP-only (freeSnapshot:false) — they are not in the
-  // Free snapshot and return "not found" from the Free lookup handler.
-  it('gutenberg category returns "not found" — entries are Pro-MCP-only', async () => {
+  // Gutenberg entries are now in the Free snapshot (freeSnapshot:true) —
+  // they are present and return content from the Free lookup handler.
+  it('gutenberg category returns entries — now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ category: 'gutenberg' }, snap);
-    expect(result).toContain('No curated entry found');
+    expect(result).not.toContain('No curated entry found');
+    expect(result).toContain('Source:');
   });
 
-  it('gutenberg-usesetting slug returns "not found" — entry is Pro-MCP-only', async () => {
+  it('gutenberg-usesetting slug returns content — now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-usesetting-deprecated-wp6-5' }, snap);
-    expect(result).toContain('No curated entry found');
+    expect(result).not.toContain('No curated entry found');
+    expect(result).toContain('Source:');
   });
 
-  it('gutenberg-isvalidblockcontent slug returns "not found" — entry is Pro-MCP-only', async () => {
+  it('gutenberg-isvalidblockcontent slug returns content — now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-isvalidblockcontent-removed' }, snap);
-    expect(result).toContain('No curated entry found');
+    expect(result).not.toContain('No curated entry found');
+    expect(result).toContain('Source:');
   });
 
-  it('gutenberg-apiversion slug returns "not found" — entry is Pro-MCP-only', async () => {
+  it('gutenberg-apiversion slug returns content — now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-apiversion-2-deprecated-wp6-9' }, snap);
-    expect(result).toContain('No curated entry found');
+    expect(result).not.toContain('No curated entry found');
+    expect(result).toContain('Source:');
   });
 });
 
@@ -235,21 +239,21 @@ describe('handleLookup', () => {
 // ---------------------------------------------------------------------------
 
 describe('handleCheckCode — version-scoping', () => {
-  // These tests exercise version-relative LOUD output for the gutenberg apiVersion:2
-  // signal, which requires the gutenberg entry to be in the snapshot. We use catchSnap
-  // (Free + Pro-only catch entries) so the engine can resolve the entry object.
+  // These tests exercise version-relative LOUD output for a gutenberg LOUD signal.
+  // isValidBlockContent has breaking_change:true (removed in WP 5.9) so it produces LOUD.
   it('explicit wp_version produces relative line in LOUD output', async () => {
-    // apiVersion:2 deprecated in WP 6.9; project on 6.9 → already-broken
-    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, catchSnap);
+    // isValidBlockContent removed in WP 5.9; project on 5.9 → already-broken
+    const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '5.9' }, catchSnap);
     expect(result).toContain('⚠️');
     // The relative line should appear (already-broken)
     expect(result).toContain('fix now');
   });
 
   it('explicit wp_version below breaking version produces upcoming line', async () => {
-    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.8' }, catchSnap);
+    // isValidBlockContent removed in WP 5.9; project on 5.8 → upcoming
+    const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
+    const result = await handleCheckCode({ code, language: 'js', wp_version: '5.8' }, catchSnap);
     expect(result).toContain('⚠️');
     expect(result).toContain('soon-dead pattern');
   });
@@ -319,8 +323,9 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
 
   it('Block Editor LOUD catch → prompt fires with "Block Editor" domain label', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
-    const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
-    const result = await handleCheckCode({ code, language: 'js', wp_version: '6.9' }, catchSnap);
+    // isValidBlockContent is breaking_change:true (removed in WP 5.9) → LOUD
+    const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
+    const result = await handleCheckCode({ code, language: 'js' }, catchSnap);
     expect(result).toContain('⚠️');
     // Domain-aware prompt fires on any LOUD catch when a real URL is configured.
     expect(result).toContain('Get it:');
