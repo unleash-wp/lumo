@@ -4,7 +4,7 @@
  *
  * Wire-up: McpServer (high-level) + StdioServerTransport.
  * Registers two tools:
- *   lumo_audit   — detect HPOS risk in a project root
+ *   lumo_audit   — scan a project for stale or incorrect WordPress patterns
  *   lumo_lookup  — look up a Free snapshot entry by slug or category
  *
  * SDK pinned to 1.29.0 (matches lumo-pro).
@@ -28,12 +28,13 @@ const server = new McpServer({
 server.registerTool(
   'lumo_audit',
   {
-    title: 'Lumo WordPress/WooCommerce audit',
+    title: 'Lumo WordPress audit',
     description: [
-      'Scan the open project for known WordPress and WooCommerce risk patterns —',
-      'such as deprecated order-meta calls and HPOS-incompatible code — and return',
-      'the wrong-vs-correct fix with the source and a verification step to run before',
-      'deploying. Proposes and cites; never applies code changes autonomously.',
+      'Scan the open project for stale or incorrect WordPress patterns —',
+      'block.json apiVersion, theme.json schema, deprecated Core APIs,',
+      'WooCommerce order-meta, and more — and return the wrong-vs-correct fix',
+      'with the source and a verification step to run before deploying.',
+      'Proposes and cites; never applies code changes autonomously.',
     ].join(' '),
     inputSchema: {
       project_root: z
@@ -57,13 +58,14 @@ server.registerTool(
 server.registerTool(
   'lumo_lookup',
   {
-    title: 'Lumo WordPress/WooCommerce knowledge lookup',
+    title: 'Lumo WordPress knowledge lookup',
     description: [
-      'Look up the current, evidence-backed correct pattern for a WordPress or',
-      'WooCommerce topic. Pass an entry slug or a category and get back the right',
-      'approach, the source, the affected version range, and a test step to verify it.',
+      'Look up the current, evidence-backed correct pattern for a WordPress topic —',
+      'block.json/apiVersion, theme.json schema, Core APIs, WooCommerce, and more.',
+      'Pass an entry slug or a category and get back the right approach, the source,',
+      'the affected version range, and a test step to verify it.',
       'Free tier — proposes and cites, never edits autonomously.',
-      'Example slug: "woocommerce-hpos-order-access". Example category: "woocommerce".',
+      'Example slug: "woocommerce-hpos-order-access". Example category: "gutenberg".',
     ].join(' '),
     inputSchema: {
       slug: z
@@ -89,12 +91,13 @@ server.registerTool(
 server.registerTool(
   'lumo_check_code',
   {
-    title: 'Lumo WordPress/WooCommerce code catch',
+    title: 'Lumo WordPress code catch',
     description: [
-      'Before presenting WordPress or WooCommerce PHP/JS to the user, pass it here.',
-      'Returns any place the code uses a pattern that broke in a specific WP/WooCommerce',
-      'version — with the dated source and the correct form.',
-      'Call this on every WordPress/WooCommerce code suggestion before the user sees it.',
+      'Before presenting WordPress PHP/JS to the user, pass it here.',
+      'Returns any place the code uses a stale pattern — block.json apiVersion,',
+      'theme.json schema, deprecated Core APIs, WooCommerce order-meta — with the',
+      'dated source and the correct form.',
+      'Call this on every WordPress code suggestion before the user sees it.',
       'Proposes and cites; never edits autonomously.',
       'Accepts a raw blob or a unified diff (scans added lines only when a diff is detected).',
     ].join(' '),
