@@ -1,9 +1,15 @@
 # The Catch Demo — reproducible in 30–90 seconds
 
-The flagship demo: AI-typical WooCommerce code that reads orders from the post
-tables, caught LOUD by Lumo with a dated source and the correct pattern. Every
-output block below is captured verbatim from `lumo-scan` 0.3.0 — nothing staged,
-nothing shortened except where marked.
+The flagship demo: AI-typical WordPress code calling a function that WordPress
+retired in 6.4, caught LOUD by Lumo with a dated source and the correct pattern.
+Every output block below is captured verbatim from `lumo-scan` 0.3.0 — nothing
+staged, nothing shortened except where marked.
+
+The example is deliberately a Core deprecation rather than the WooCommerce/HPOS
+one used previously: WooCommerce knowledge is Pro-only, so a Core case is what a
+free reader can actually reproduce. (A WooCommerce project still gets an honest
+answer — Lumo names the detection and says the coverage is Pro, never a clean
+bill of health.)
 
 ---
 
@@ -17,22 +23,20 @@ the repo, run `npm install && npm run build`, and substitute
 **1. Create the file an AI assistant would plausibly write** (about 15 s):
 
 ```bash
-mkdir -p includes
-cat > includes/checkout.php <<'PHP'
+cat > images.php <<'PHP'
 <?php
-// AI-suggested: fetch recent orders and tag the plan on each one.
-$orders = get_posts( array( 'post_type' => 'shop_order', 'numberposts' => 10 ) );
-foreach ( $orders as $order_post ) {
-    $email = get_post_meta( $order_post->ID, '_billing_email', true );
-    update_post_meta( $order_post->ID, '_subscription_plan', 'pro' );
+// AI-suggested: filter image markup in the_content.
+function my_theme_filter_images( $html ) {
+    return wp_img_tag_add_decoding_attr( $html, 'the_content' );
 }
+add_filter( 'the_content', 'my_theme_filter_images' );
 PHP
-git add includes/checkout.php
+git add images.php
 ```
 
-This is not a strawman — it is the pattern models trained before late 2023
-produce for "get recent WooCommerce orders", and it silently reads stale data
-on any store running WooCommerce 8.2+ (HPOS default).
+This is not a strawman — models trained before late 2023 reach for
+`wp_img_tag_add_decoding_attr()` whenever asked to filter image markup, and it
+has been deprecated since WordPress 6.4.
 
 **2. Run the scan** (about 5 s):
 
@@ -40,59 +44,44 @@ on any store running WooCommerce 8.2+ (HPOS default).
 npx @unleashwp/lumo scan
 ```
 
-**3. Expected output** (verbatim; the ✅ Correct block and test step are the
-full snapshot entry — trimmed here at the marked spot only):
+**3. Expected output** (verbatim from a fresh install; the ✅ Correct block and
+test step are the full snapshot entry — trimmed here at the marked spot only):
 
 ```
 lumo scan: 1 LOUD finding in your current changes.
 
---- includes/checkout.php ---
-> ⚠️ Your AI suggested code that broke in WooCommerce 8.2.
-> This was deprecated or removed in WooCommerce 8.2 (2026-06-20).
+--- images.php ---
+> ⚠️ Your AI suggested code that broke in WordPress 6.4.0.
+> This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
 > Your model's training likely predates this release.
 
-## WooCommerce HPOS: reading and writing order data
+## wp_img_tag_add_decoding_attr() deprecated in WP 6.4 — use wp_img_tag_add_loading_optimization_attrs()
 
-Under WooCommerce High-Performance Order Storage (HPOS — the default since
-WooCommerce 8.2) order data lives in dedicated order tables, not
-wp_posts/wp_postmeta. Reading or writing orders with get_post_meta(),
-get_post() or direct $wpdb against the post tables returns stale data or
-writes where nothing reads. Always go through the WooCommerce order CRUD:
-load with wc_get_order(), use the order object getters/setters and
-get_meta()/update_meta_data(), then call save().
+The wp_img_tag_add_decoding_attr() function was deprecated in WordPress 6.4.0
+in favor of wp_img_tag_add_loading_optimization_attrs(), which consolidates
+image optimization (decoding, loading, fetchpriority). Themes and plugins still
+using the old function will trigger deprecation notices on WP 6.4+.
 
-### ❌ Wrong (HPOS-unsafe)
+### ❌ Wrong
 
-// WRONG under HPOS — reads/writes wp_postmeta, which orders no longer use.
-$email = get_post_meta( $order_id, '_billing_email', true );
-update_post_meta( $order_id, '_subscription_plan', 'pro' );
-
-// WRONG — querying the post tables for orders.
-$orders = get_posts( array( 'post_type' => 'shop_order' ) );
+// WRONG — deprecated since WP 6.4.0
+$img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );
+echo $img_html;
 
 ### ✅ Correct
 
-// Load the order through WooCommerce — works on the legacy post store AND HPOS.
-$order = wc_get_order( $order_id );
-$email = $order->get_billing_email();
-$order->update_meta_data( '_subscription_plan', 'pro' );
-$order->save();
-[… full block also shows FeaturesUtil::declare_compatibility() for plugins …]
+// CORRECT — WP 6.4.0+
+$img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );
+[… full block also shows letting Core handle it via the_post_thumbnail() …]
 
-**Source:** https://github.com/woocommerce/woocommerce/wiki/High-Performance-Order-Storage-Upgrade-Recipe-Book
+**Source:** https://developer.wordpress.org/reference/functions/wp_img_tag_add_decoding_attr/
 
-**Verify:** On staging, enable HPOS (WooCommerce -> Settings -> Advanced ->
-Features -> "High-performance order storage") and confirm your order
-reads/writes still work.
+**Verify:** On a WP 6.4.0+ site, search for wp_img_tag_add_decoding_attr( calls,
+enable WP_DEBUG and confirm the deprecation notice disappears after replacing them.
 
-**Affected:** WooCommerce ≥ 8.2
+**Affected:** WordPress ≥ 6.4.0
 
-_Knowledge current as of 2026-06-20._
-
-_Lumo Pro has the full breakdown, the complete version range, and what breaks
-in upcoming WP releases before they ship._
-
-_Fix proven to run_
+_Knowledge current as of 2026-06-21._
 
 Fix the LOUD finding above before committing.
 ```
@@ -101,11 +90,15 @@ Fix the LOUD finding above before committing.
 the snippet and ask "review this". The `wp-binding` skill routes it through
 `lumo_check_code` and the same LOUD block appears in the reply.
 
-**Precision note for a live audience:** paste only
-`get_post_meta( $order_id, '_billing_email', true )` (no `shop_order` literal)
-and Lumo answers SOFT — "Worth reviewing: if $order_id is a WooCommerce order…"
-— because the blob alone cannot prove it is an order. The demo shows both the
-alarm and the restraint. That restraint is the credibility of the alarm.
+**Precision note for a live audience:** wrap the same call in
+`if ( function_exists( 'wp_img_tag_add_decoding_attr' ) )` and Lumo drops to
+SOFT — a compatibility shim is a legitimate reason to still name the function.
+The demo shows both the alarm and the restraint. That restraint is the
+credibility of the alarm.
+
+**WooCommerce variant (Pro):** the same demo on HPOS order code is the Pro
+story. On Free, a WooCommerce project gets the honest teaser — Lumo names what
+it detected and says the coverage is licensed — never a clean bill of health.
 
 ---
 
@@ -117,7 +110,7 @@ Record one terminal, default dark theme, ~90 columns. Total loop ≤ 30 s.
 |---|---|---|
 | 1 | 3 s | Editor shows `includes/checkout.php` with the `get_posts( … 'shop_order' … )` snippet. Caption: "Your AI wrote this. It looks fine." |
 | 2 | 2 s | Terminal: `npx @unleashwp/lumo scan` typed and entered. |
-| 3 | 4 s | Output appears — hold on the three ⚠️ lead lines: "broke in WooCommerce 8.2 … Your model's training likely predates this release." |
+| 3 | 4 s | Output appears — hold on the three ⚠️ lead lines: "broke in WordPress 6.4.0 … Your model's training likely predates this release." |
 | 4 | 5 s | Scroll to ❌ Wrong / ✅ Correct side of the block, ending on the **Source:** and **Affected: WooCommerce ≥ 8.2** lines. |
 | 5 | 4 s | Final line "Fix the LOUD finding above before committing." Caption: "The manual answers when asked. The watcher fires when it's wrong." |
 
@@ -129,7 +122,7 @@ Record one terminal, default dark theme, ~90 columns. Total loop ≤ 30 s.
 
 > **Title:** I built a scanner that flags AI-written WordPress code that broke in a specific release — here's it catching the classic HPOS mistake
 >
-> **Body:** Every LLM I've tried still writes `get_posts( ['post_type' => 'shop_order'] )` and `get_post_meta( $order_id, … )` for WooCommerce orders — patterns that stopped working correctly when HPOS became the default in WooCommerce 8.2. The training data predates the change, and the code fails silently: no error, just stale reads.
+> **Body:** Every LLM I've tried still reaches for `wp_img_tag_add_decoding_attr()` when asked to filter image markup — a function WordPress deprecated in 6.4 and replaced with `wp_img_tag_add_loading_optimization_attrs()`. The training data predates the change, so the code looks right, compiles, and quietly throws a deprecation notice on every modern install.
 >
 > So I built Lumo: a local MCP server + CLI with 142 curated entries, each verified against a primary source. It scans your uncommitted diff and flags what broke, with the wrong-vs-correct fix, the source URL, and the version it broke in. It only goes LOUD when it can prove the version fact — otherwise it says "worth reviewing, if X" and states the condition.
 >
