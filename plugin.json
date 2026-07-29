@@ -1,0 +1,11 @@
+{
+  "id": "lumo",
+  "name": "Lumo",
+  "description": "The WordPress knowledge layer: 142 curated, source-verified entries (Core APIs, block.json/theme.json, security, WooCommerce) queryable from chat — plus the live code catch when @unleashwp/lumo is installed.",
+  "version": "0.3.0",
+  "coreVersion": ">=0.3.0",
+  "icon": "code",
+  "author": "Benjamin Zekavica",
+  "price": "free",
+  "updateSource": "github:unleash-wp/lumo"
+}
