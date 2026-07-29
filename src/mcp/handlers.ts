@@ -11,6 +11,7 @@ import {
   CATCH_NEUTRAL_LINE,
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
+  PRO_MCP_ADD_LINE,
 } from '../lib/render.js';
 import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
 import type { Snapshot } from '../types.js';
@@ -267,6 +268,13 @@ function appendFreshnessReveal(
   }
 
   const dateStr = snapshotDate ? snapshotDate.slice(0, 10) : 'June 2025';
-  const reveal = FRESHNESS_REVEAL_LINE.replace('{date}', dateStr);
+  let reveal = FRESHNESS_REVEAL_LINE.replace('{date}', dateStr);
+
+  // Only name an endpoint the reader can actually reach (same rule as the
+  // checkout link). Unset → the freshness sentence stands alone.
+  const proUrl = (process.env['LUMO_PRO_MCP_URL'] ?? '').trim();
+  if (proUrl) {
+    reveal += `\n\n${PRO_MCP_ADD_LINE.replace('{url}', proUrl)}`;
+  }
   return `${body}\n\n---\n\n${reveal}`;
 }

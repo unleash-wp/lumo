@@ -362,13 +362,28 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
   afterEach(() => {
     delete process.env['LUMO_CHECKOUT_URL'];
     delete process.env['LUMO_UPGRADE_PROMPT'];
+    delete process.env['LUMO_PRO_MCP_URL'];
   });
 
   it('reveal fires on a LOUD catch when no checkout URL is set (upgrade prompt suppressed)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
     expect(result).toContain('verified as of');
-    expect(result).toContain('claude mcp add');
+  });
+
+  it('names no Pro MCP endpoint while LUMO_PRO_MCP_URL is unset (no dead install command)', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    delete process.env['LUMO_PRO_MCP_URL'];
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).toContain('verified as of');
+    expect(result).not.toContain('claude mcp add');
+  });
+
+  it('appends the add-command only when LUMO_PRO_MCP_URL names a reachable server', async () => {
+    delete process.env['LUMO_CHECKOUT_URL'];
+    process.env['LUMO_PRO_MCP_URL'] = 'https://mcp.example.test/mcp';
+    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    expect(result).toContain('claude mcp add lumo-pro --transport http https://mcp.example.test/mcp');
   });
 
   it('reveal does NOT fire when the upgrade prompt block already fired (no double-printing)', async () => {
@@ -394,7 +409,6 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
     const code = `const fontSize = useSetting( 'typography.fontSize' );`;
     const result = await handleCheckCode({ code, language: 'js' }, catchSnap);
     expect(result).toContain('verified as of');
-    expect(result).toContain('claude mcp add');
   });
 
   it('reveal contains the snapshot generatedAt date (YYYY-MM-DD shape)', async () => {

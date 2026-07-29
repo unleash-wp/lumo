@@ -6,6 +6,7 @@ import {
   UPGRADE_REVEAL_LINE,
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
+  PRO_MCP_ADD_LINE,
 } from '../src/lib/render.js';
 import { loadSnapshot, findEntry } from '../src/lib/snapshot.js';
 import type { SnapshotEntry } from '../src/types.js';
@@ -332,8 +333,18 @@ describe('FRESHNESS_REVEAL_LINE', () => {
     expect(FRESHNESS_REVEAL_LINE).toContain('{date}');
   });
 
-  it('contains the MCP add command (always-inert destination)', () => {
-    expect(FRESHNESS_REVEAL_LINE).toContain('claude mcp add');
+  it('names no Pro endpoint — the add-command moved behind LUMO_PRO_MCP_URL', () => {
+    // Pro ships as a licensed knowledge pack; there is no default hosted
+    // server, so the reveal must never print an install command for a host
+    // the reader cannot reach (same dead-link rule as the checkout prompt).
+    expect(FRESHNESS_REVEAL_LINE).not.toContain('claude mcp add');
+    expect(FRESHNESS_REVEAL_LINE).not.toMatch(/https?:\/\//);
+  });
+
+  it('PRO_MCP_ADD_LINE carries the command and a {url} placeholder, never a baked host', () => {
+    expect(PRO_MCP_ADD_LINE).toContain('claude mcp add');
+    expect(PRO_MCP_ADD_LINE).toContain('{url}');
+    expect(PRO_MCP_ADD_LINE).not.toMatch(/https?:\/\//);
   });
 
   it('says "verified as of" — honest claim about snapshot date, not a staleness verdict', () => {
