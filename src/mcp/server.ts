@@ -34,6 +34,7 @@ server.registerTool(
   'lumo_audit',
   {
     title: 'Lumo WordPress audit',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     description: [
       'Scan the open project for stale or incorrect WordPress patterns —',
       'block.json apiVersion, theme.json schema, deprecated Core APIs,',
@@ -64,6 +65,7 @@ server.registerTool(
   'lumo_lookup',
   {
     title: 'Lumo WordPress knowledge lookup',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     description: [
       'Look up the current, evidence-backed correct pattern for a WordPress topic —',
       'block.json/apiVersion, theme.json schema, Core APIs, WooCommerce, and more.',
@@ -97,6 +99,7 @@ server.registerTool(
   'lumo_check_code',
   {
     title: 'Lumo WordPress code catch',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     description: [
       'Before presenting WordPress PHP/JS to the user, pass it here.',
       'Returns any place the code uses a stale pattern — block.json apiVersion,',
