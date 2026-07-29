@@ -1,0 +1,83 @@
+name: Release
+
+# Publishing by hand cannot produce provenance — npm only attests a package
+# built by a trusted CI runner. For something that ships knowledge onto other
+# people's dev machines that attestation is worth having, so a release is a tag
+# push and nothing else.
+#
+# Founder setup, once: add an npm automation token as the NPM_TOKEN secret
+# (npm token create --type=automation — automation tokens bypass 2FA, which is
+# what lets CI publish at all).
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # create the GitHub Release
+  id-token: write # required for npm provenance
+
+jobs:
+  release:
+    name: Publish to npm and cut the GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A tag that disagrees with the manifest would publish the wrong version
+      # under the right name — fail before anything is pushed anywhere.
+      - name: Verify the tag matches package.json
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $PKG"
+            exit 1
+          fi
+          echo "Releasing $PKG"
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # The advertised entry points are the ones that break silently: a missing
+      # bin or an unbuilt dist only shows up after someone installs. Prove them
+      # against the packed tarball, not the working tree.
+      - name: Verify the packed tarball actually works
+        run: |
+          npm pack --silent
+          TARBALL="$(ls unleashwp-lumo-*.tgz)"
+          WORK="$(mktemp -d)"
+          cd "$WORK"
+          npm init -y >/dev/null
+          npm install --silent "$GITHUB_WORKSPACE/$TARBALL"
+          test -x node_modules/.bin/lumo || { echo "lumo bin missing from the package"; exit 1; }
+          node_modules/.bin/lumo --version
+          node_modules/.bin/lumo --help >/dev/null
+
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "Published to npm as @unleashwp/lumo@${GITHUB_REF_NAME#v} with provenance. See CHANGELOG.md." \
+            unleashwp-lumo-*.tgz
