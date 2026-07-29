@@ -13,13 +13,13 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createRequire } from 'node:module';
 import { z } from 'zod';
 import { handleAudit, handleLookup, handleCheckCode } from './handlers.js';
-
-// Single version source: package.json, inlined by tsup at build time.
-// A hardcoded string here shipped 0.3.0 announcing itself as 0.2.0.
-const pkg = createRequire(import.meta.url)('../../package.json') as { version: string };
+// Static JSON import: esbuild inlines it at build time, so the manifest is the
+// single version source and the bundle carries no runtime path dependency.
+// (A createRequire('../../package.json') variant stayed a RUNTIME require and
+// broke in the installed package — dist/../../ points outside the tarball.)
+import pkg from '../../package.json';
 
 const server = new McpServer({
   name: 'unleashwp-lumo',
