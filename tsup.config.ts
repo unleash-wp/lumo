@@ -2,6 +2,9 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    // Default binary — `npx @unleashwp/lumo <cmd>` resolves the bin named after
+    // the package, so this dispatcher is what makes the advertised command real.
+    lumo: 'src/cli/main.ts',
     mcp: 'src/mcp/server.ts',
     // GitHub Action entry point — produces dist/action.mjs referenced by action.yml.
     action: 'src/action/main.ts',

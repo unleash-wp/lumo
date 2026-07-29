@@ -1,7 +1,7 @@
 {
   "name": "@unleashwp/lumo",
   "version": "0.3.0",
-  "description": "UnleashWP Lumo — HPOS guardrail for WooCommerce developers (Claude Code plugin)",
+  "description": "UnleashWP Lumo — catches stale or wrong AI-written WordPress code the moment it is generated, with the wrong-vs-correct fix and a dated source (MCP server, CLI and GitHub Action).",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -20,6 +20,7 @@
     ".": "./dist/mcp.mjs"
   },
   "bin": {
+    "lumo": "dist/lumo.mjs",
     "lumo-mcp": "dist/mcp.mjs",
     "lumo-scan": "dist/scan.mjs"
   },

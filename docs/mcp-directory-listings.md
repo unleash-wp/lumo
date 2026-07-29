@@ -1,104 +1,121 @@
-# MCP Directory Listings
+# MCP Directory Listings — ready-to-paste submissions
 
-Three directories: PulseMCP, Glama, Smithery. Submission paths differ per directory.
+Final submission texts for six directories. Copy the block, paste into the form.
+Markers: **[after npm publish]** — requires `@unleashwp/lumo` live on npm first.
+**[FOUNDER]** — needs the founder's account; cannot be automated.
 
-Conventions used below:
-- **[TEAM DONE]** — committed in this branch; no founder action needed.
-- **[FOUNDER]** — requires founder account / action; cannot be automated.
+## Canonical copy (single source — reuse everywhere)
 
----
+- **Name:** UnleashWP Lumo — WordPress Code Quality
+- **One-liner:** Catches stale AI-written WordPress code — Core deprecations, Gutenberg/block.json, WooCommerce HPOS — with the wrong-vs-correct fix and a dated source.
+- **Description:** Lumo is a local stdio MCP server for WordPress code review. It checks PHP and JavaScript against 142 curated, source-verified entries covering WordPress Core deprecations, Gutenberg block development (block.json, apiVersion, theme.json), and WooCommerce HPOS breakage — and returns the wrong pattern, the correct replacement, the affected version range, and a dated source URL. Tools: `lumo_check_code` (review a snippet or diff), `lumo_audit` (audit a project), `lumo_lookup` (query the knowledge base).
+- **Category:** Developer Tools (variant: Code Review / Code Quality where offered)
+- **Tags:** `wordpress` `woocommerce` `hpos` `gutenberg` `block-json` `code-review` `code-quality` `deprecations` `php` `mcp-server`
+- **Homepage / repo:** https://github.com/unleash-wp/lumo
+- **Install (standard MCP config):**
 
-## 1. Official MCP Registry (prerequisite for PulseMCP)
+```json
+{
+  "mcpServers": {
+    "lumo": {
+      "command": "npx",
+      "args": ["-y", "-p", "@unleashwp/lumo", "lumo-mcp"]
+    }
+  }
+}
+```
 
-PulseMCP ingests from the official Anthropic/MCP Registry (registry.modelcontextprotocol.io), so the registry is the primary submission target. PulseMCP auto-indexes from there within ~24 h.
-
-### What is required
-
-- `mcpName` field in `package.json` — **[TEAM DONE]**: set to `"io.github.unleash-wp/lumo"`.
-- `server.json` in the repo root — **[TEAM DONE]**: created at `server.json`, schema `https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json`.
-- Package published to npm as `@unleashwp/lumo`.
-- `mcp-publisher` CLI to authenticate and push the registry entry.
-
-### Founder steps — MCP Registry
-
-1. Verify `@unleashwp/lumo` is published to npm and the version matches `server.json` (`0.2.0`).
-2. Install the publisher CLI: `brew install mcp-publisher`
-3. In the repo root: `mcp-publisher init` — review the generated `server.json` and compare against the one committed here; the committed file should already be correct.
-4. Authenticate: `mcp-publisher login github` (device flow, uses the `unleash-wp` GitHub org account).
-5. Publish: `mcp-publisher publish` — this pushes the entry to `registry.modelcontextprotocol.io`.
-6. Confirm at https://registry.modelcontextprotocol.io — search for `io.github.unleash-wp/lumo`.
-
-Source: https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/quickstart.mdx
+*(The explicit `-p … lumo-mcp` form is required: the package exposes the bins `lumo-mcp` and `lumo-scan`, so a bare `npx @unleashwp/lumo` cannot resolve a default binary.)*
 
 ---
 
-## 2. PulseMCP
+## 1. Official MCP Registry (registry.modelcontextprotocol.io) — [after npm publish]
 
-**Indexing:** PulseMCP pulls from the official MCP Registry daily; it also has a direct submission form as a fallback (GitHub repo URL, one field).
+Server metadata comes from the committed `server.json` (name `io.github.unleash-wp/lumo`); there is no free-text form. What you submit IS `server.json` — description field already carries the canonical copy.
 
-**Artifacts needed:** none beyond what the MCP Registry entry covers (README, package.json keywords, server.json).
-
-### Founder steps — PulseMCP
-
-1. Complete the MCP Registry submission above — PulseMCP auto-indexes within ~24 h of the registry entry being live.
-2. *(Fallback / faster)* Go to https://www.pulsemcp.com/submit → select "MCP Server" → paste `https://github.com/unleash-wp/lumo` → submit.
-3. If a week passes with no listing, email hello@pulsemcp.com with the GitHub URL.
-
-Source: https://www.pulsemcp.com/submit
+**[FOUNDER] steps:**
+1. Publish `@unleashwp/lumo@0.3.0` to npm (registry validates the `mcpName` field in the published package.json).
+2. `brew install mcp-publisher`
+3. Repo root: `mcp-publisher login github` (account must be a member of the `unleash-wp` org — the namespace `io.github.unleash-wp/*` binds to it).
+4. `mcp-publisher publish`
+5. Verify: search `io.github.unleash-wp/lumo` at https://registry.modelcontextprotocol.io
 
 ---
 
-## 3. Glama
+## 2. PulseMCP — https://www.pulsemcp.com/submit
 
-**Indexing:** Glama indexes ~47k servers; community submissions via "Add Server" form (GitHub URL). No manifest file required.
+Auto-indexes from the official registry within ~24 h — completing #1 covers PulseMCP. Fallback: the direct form (one field).
 
-**Artifacts needed:** accurate README and package.json keywords — **[TEAM DONE]**.
+**Paste block (fallback form):**
+> **URL:** https://github.com/unleash-wp/lumo
+> **Type:** MCP Server
 
-### Founder steps — Glama
-
-1. Go to https://glama.ai/mcp/servers → click "Add Server".
-2. Paste `https://github.com/unleash-wp/lumo` when the form asks for a repository or URL.
-3. Complete any account/verification step the form requests.
-4. After submission, search Glama for "lumo" or "unleashwp" to confirm indexing.
-
-Source: https://glama.ai/mcp/servers (observed "Add Server" link; exact form fields require a logged-in session)
+Name, description, and tags are read from the repo README and package.json — already aligned with the canonical copy. **[FOUNDER]** If not listed after a week: hello@pulsemcp.com with the repo URL.
 
 ---
 
-## 4. Smithery
+## 3. Glama — https://glama.ai/mcp/servers → "Add Server"
 
-**Indexing:** Smithery does NOT auto-crawl GitHub repos. For stdio servers (like Lumo) it requires either:
-  - **(a) MCPB bundle** — a compiled `.mcpb` bundle uploaded via `smithery.ai/new`.
-  - **(b) HTTP endpoint** — only applicable to remote/hosted servers; Lumo Free is stdio-only so this does not apply.
+Indexes from the GitHub repo; submission works before npm publish.
 
-Smithery scans the running server for tool metadata after submission; no extra manifest file is needed.
+**Paste block:**
+> **Repository:** https://github.com/unleash-wp/lumo
+> **Name:** UnleashWP Lumo — WordPress Code Quality
+> **Description:** Catches stale AI-written WordPress code — Core deprecations, Gutenberg/block.json, WooCommerce HPOS — with the wrong-vs-correct fix and a dated source. Local stdio server; tools: lumo_check_code, lumo_audit, lumo_lookup.
+> **Category:** Developer Tools
 
-**Artifacts needed:** none committed (no `smithery.yaml` schema exists for stdio servers per current docs).
-
-### Founder steps — Smithery
-
-1. Build the MCPB bundle locally (requires Smithery's `mcpb` toolchain — check https://smithery.ai/docs for the build command; as of June 2026 the toolchain is separate from npm).
-2. Go to https://smithery.ai/new — create or log in to a Smithery account.
-3. Select "Local / stdio" as the server type.
-4. Upload the `.mcpb` bundle.
-5. Smithery will scan the bundle for tool metadata (`lumo_audit`, `lumo_lookup`, `lumo_check_code`) and populate the listing.
-6. Fill in display name ("UnleashWP Lumo"), description, and GitHub repo URL (`https://github.com/unleash-wp/lumo`) in the listing form.
-
-Source: https://smithery.ai/docs/build/publish.md (API reference; UI flow at smithery.ai/new returned 429 during research — verify current UI live).
+**[FOUNDER]** Log in, submit, then search "lumo" / "unleashwp" to confirm indexing.
 
 ---
 
-## Team-done checklist
+## 4. Smithery — https://smithery.ai/new — [FOUNDER]
 
-- [x] `package.json` — added `mcpName`, expanded keywords (`mcp`, `mcp-server`, `woocommerce-deprecation`, `wordpress-audit`)
-- [x] `server.json` — MCP Registry manifest (root of repo), schema-validated structure
-- [x] `README.md` — added MCP tools line with freshness note, npm/global install block for non-Claude Code clients
+No GitHub auto-crawl for stdio servers: requires an MCPB bundle upload (Smithery's `mcpb` toolchain — verify the current build command at https://smithery.ai/docs; it is separate from npm). Smithery scans the running server and auto-populates the tool list (`lumo_audit`, `lumo_lookup`, `lumo_check_code`).
+
+**Paste block (listing form):**
+> **Display name:** UnleashWP Lumo — WordPress Code Quality
+> **Description:** Local WordPress code-review server: checks PHP/JS against 142 source-verified entries for Core deprecations, Gutenberg/block.json changes, and WooCommerce HPOS breakage. Returns wrong vs. correct pattern, affected version range, and a dated source URL.
+> **Repository:** https://github.com/unleash-wp/lumo
+> **Server type:** Local / stdio
 
 ---
 
-## Unresolved questions
+## 5. Cursor Directory — https://cursor.directory (MCP section) — [after npm publish]
 
-1. **npm publish status**: `@unleashwp/lumo` must be public on npm before `mcp-publisher publish` will work. Confirm the package is published or add this to the release checklist.
-2. **Smithery MCPB toolchain**: the build command for `.mcpb` bundles is not documented in the public docs fetched; verify at https://smithery.ai/docs before attempting the Smithery submission.
-3. **`unleash-wp` GitHub org ownership**: `mcp-publisher login github` ties the `mcpName` namespace `io.github.unleash-wp/*` to the authenticated GitHub account. The account used must be a member (or owner) of the `unleash-wp` org; confirm before running publish.
-4. **Glama submission form fields**: the exact fields were behind a login wall during research. If the form asks for more than a GitHub URL (e.g. category, description), use: category = "Developer Tools", description = first sentence of README.
+The install command runs through npx, so the listing is only functional once the package is live.
+
+**Paste block:**
+> **Name:** UnleashWP Lumo — WordPress Code Quality
+> **One-liner:** Catches stale AI-written WordPress code — Core deprecations, Gutenberg/block.json, WooCommerce HPOS — with the wrong-vs-correct fix and a dated source.
+> **Description:** Local stdio MCP server for WordPress code review: 142 curated, source-verified entries covering WordPress Core deprecations, Gutenberg block development (block.json, apiVersion, theme.json), and WooCommerce HPOS. The bundled `.cursor/rules/lumo.mdc` makes Cursor consult it before writing WordPress code.
+> **Repository:** https://github.com/unleash-wp/lumo
+> **Install (`.cursor/mcp.json`):**
+> ```json
+> { "mcpServers": { "lumo": { "command": "npx", "args": ["-y", "-p", "@unleashwp/lumo", "lumo-mcp"] } } }
+> ```
+
+**[FOUNDER]** Submission flow is on the site (community-run); verify the current form live.
+
+---
+
+## 6. VS Code MCP list — https://code.visualstudio.com/mcp — [after npm publish]
+
+VS Code's curated list sources from the official MCP Registry — #1 is the prerequisite. The page links its submission/contribution path; verify live at submission time.
+
+**Paste block (if a form/PR asks for fields):**
+> **Name:** UnleashWP Lumo — WordPress Code Quality
+> **Description:** WordPress code review for AI-assisted development: flags Core deprecations, Gutenberg/block.json changes, and WooCommerce HPOS breakage in PHP/JS, with the correct replacement, affected version range, and dated source.
+> **Repository:** https://github.com/unleash-wp/lumo
+> **Install (`.vscode/mcp.json`):**
+> ```json
+> { "servers": { "lumo": { "type": "stdio", "command": "npx", "args": ["-y", "-p", "@unleashwp/lumo", "lumo-mcp"] } } }
+> ```
+
+---
+
+## Open items before submitting anywhere
+
+1. **npm publish** — `@unleashwp/lumo@0.3.0` must be public on npm for #1, #5, #6 and for every `npx` install command above.
+2. **npx ergonomics** — package.json ships no bin named `lumo`, so `npx @unleashwp/lumo <anything>` fails to resolve. Either keep the explicit `-p … lumo-mcp` form everywhere (as written above) or add a `lumo` dispatcher bin before publish.
+3. **`unleash-wp` org membership** — the registry namespace binds to the GitHub account used in `mcp-publisher login github`.
+4. **Smithery MCPB toolchain** — build command undocumented at research time; verify at smithery.ai/docs.
