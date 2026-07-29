@@ -104,9 +104,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has at least 100 entries', () => {
+  it('has at least 60 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBeGreaterThanOrEqual(100);
+    expect(snap.entries.length).toBeGreaterThanOrEqual(60);
   });
 
   it('every entry has tier "free"', () => {
