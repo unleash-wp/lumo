@@ -128,6 +128,13 @@ export const PATTERNS: readonly PatternDefinition[] = [
   },
   {
     pattern: 'woocommerce',
+    // WooCommerce knowledge is Pro-only. Detection must still fire, or a Free
+    // user auditing a WooCommerce project would be told "nothing to check here"
+    // — silence read as a clean bill of health on code Lumo simply cannot see.
+    // The teaser names what was detected and what covers it.
+    proTeaser: true,
+    proTeaserName: 'WooCommerce',
+    hasProCoverage: true,
     composerKeys: ['woocommerce/woocommerce', 'wpackagist-plugin/woocommerce'],
     directoryPaths: [
       'wp-content/plugins/woocommerce/woocommerce.php',

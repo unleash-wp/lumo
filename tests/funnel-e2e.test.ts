@@ -16,18 +16,23 @@ import { checkCode } from '../src/detection/catch.js';
  */
 
 /**
- * The flagship demo snippet (README + catch demo). It carries the CERTAIN
- * 'shop_order' post-type literal, which is what earns a LOUD catch — a bare
- * `get_post_meta( $order_id )` is deliberately only SOFT (that id could be any
- * post). Asserted separately below so the commercial boundary stays explicit.
+ * The flagship Free demo snippet. It calls wp_img_tag_add_decoding_attr(), a
+ * CERTAIN signal on a dated breaking change (WP 6.4), which is what earns a LOUD
+ * catch. WooCommerce knowledge is Pro-only now, so the funnel is asserted on the
+ * LOUD a real free user can hit — these handlers read the shipped Free snapshot.
  */
-const HPOS_SNIPPET = `<?php
-$email = get_post_meta( $order_id, '_billing_email', true );
-update_post_meta( $order_id, '_subscription_plan', 'pro' );
-$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
+const LOUD_SNIPPET = `<?php
+$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
+echo $html;`;
 
-/** Same domain, but context-dependent only — SOFT, not LOUD. */
-const SOFT_ONLY_SNIPPET = "<?php $email = get_post_meta( $order_id, '_billing_email', true );";
+/**
+ * Same signal, but wrapped in a function_exists() shim — the developer is writing
+ * a polyfill, not misusing the API, so the engine caps it at SOFT.
+ */
+const SOFT_ONLY_SNIPPET = `<?php
+if ( ! function_exists( 'wp_img_tag_add_decoding_attr' ) ) {
+    $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
+}`;
 const CHECKOUT = 'https://buy.example.test/lumo';
 
 describe('checkout funnel — catch → attributed upgrade prompt', () => {
@@ -45,12 +50,12 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
   });
 
   it('the flagship snippet still produces a LOUD catch (the funnel entry point)', () => {
-    const results = checkCode(HPOS_SNIPPET, 'php');
+    const results = checkCode(LOUD_SNIPPET, 'php');
     expect(results.some((r) => r.tier === 'LOUD')).toBe(true);
   });
 
   it('emits the checkout URL with full attribution when a LOUD catch fires', async () => {
-    const out = await handleCheckCode({ code: HPOS_SNIPPET, language: 'php' });
+    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'php' });
     expect(out).toContain(CHECKOUT);
     // Attribution params the funnel digest joins on — a bare URL is a lost sale.
     expect(out).toMatch(/[?&]ref=catch\b/);
@@ -60,19 +65,23 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
 
   it('prints no dead buy-link when no checkout URL is configured', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const out = await handleCheckCode({ code: HPOS_SNIPPET, language: 'php' });
+    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'php' });
     expect(out).not.toContain('buy.example.test');
     expect(out).not.toMatch(/lumo\.so\/pro/); // the default must stay inert too
   });
 
   it('honours the kill-switch even with a checkout URL set', async () => {
     process.env['LUMO_UPGRADE_PROMPT'] = 'off';
-    const out = await handleCheckCode({ code: HPOS_SNIPPET, language: 'php' });
+    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'php' });
     expect(out).not.toContain(CHECKOUT);
   });
 
   it('never shows the upgrade prompt on clean code (no nag without a finding)', async () => {
-    const out = await handleCheckCode({ code: '<?php $order = wc_get_order( $order_id );', language: 'php' });
+    // The correct replacement call — near-miss of the LOUD signal, must stay silent.
+    const out = await handleCheckCode({
+      code: "<?php $html = wp_img_tag_add_loading_optimization_attrs( $img, 'the_content' );",
+      language: 'php',
+    });
     expect(out).not.toContain(CHECKOUT);
   });
 
