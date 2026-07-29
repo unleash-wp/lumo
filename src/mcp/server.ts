@@ -13,12 +13,17 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { createRequire } from 'node:module';
 import { z } from 'zod';
 import { handleAudit, handleLookup, handleCheckCode } from './handlers.js';
 
+// Single version source: package.json, inlined by tsup at build time.
+// A hardcoded string here shipped 0.3.0 announcing itself as 0.2.0.
+const pkg = createRequire(import.meta.url)('../../package.json') as { version: string };
+
 const server = new McpServer({
   name: 'unleashwp-lumo',
-  version: '0.2.0',
+  version: pkg.version,
 });
 
 // ---------------------------------------------------------------------------
