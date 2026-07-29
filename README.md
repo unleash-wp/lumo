@@ -2,53 +2,52 @@
 
 **The official WordPress skills are the manual. Lumo is the watcher.**
 
-Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release — Core APIs, block.json/apiVersion, theme.json, WooCommerce/HPOS — the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
+Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release — Core APIs, block and theme APIs, security fundamentals — the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
 
-**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Transport:** stdio, runs locally · **Knowledge:** 142 curated, source-verified entries
+**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Transport:** stdio, runs locally · **Knowledge:** 42 curated, source-verified entries in Free; the full catalogue in Pro
 
 ---
 
 ## The 30-second proof
 
-Ask any AI assistant for WooCommerce code that touches orders. Sooner or later it writes this:
+Ask any AI assistant for a WordPress image filter. Sooner or later it writes this:
 
 ```php
-$orders = get_posts( array( 'post_type' => 'shop_order', 'numberposts' => 10 ) );
-foreach ( $orders as $order_post ) {
-    $email = get_post_meta( $order_post->ID, '_billing_email', true );
+function my_theme_filter_images( $html ) {
+    return wp_img_tag_add_decoding_attr( $html, 'the_content' );
 }
+add_filter( 'the_content', 'my_theme_filter_images' );
 ```
 
-It looks fine. It compiles. It reads stale data on every store running WooCommerce 8.2 or later. Run the scan on your uncommitted changes and Lumo catches it — unprompted:
+It looks fine. It compiles. It has been deprecated since WordPress 6.4 and throws a
+deprecation notice on every modern install. Run the scan on your uncommitted changes
+and Lumo catches it — unprompted:
 
 ```
 $ npx @unleashwp/lumo scan
 lumo scan: 1 LOUD finding in your current changes.
 
---- includes/checkout.php ---
-> ⚠️ Your AI suggested code that broke in WooCommerce 8.2.
-> This was deprecated or removed in WooCommerce 8.2 (2026-06-20).
+--- images.php ---
+> ⚠️ Your AI suggested code that broke in WordPress 6.4.0.
+> This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
 > Your model's training likely predates this release.
 
-## WooCommerce HPOS: reading and writing order data
+## wp_img_tag_add_decoding_attr() deprecated in WP 6.4 — use wp_img_tag_add_loading_optimization_attrs()
 
-### ❌ Wrong (HPOS-unsafe)
-$email = get_post_meta( $order_id, '_billing_email', true );
-$orders = get_posts( array( 'post_type' => 'shop_order' ) );
+### ❌ Wrong
+$img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );
 
 ### ✅ Correct
-$order = wc_get_order( $order_id );
-$email = $order->get_billing_email();
-$order->update_meta_data( '_subscription_plan', 'pro' );
-$order->save();
+$img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );
 
-**Source:** https://github.com/woocommerce/woocommerce/wiki/High-Performance-Order-Storage-Upgrade-Recipe-Book
-**Affected:** WooCommerce ≥ 8.2
+**Source:** https://developer.wordpress.org/reference/functions/wp_img_tag_add_decoding_attr/
+**Affected:** WordPress ≥ 6.4.0
 
 Fix the LOUD finding above before committing.
 ```
 
-(Output trimmed — the full catch includes the summary, a staging test step, and the knowledge date. Reproduce it yourself: [docs/catch-demo.md](docs/catch-demo.md).)
+(Output trimmed — the full catch includes the summary, a test step, and the knowledge
+date. Reproduce it yourself: [docs/catch-demo.md](docs/catch-demo.md).)
 
 Nobody asked Lumo to check. That is the product. The official [WordPress/agent-skills](https://github.com/WordPress/agent-skills) answer when your AI consults them; Lumo fires when your AI is wrong. Run both.
 
@@ -102,14 +101,18 @@ Full options, Cursor setup, the `wp-binding` skill, and the edit-time enforcemen
 
 Every catch shows five things: the wrong pattern, the correct replacement, the source URL, the affected version range, and a test step to run before shipping.
 
-**Coverage — 142 entries, each verified against a primary source:**
+**Coverage — 42 entries, each verified against a primary source:**
 
 - WordPress Core deprecations and removals, through WordPress 7.0 (PHP minimum, Interactivity API changes)
-- Block editor: `apiVersion` 2→3, `useSetting()` → `useSettings()`, removed block APIs
-- block.json and theme.json: v3 schema, `viewScriptModule`, per-block settings, style variations
-- Block themes / FSE: template parts, patterns, the `get_header()`/`get_footer()` no-op trap
+- Block editor basics: removed block APIs, `apiVersion` migration
+- WordPress Abilities API: exposing abilities to MCP clients correctly
+- Plugin standards: prefixing, ABSPATH guards, text domains, capability and nonce checks
 - Security and repo hygiene: output escaping, committed `.env` files, hardcoded API keys
-- WooCommerce HPOS: order access via post tables vs. the order CRUD
+- Secure Custom Fields: what the WordPress fork actually ships
+
+Not in Free: WooCommerce, ACF Pro, Elementor, Gravity Forms, Meta Box, Carbon Fields, the
+block-theme and FSE currency layer, and the deprecation timeline. Lumo tells you when it
+detects one of those rather than reporting a clean bill of health it cannot vouch for.
 
 **Where it fires:**
 
