@@ -128,10 +128,15 @@ describe('detectStack', () => {
 // ---------------------------------------------------------------------------
 
 describe('auditProject', () => {
-  it('returns detected:true + entry slug on composer-woo fixture', () => {
+  // WooCommerce knowledge is Pro-only, so a detected Woo project yields the Pro
+  // teaser instead of a Free entry. Detection itself must still fire — silence
+  // here would read as a clean bill of health on code Lumo cannot see.
+  it('returns detected:true + Pro teaser on composer-woo fixture', () => {
     const result = auditProject(join(fixturesDir, 'composer-woo'));
     expect(result.detected).toBe(true);
-    expect(result.entry?.slug).toBe('woocommerce-hpos-order-access');
+    expect(result.proTeaser).toBeDefined();
+    expect(result.proTeaser).toContain('WooCommerce');
+    expect(result.entry).toBeUndefined();
     expect(result.detection?.source).toBe('composer');
   });
 
@@ -306,11 +311,15 @@ describe('detectStack — heuristic fallback', () => {
 });
 
 describe('auditProject — heuristic path', () => {
-  it('returns detected:true and routes to woocommerce-hpos-order-access entry for heuristic-woo', () => {
+  // Heuristic detection still reaches the WooCommerce pattern; the result is the
+  // Pro teaser now that the knowledge behind it is Pro-only.
+  it('returns detected:true and routes to the Pro teaser for heuristic-woo', () => {
     const result = auditProject(join(fixturesDir, 'heuristic-woo'));
     expect(result.detected).toBe(true);
     expect(result.detection?.source).toBe('heuristic');
-    expect(result.entry?.slug).toBe('woocommerce-hpos-order-access');
+    expect(result.proTeaser).toBeDefined();
+    expect(result.proTeaser).toContain('WooCommerce');
+    expect(result.entry).toBeUndefined();
   });
 });
 
@@ -708,11 +717,19 @@ describe('detectStack — Pro-teaser patterns do not shadow Free patterns (ladde
   });
 });
 
-describe('auditProject — Pro-teaser does not bleed into WooCommerce result', () => {
-  it('composer-woo fixture still returns woocommerce entry, no proTeaser', () => {
-    const result = auditProject(join(fixturesDir, 'composer-woo'));
+describe('auditProject — Pro-teaser does not bleed into Free-covered results', () => {
+  // WooCommerce is a teaser pattern itself now, so the no-bleed guard runs on a
+  // pattern Free still covers: wordpress-core must return its entry and no teaser.
+  it('a wordpress-core project returns the Free entry, no proTeaser', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-no-bleed-'));
+    writeFileSync(
+      join(dir, 'plugin.php'),
+      '<?php\n$html = wp_img_tag_add_decoding_attr( $img, \'the_content\' );\n',
+    );
+    const result = auditProject(dir);
     expect(result.detected).toBe(true);
-    expect(result.entry?.slug).toBe('woocommerce-hpos-order-access');
+    expect(result.entry?.slug).toBe('wp-img-tag-add-decoding-attr-deprecation');
     expect(result.proTeaser).toBeUndefined();
+    expect(result.detectionNote).toBeUndefined();
   });
 });

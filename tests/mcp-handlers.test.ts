@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleAudit, handleLookup, handleCheckCode } from '../src/mcp/handlers.js';
@@ -8,10 +10,44 @@ import type { SnapshotEntry } from '../src/types.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, 'fixtures');
 
-// Gutenberg entries are Pro-MCP-only (freeSnapshot:false); not in the redistributable
-// Free snapshot. Tests that verify catch-engine behavior against these entries use
-// catchSnap — an extended snapshot with synthetic entries for test-only purposes.
-const gutenbergCatchEntries: SnapshotEntry[] = [
+/**
+ * A project the Free tier still has knowledge for: the wordpress-core heuristic
+ * signal. WooCommerce projects now resolve to the Pro teaser, so the Free-Markdown
+ * audit path needs a Free-covered pattern to be exercised at all.
+ */
+function makeFreeAuditProject(): string {
+  const dir = mkdtempSync(join(tmpdir(), 'lumo-free-audit-'));
+  writeFileSync(
+    join(dir, 'plugin.php'),
+    '<?php\n$html = wp_img_tag_add_decoding_attr( $img, \'the_content\' );\n',
+  );
+  return dir;
+}
+
+/** The Free-tier LOUD blob — the catch a real free user hits (WP 6.4, breaking). */
+const loudBlob = `<?php $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );`;
+
+// Gutenberg entries are Pro-MCP-only (freeSnapshot:false); WooCommerce knowledge is
+// Pro-only too. Neither ships in the redistributable Free snapshot. Tests that verify
+// catch-engine or handler wiring against these entries use catchSnap — an extended
+// snapshot with synthetic entries for test-only purposes.
+const proOnlyCatchEntries: SnapshotEntry[] = [
+  {
+    slug: 'woocommerce-hpos-order-access',
+    title: 'WooCommerce HPOS: reading and writing order data',
+    category_slug: 'woocommerce',
+    summary: 'Under HPOS order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
+    code_example: '$order = wc_get_order( $order_id );',
+    bad_pattern: "$email = get_post_meta( $order_id, '_billing_email', true );",
+    source_url:
+      'https://github.com/woocommerce/woocommerce/wiki/High-Performance-Order-Storage-Upgrade-Recipe-Book',
+    test_step: 'On staging, enable HPOS and confirm your order reads/writes still work.',
+    tier: 'free' as const,
+    updatedAt: '2026-06-20T09:30:00Z',
+    versions: [
+      { wp_version_min: null, wp_version_max: null, woo_version_min: '8.2', breaking_change: true },
+    ],
+  },
   {
     slug: 'gutenberg-usesetting-deprecated-wp6-5',
     title: 'useSetting() hook deprecated in WP 6.5 — migrate to useSettings()',
@@ -54,20 +90,31 @@ const gutenbergCatchEntries: SnapshotEntry[] = [
 ];
 
 const snapBase = loadSnapshot();
-const catchSnap = { ...snapBase, entries: [...snapBase.entries, ...gutenbergCatchEntries] };
+const catchSnap = { ...snapBase, entries: [...snapBase.entries, ...proOnlyCatchEntries] };
 
 // ---------------------------------------------------------------------------
 // handleAudit
 // ---------------------------------------------------------------------------
 
 describe('handleAudit', () => {
-  it('returns Free Markdown when WooCommerce is detected', async () => {
+  // WooCommerce knowledge is Pro-only: a detected Woo project gets the teaser, not
+  // a Free entry. Detection must still fire so the user is never told "all clear".
+  it('returns the Pro teaser when WooCommerce is detected', async () => {
     const result = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
 
+    expect(result).toContain('Detected WooCommerce');
+    expect(result).toContain('Lumo Pro');
+    // Not a false all-clear
+    expect(result).not.toContain('No known WordPress risk patterns detected');
+  });
+
+  it('returns Free Markdown when a Free-covered pattern is detected', async () => {
+    const result = await handleAudit({ project_root: makeFreeAuditProject() });
+
     // Must contain the entry title
-    expect(result).toContain('HPOS');
+    expect(result).toContain('wp_img_tag_add_decoding_attr');
     // Must contain wrong/correct sections
-    expect(result).toContain('Wrong (HPOS-unsafe)');
+    expect(result).toContain('❌ Wrong');
     expect(result).toContain('Correct');
     // Must cite source
     expect(result).toContain('Source:');
@@ -76,7 +123,7 @@ describe('handleAudit', () => {
   });
 
   it('output contains NO "body" key — Free tier boundary', async () => {
-    const result = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
+    const result = await handleAudit({ project_root: makeFreeAuditProject() });
     // The literal string "body" must not appear as a JSON key or Markdown heading
     expect(result).not.toMatch(/^"body":/m);
     expect(result).not.toMatch(/^## body/im);
@@ -101,14 +148,14 @@ describe('handleAudit', () => {
     await expect(handleAudit({ project_root: '' })).resolves.toBeTypeOf('string');
   });
 
-  it('output matches formatFreeMarkdown for the HPOS entry (byte-equal check)', async () => {
+  it('output matches formatFreeMarkdown for the wp-img-tag entry (byte-equal check)', async () => {
     const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
     const snap = loadSnapshot();
-    const entry = snap.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
-    if (!entry) throw new Error('HPOS entry missing from snapshot — test setup broken');
+    const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    if (!entry) throw new Error('wp-img-tag entry missing from snapshot — test setup broken');
 
     const expected = formatFreeMarkdown(renderFree(entry));
-    const actual = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
+    const actual = await handleAudit({ project_root: makeFreeAuditProject() });
     expect(actual).toBe(expected);
   });
 });
@@ -118,12 +165,14 @@ describe('handleAudit', () => {
 // ---------------------------------------------------------------------------
 
 describe('handleLookup', () => {
+  // Lookup reads the shipped Free snapshot, so both the slug and the category case
+  // use Free-tier knowledge — WooCommerce slugs/categories are Pro-only now.
   it('returns Free Markdown for a known slug', async () => {
     const snap = loadSnapshot();
-    const result = await handleLookup({ slug: 'woocommerce-hpos-order-access' }, snap);
+    const result = await handleLookup({ slug: 'wp-img-tag-add-decoding-attr-deprecation' }, snap);
 
-    expect(result).toContain('HPOS');
-    expect(result).toContain('Wrong (HPOS-unsafe)');
+    expect(result).toContain('wp_img_tag_add_decoding_attr');
+    expect(result).toContain('❌ Wrong');
     expect(result).toContain('Correct');
     expect(result).toContain('Source:');
     expect(result).toContain('Verify:');
@@ -131,24 +180,34 @@ describe('handleLookup', () => {
 
   it('output contains NO "body" key for slug lookup — Free tier boundary', async () => {
     const snap = loadSnapshot();
-    const result = await handleLookup({ slug: 'woocommerce-hpos-order-access' }, snap);
+    const result = await handleLookup({ slug: 'wp-img-tag-add-decoding-attr-deprecation' }, snap);
     expect(result).not.toMatch(/^"body":/m);
     expect(result).not.toMatch(/^## body/im);
   });
 
   it('returns Free Markdown for a known category', async () => {
     const snap = loadSnapshot();
-    const result = await handleLookup({ category: 'woocommerce' }, snap);
+    const result = await handleLookup({ category: 'wordpress-security' }, snap);
 
-    expect(result).toContain('HPOS');
+    expect(result).toContain('esc_html');
     expect(result).toContain('Source:');
   });
 
   it('output contains NO "body" key for category lookup — Free tier boundary', async () => {
     const snap = loadSnapshot();
-    const result = await handleLookup({ category: 'woocommerce' }, snap);
+    const result = await handleLookup({ category: 'wordpress-security' }, snap);
     expect(result).not.toMatch(/^"body":/m);
     expect(result).not.toMatch(/^## body/im);
+  });
+
+  it('answers the Pro-only "woocommerce" category with the Pro teaser, not a dead end', async () => {
+    // Same story lumo_audit tells when it detects WooCommerce in a project:
+    // the knowledge exists, it is licensed. "No curated entry found" would be
+    // untrue and would waste the highest-intent free-tier moment.
+    const snap = loadSnapshot();
+    const result = await handleLookup({ category: 'woocommerce' }, snap);
+    expect(result).toContain('part of Lumo Pro');
+    expect(result).not.toContain('No curated entry found');
   });
 
   it('returns neutral message for unknown slug', async () => {
@@ -259,16 +318,17 @@ describe('handleCheckCode — version-scoping', () => {
   });
 
   it('project_root that does not exist → never throws, output is a string', async () => {
-    const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     await expect(
-      handleCheckCode({ code, language: 'php', project_root: '/tmp/__lumo_no_such_dir__' }, catchSnap),
+      handleCheckCode(
+        { code: loudBlob, language: 'php', project_root: '/tmp/__lumo_no_such_dir__' },
+        catchSnap,
+      ),
     ).resolves.toBeTypeOf('string');
   });
 
   it('project_root with no version detection falls back gracefully — still emits LOUD', async () => {
-    const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     const result = await handleCheckCode(
-      { code, language: 'php', project_root: join(fixturesDir, 'non-woo') },
+      { code: loudBlob, language: 'php', project_root: join(fixturesDir, 'non-woo') },
       catchSnap,
     );
     // LOUD still fires; no relative line because version unknown — but no throw
@@ -278,11 +338,11 @@ describe('handleCheckCode — version-scoping', () => {
   it('handleAudit byte-equal check remains green (regression guard)', async () => {
     const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
     const s = loadSnapshot();
-    const entry = s.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
-    if (!entry) throw new Error('HPOS entry missing — test setup broken');
+    const entry = s.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    if (!entry) throw new Error('wp-img-tag entry missing — test setup broken');
 
     const expected = formatFreeMarkdown(renderFree(entry));
-    const actual = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
+    const actual = await handleAudit({ project_root: makeFreeAuditProject() });
     expect(actual).toBe(expected);
   });
 });
@@ -292,6 +352,9 @@ describe('handleCheckCode — version-scoping', () => {
 // ---------------------------------------------------------------------------
 
 describe('handleCheckCode — upgrade prompt wiring', () => {
+  // The funnel is asserted on the Free LOUD entry — that is the catch a free user
+  // reaches now. The WooCommerce domain label is covered separately below via the
+  // Pro fixture, since that mapping still ships.
   const hposBlob = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
 
   afterEach(() => {
@@ -301,23 +364,23 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
 
   it('no checkout URL configured → LOUD fires but no upgrade prompt (dead default never shown)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     expect(result).toContain('⚠️');
     expect(result).not.toContain('Get it:');
   });
 
   it('real checkout URL set → appends the prompt with the gated count, domain label, and attributed link', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
-    // Domain label for woocommerce slug is "WooCommerce"
-    expect(result).toContain('Lumo caught 1 stale-pattern risk in your WooCommerce code.');
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    // Domain label for the wordpress-core slug is "WordPress Core"
+    expect(result).toContain('Lumo caught 1 stale-pattern risk in your WordPress Core code.');
     expect(result).toContain('Get it: https://buy.example.com/pro?ref=catch&gated=1&v=block');
   });
 
   it('kill-switch off → no prompt even with a real URL set', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     process.env['LUMO_UPGRADE_PROMPT'] = 'off';
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     expect(result).not.toContain('Get it:');
   });
 
@@ -332,11 +395,13 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
     expect(result).toContain('Block Editor');
   });
 
-  it('WooCommerce LOUD catch → prompt uses singular "risk" for a single result', async () => {
+  // WooCommerce catches are Pro knowledge now, so this runs off the Pro fixture in
+  // catchSnap — the woocommerce → "WooCommerce" label mapping still ships in handlers.
+  it('WooCommerce LOUD catch → WooCommerce domain label, singular "risk" for a single result', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
     // Single LOUD result → "risk" not "risks"
-    expect(result).toContain('stale-pattern risk in your');
+    expect(result).toContain('stale-pattern risk in your WooCommerce code.');
     expect(result).not.toContain('stale-pattern risks in your');
   });
 
@@ -357,8 +422,6 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
 // ---------------------------------------------------------------------------
 
 describe('handleCheckCode — freshness-gap reveal (C4)', () => {
-  const hposBlob = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
-
   afterEach(() => {
     delete process.env['LUMO_CHECKOUT_URL'];
     delete process.env['LUMO_UPGRADE_PROMPT'];
@@ -367,14 +430,14 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
 
   it('reveal fires on a LOUD catch when no checkout URL is set (upgrade prompt suppressed)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     expect(result).toContain('verified as of');
   });
 
   it('names no Pro MCP endpoint while LUMO_PRO_MCP_URL is unset (no dead install command)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     delete process.env['LUMO_PRO_MCP_URL'];
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     expect(result).toContain('verified as of');
     expect(result).not.toContain('claude mcp add');
   });
@@ -382,13 +445,13 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
   it('appends the add-command only when LUMO_PRO_MCP_URL names a reachable server', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     process.env['LUMO_PRO_MCP_URL'] = 'https://mcp.example.test/mcp';
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     expect(result).toContain('claude mcp add lumo-pro --transport http https://mcp.example.test/mcp');
   });
 
   it('reveal does NOT fire when the upgrade prompt block already fired (no double-printing)', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     // Upgrade prompt fires (Get it:) → reveal must not also appear
     expect(result).toContain('Get it:');
     expect(result).not.toContain('verified as of');
@@ -398,7 +461,7 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
   it('reveal is suppressed when kill-switch is off', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     process.env['LUMO_UPGRADE_PROMPT'] = 'off';
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     expect(result).not.toContain('verified as of');
     expect(result).not.toContain('claude mcp add');
   });
@@ -413,14 +476,14 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
 
   it('reveal contains the snapshot generatedAt date (YYYY-MM-DD shape)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     // The date from snapshot.generatedAt is substituted; catchSnap uses the real snapshot.
     expect(result).toMatch(/verified as of \d{4}-\d{2}-\d{2}/);
   });
 
   it('reveal says "verified as of" — never "out of date" or "stale"', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
     const lower = result.toLowerCase();
     expect(lower).not.toContain('out of date');
     expect(lower).not.toContain('is stale');
@@ -430,11 +493,11 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
   it('lumo_audit output is byte-equal to formatFreeMarkdown (reveal never touches audit path)', async () => {
     const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
     const s = loadSnapshot();
-    const entry = s.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
-    if (!entry) throw new Error('HPOS entry missing — test setup broken');
+    const entry = s.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    if (!entry) throw new Error('wp-img-tag entry missing — test setup broken');
 
     const expected = formatFreeMarkdown(renderFree(entry));
-    const actual = await handleAudit({ project_root: join(fixturesDir, 'classic-wp') });
+    const actual = await handleAudit({ project_root: makeFreeAuditProject() });
     // lumo_audit must be byte-identical regardless of C4 changes
     expect(actual).toBe(expected);
   });

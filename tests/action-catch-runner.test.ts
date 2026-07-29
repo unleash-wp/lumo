@@ -4,42 +4,41 @@ import { runCatch } from '../src/action/catch-runner.js';
 // ---------------------------------------------------------------------------
 // Unified diff fixtures — real patterns that fire on the live catch engine.
 //
+// runCatch always reads the shipped Free snapshot (no injection seam), so the
+// fixtures use Free-tier signals: WooCommerce knowledge is Pro-only and no
+// longer produces findings for a free user.
+//
 // Precision model (from src/detection/registry.ts):
-//   CERTAIN  → 'post_type' => 'shop_order'  (self-evident, LOUD when breaking_change=true)
-//   CONTEXT_DEPENDENT → get_post_meta($order_id, ...) (variable could be any post, → SOFT)
+//   CERTAIN  → wp_img_tag_add_decoding_attr( (self-evident, LOUD when breaking_change=true)
+//   CONTEXT_DEPENDENT → wp_register_ability( without the mcp.public flag (→ SOFT)
 // ---------------------------------------------------------------------------
 
 /**
- * A diff that adds 'post_type' => 'shop_order' — a CERTAIN HPOS signal.
+ * A diff that adds a wp_img_tag_add_decoding_attr() call — a CERTAIN core signal.
  * classify() checks CERTAIN + version stamp + breaking_change=true → LOUD.
  */
-const hposLoudDiff = `diff --git a/includes/class-order-handler.php b/includes/class-order-handler.php
+const coreLoudDiff = `diff --git a/includes/class-image-renderer.php b/includes/class-image-renderer.php
 index abc1234..def5678 100644
---- a/includes/class-order-handler.php
-+++ b/includes/class-order-handler.php
+--- a/includes/class-image-renderer.php
++++ b/includes/class-image-renderer.php
 @@ -10,3 +10,7 @@
- function get_legacy_orders() {
-+    $orders = get_posts( array(
-+        'post_type'   => 'shop_order',
-+        'post_status' => 'wc-processing',
-+        'numberposts' => 10,
-+    ) );
-     return $orders;
+ function render_thumbnail( $img ) {
++    $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
+     return $html;
  }
 `;
 
 /**
- * A diff with get_post_meta($order_id) — CONTEXT_DEPENDENT, always SOFT.
- * Used to verify the advisory (non-blocking) path.
+ * A diff registering an ability without the mcp.public flag — CONTEXT_DEPENDENT,
+ * always SOFT. Used to verify the advisory (non-blocking) path.
  */
-const hposSoftDiff = `diff --git a/includes/class-order-handler.php b/includes/class-order-handler.php
+const abilitySoftDiff = `diff --git a/includes/class-ability-registrar.php b/includes/class-ability-registrar.php
 index abc1234..def5678 100644
---- a/includes/class-order-handler.php
-+++ b/includes/class-order-handler.php
+--- a/includes/class-ability-registrar.php
++++ b/includes/class-ability-registrar.php
 @@ -10,3 +10,4 @@
- function get_my_order_total( $order_id ) {
-+    $total = get_post_meta( $order_id, '_order_total', true );
-     return $total;
+ function register_my_ability() {
++    wp_register_ability( 'my-plugin/get-data', [ 'meta' => [ 'show_in_rest' => true ] ] );
  }
 `;
 
@@ -50,7 +49,7 @@ index 111..222 100644
 +++ b/functions.php
 @@ -5,3 +5,2 @@
  function setup() {
--    get_post_meta( $order_id, '_order_total', true );
+-    wp_img_tag_add_decoding_attr( $img, 'the_content' );
  }
 `;
 
@@ -80,25 +79,25 @@ index ccc..ddd 100644
 // ---------------------------------------------------------------------------
 
 describe('runCatch', () => {
-  it('returns LOUD finding for shop_order post_type — CERTAIN signal', async () => {
-    const result = await runCatch({ diff: hposLoudDiff });
+  it('returns LOUD finding for wp_img_tag_add_decoding_attr — CERTAIN signal', async () => {
+    const result = await runCatch({ diff: coreLoudDiff });
 
     expect(result.findings.length).toBeGreaterThan(0);
     expect(result.loudCount).toBeGreaterThan(0);
 
     const loudFinding = result.findings.find((f) => f.tier === 'LOUD');
     expect(loudFinding).toBeDefined();
-    expect(loudFinding?.filename).toBe('includes/class-order-handler.php');
+    expect(loudFinding?.filename).toBe('includes/class-image-renderer.php');
 
-    // LOUD lead must include the ⚠️ alarm and a WooCommerce version reference.
+    // LOUD lead must include the ⚠️ alarm and a WordPress version reference.
     expect(loudFinding?.body).toContain('⚠️');
     expect(loudFinding?.body).toMatch(/WooCommerce|WordPress/);
     // Rendered body includes the correct pattern from the snapshot entry.
-    expect(loudFinding?.body).toMatch(/wc_get_order|HPOS/i);
+    expect(loudFinding?.body).toMatch(/wp_img_tag_add_loading_optimization_attrs|deprecated/i);
   });
 
-  it('returns SOFT finding for get_post_meta($order_id) — CONTEXT_DEPENDENT signal', async () => {
-    const result = await runCatch({ diff: hposSoftDiff });
+  it('returns SOFT finding for wp_register_ability() — CONTEXT_DEPENDENT signal', async () => {
+    const result = await runCatch({ diff: abilitySoftDiff });
 
     expect(result.findings.length).toBeGreaterThan(0);
     // CONTEXT_DEPENDENT → always SOFT, never LOUD
@@ -129,12 +128,12 @@ describe('runCatch', () => {
   });
 
   it('loudCount + softCount equals total findings length', async () => {
-    const result = await runCatch({ diff: hposLoudDiff });
+    const result = await runCatch({ diff: coreLoudDiff });
     expect(result.loudCount + result.softCount).toBe(result.findings.length);
   });
 
   it('every finding body is non-empty rendered Markdown with a heading', async () => {
-    const result = await runCatch({ diff: hposLoudDiff });
+    const result = await runCatch({ diff: coreLoudDiff });
     for (const f of result.findings) {
       expect(f.body.trim().length).toBeGreaterThan(0);
       expect(f.body).toMatch(/^#{1,3} /m);
@@ -146,12 +145,12 @@ describe('runCatch — Pro fallback on unreachable server', () => {
   it('falls back to free catch when Pro URL is set but server is unreachable', async () => {
     // Port 1 refuses connections immediately.
     const result = await runCatch({
-      diff: hposLoudDiff,
+      diff: coreLoudDiff,
       proUrl: 'http://127.0.0.1:1',
       licenseKey: 'test-key',
     });
 
-    // Free catch fires the shop_order LOUD signal — fallback must not swallow it.
+    // Free catch fires the wp_img_tag LOUD signal — fallback must not swallow it.
     expect(result.findings.length).toBeGreaterThan(0);
     expect(result.loudCount).toBeGreaterThan(0);
   });

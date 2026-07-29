@@ -104,9 +104,12 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(snap.schemaVersion).toBe(1);
   });
 
-  it('has at least 60 entries', () => {
+  // Floor lowered with the WooCommerce tier decision: the woocommerce,
+  // block-theme-currency, fse-block-theme and wp-deprecation-timeline categories
+  // (plus the book-* entries) are Pro-only and no longer ship in the Free artifact.
+  it('has at least 40 entries', () => {
     const snap = loadSnapshot();
-    expect(snap.entries.length).toBeGreaterThanOrEqual(60);
+    expect(snap.entries.length).toBeGreaterThanOrEqual(40);
   });
 
   it('every entry has tier "free"', () => {
@@ -130,30 +133,40 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     });
   });
 
-  it('HPOS entry carries all required Free fields', () => {
+  // WooCommerce knowledge is Pro-only: the HPOS flagship entry must NOT be in the
+  // redistributable Free artifact. This is the shipping boundary — if it ever
+  // reappears here, paid knowledge is being given away.
+  it('does NOT ship the HPOS entry — WooCommerce knowledge is Pro-only', () => {
     const snap = loadSnapshot();
     const hpos = snap.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
-    expect(hpos).toBeDefined();
-    if (!hpos) return;
-
-    expect(hpos.summary).toBeTruthy();
-    expect(hpos.bad_pattern).toBeTruthy();
-    expect(hpos.code_example).toBeTruthy();
-    expect(hpos.source_url).toBeTruthy();
-    expect(hpos.test_step).toBeTruthy();
+    expect(hpos).toBeUndefined();
   });
 
-  it('HPOS entry has category_slug "woocommerce" for detection routing', () => {
+  it('ships no entry from a Pro-only category and no book-* entry', () => {
     const snap = loadSnapshot();
-    const hpos = snap.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
-    expect(hpos?.category_slug).toBe('woocommerce');
+    const proOnlyCategories = [
+      'woocommerce',
+      'block-theme-currency',
+      'fse-block-theme',
+      'wp-deprecation-timeline',
+    ];
+    for (const entry of snap.entries) {
+      expect(proOnlyCategories).not.toContain(entry.category_slug);
+      expect(entry.slug.startsWith('book-')).toBe(false);
+    }
   });
 
-  it('HPOS entry has version row with woo_version_min "8.2"', () => {
+  // The Free artifact still needs a version-stamped breaking entry — the catch
+  // engine's LOUD path is structurally barred without one. wp-img-tag is that entry.
+  it('ships a version-stamped breaking entry so LOUD stays reachable in Free', () => {
     const snap = loadSnapshot();
-    const hpos = snap.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
-    expect(hpos?.versions.length).toBeGreaterThan(0);
-    expect(hpos?.versions[0]?.woo_version_min).toBe('8.2');
+    const loudCapable = snap.entries.filter((e) =>
+      e.versions.some(
+        (v) => v.breaking_change && (v.wp_version_min != null || v.woo_version_min != null),
+      ),
+    );
+    expect(loudCapable.length).toBeGreaterThan(0);
+    expect(loudCapable.map((e) => e.slug)).toContain('wp-img-tag-add-decoding-attr-deprecation');
   });
 
   it('wp-img-tag deprecation entry carries all required Free fields', () => {

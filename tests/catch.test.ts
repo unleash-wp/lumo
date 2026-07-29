@@ -33,6 +33,27 @@ const snap = loadSnapshot();
 // entry objects they need without pulling the Pro entries back into the public artifact.
 const proOnlyCatchEntries: SnapshotEntry[] = [
   {
+    // Pro-only since the WooCommerce tier decision: kept here so catch tests
+    // keep exercising the CERTAIN shop_order signal without pulling paid
+    // knowledge back into the redistributable Free artifact.
+    slug: 'woocommerce-hpos-order-access',
+    title: 'WooCommerce HPOS: reading and writing order data',
+    category_slug: 'woocommerce',
+    summary:
+      'Under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
+    code_example: "$order = wc_get_order( $order_id );\n$email = $order->get_billing_email();",
+    bad_pattern:
+      "$email = get_post_meta( $order_id, '_billing_email', true );\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+    source_url:
+      'https://github.com/woocommerce/woocommerce/wiki/High-Performance-Order-Storage-Upgrade-Recipe-Book',
+    test_step: 'On staging, enable HPOS and confirm your order reads/writes still work.',
+    tier: 'free' as const,
+    updatedAt: '2026-06-20T09:30:00Z',
+    versions: [
+      { wp_version_min: null, wp_version_max: null, woo_version_min: '8.2', breaking_change: true },
+    ],
+  },
+  {
     slug: 'gutenberg-usesetting-deprecated-wp6-5',
     title: 'useSetting() hook deprecated in WP 6.5 — migrate to useSettings()',
     category_slug: 'gutenberg',
@@ -1003,14 +1024,17 @@ describe('formatCatch — version-relative lines', () => {
 // ---------------------------------------------------------------------------
 
 describe('lumo_audit and sourceSignals unchanged', () => {
-  it('auditProject still works and returns HPOS entry for classic-wp fixture', async () => {
+  // The audit path is untouched by the catch engine; WooCommerce now resolves to
+  // the Pro teaser there because its knowledge is Pro-only.
+  it('auditProject still works and returns the Pro teaser for classic-wp fixture', async () => {
     const { auditProject } = await import('../src/detection/index.js');
     const { join, dirname } = await import('node:path');
     const { fileURLToPath } = await import('node:url');
     const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
     const result = auditProject(join(fixturesDir, 'classic-wp'));
     expect(result.detected).toBe(true);
-    expect(result.entry?.slug).toBe('woocommerce-hpos-order-access');
+    expect(result.proTeaser).toContain('WooCommerce');
+    expect(result.entry).toBeUndefined();
   });
 
   it('PATTERNS sourceSignals are byte-identical to pre-catch values', async () => {

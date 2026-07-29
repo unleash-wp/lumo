@@ -20,21 +20,20 @@ import { loadSnapshot } from '../src/lib/snapshot.js';
 import { orderFindingsLoudFirst } from '../src/scan/order-findings.js';
 
 // ---------------------------------------------------------------------------
-// Diff fixtures — same HPOS patterns used in action-catch-runner tests.
+// Diff fixtures — same Free-tier patterns used in action-catch-runner tests.
+// The scan pipeline reads the shipped Free snapshot, and WooCommerce knowledge is
+// Pro-only, so the LOUD example is the core deprecation a free user can hit.
 // ---------------------------------------------------------------------------
 
-/** Adds `'post_type' => 'shop_order'` — CERTAIN signal, fires LOUD. */
-const loudDiff = `diff --git a/includes/order-handler.php b/includes/order-handler.php
+/** Adds `wp_img_tag_add_decoding_attr(` — CERTAIN signal, fires LOUD. */
+const loudDiff = `diff --git a/includes/image-renderer.php b/includes/image-renderer.php
 index abc1234..def5678 100644
---- a/includes/order-handler.php
-+++ b/includes/order-handler.php
+--- a/includes/image-renderer.php
++++ b/includes/image-renderer.php
 @@ -10,3 +10,7 @@
- function get_legacy_orders() {
-+    $orders = get_posts( array(
-+        'post_type'   => 'shop_order',
-+        'post_status' => 'wc-processing',
-+    ) );
-     return $orders;
+ function render_thumbnail( $img ) {
++    $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
+     return $html;
  }
 `;
 
@@ -54,7 +53,7 @@ index aaa..bbb 100644
 // ---------------------------------------------------------------------------
 
 describe('proactive scan: LOUD pattern', () => {
-  it('surfaces a LOUD finding when diff contains shop_order post_type', async () => {
+  it('surfaces a LOUD finding when diff contains wp_img_tag_add_decoding_attr', async () => {
     const result = await runCatch({ diff: loudDiff });
 
     expect(result.loudCount).toBeGreaterThan(0);

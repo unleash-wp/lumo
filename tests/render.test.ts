@@ -15,20 +15,53 @@ import type { SnapshotEntry } from '../src/types.js';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function hposEntry(): SnapshotEntry {
+/**
+ * The Free-tier entry a real user gets rendered now: WooCommerce knowledge moved
+ * to Pro, so the generic render assertions run against the shipped Free LOUD entry.
+ */
+function freeEntry(): SnapshotEntry {
   const snap = loadSnapshot();
-  const entry = findEntry(snap, 'woocommerce-hpos-order-access');
-  if (!entry) throw new Error('HPOS entry missing from snapshot — test setup broken');
+  const entry = findEntry(snap, 'wp-img-tag-add-decoding-attr-deprecation');
+  if (!entry) throw new Error('wp-img-tag entry missing from snapshot — test setup broken');
   return entry;
+}
+
+/**
+ * Synthetic Pro-only HPOS entry — the render engine still has a WooCommerce branch
+ * (HPOS heading, "WooCommerce ≥" affected line) and that behaviour did not change,
+ * so it keeps being exercised from a fixture rather than the Free artifact.
+ * Same approach as tests/catch.test.ts.
+ */
+function hposEntry(): SnapshotEntry {
+  return {
+    slug: 'woocommerce-hpos-order-access',
+    title: 'WooCommerce HPOS: reading and writing order data',
+    category_slug: 'woocommerce',
+    summary:
+      'Under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
+    code_example: "$order = wc_get_order( $order_id );\n$email = $order->get_billing_email();",
+    bad_pattern:
+      "$email = get_post_meta( $order_id, '_billing_email', true );\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+    source_url:
+      'https://github.com/woocommerce/woocommerce/wiki/High-Performance-Order-Storage-Upgrade-Recipe-Book',
+    test_step: 'On staging, enable HPOS and confirm your order reads/writes still work.',
+    tier: 'free' as const,
+    updatedAt: '2026-06-20T09:30:00Z',
+    versions: [
+      { wp_version_min: null, wp_version_max: null, woo_version_min: '8.2', breaking_change: true },
+    ],
+  };
 }
 
 // ---------------------------------------------------------------------------
 // FA-16: renderFree
 // ---------------------------------------------------------------------------
 
+// renderFree is tier-agnostic, so it is asserted against the shipped Free entry —
+// that is the projection a free user actually receives.
 describe('renderFree', () => {
   it('returns all required Free fields', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree(entry);
 
     expect(rendered.slug).toBe(entry.slug);
@@ -45,31 +78,31 @@ describe('renderFree', () => {
   });
 
   it('summary is byte-for-byte identical to the snapshot entry summary', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree(entry);
     expect(rendered.summary).toBe(entry.summary);
   });
 
   it('output has NO "body" key', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree(entry);
     expect(Object.prototype.hasOwnProperty.call(rendered, 'body')).toBe(false);
   });
 
   it('versions is a passthrough of the entry versions array', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree(entry);
     expect(rendered.versions).toStrictEqual(entry.versions);
   });
 
   it('upgradeHint matches the mirrored FREE_UPGRADE_HINT constant', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree(entry);
     expect(rendered.upgradeHint).toBe(FREE_UPGRADE_HINT);
   });
 
   it('tier is always "free"', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     expect(renderFree(entry).tier).toBe('free');
   });
 });
@@ -80,7 +113,7 @@ describe('renderFree', () => {
 
 describe('formatFreeMarkdown', () => {
   it('contains both fenced php blocks', () => {
-    const rendered = renderFree(hposEntry());
+    const rendered = renderFree(freeEntry());
     const md = formatFreeMarkdown(rendered);
     const fencedBlocks = md.match(/```php/g);
     expect(fencedBlocks).not.toBeNull();
@@ -88,24 +121,32 @@ describe('formatFreeMarkdown', () => {
   });
 
   it('contains the source_url', () => {
-    const rendered = renderFree(hposEntry());
+    const rendered = renderFree(freeEntry());
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain(rendered.source_url);
   });
 
   it('contains the test_step', () => {
-    const rendered = renderFree(hposEntry());
+    const rendered = renderFree(freeEntry());
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain(rendered.test_step);
   });
 
   it('contains the upgradeHint', () => {
-    const rendered = renderFree(hposEntry());
+    const rendered = renderFree(freeEntry());
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain(rendered.upgradeHint);
   });
 
   it('contains the wrong-vs-correct section headers', () => {
+    const rendered = renderFree(freeEntry());
+    const md = formatFreeMarkdown(rendered);
+    expect(md).toContain('### ❌ Wrong');
+    expect(md).toContain('### ✅ Correct');
+  });
+
+  // WooCommerce branch of the renderer — Pro-only content, so it runs off the fixture.
+  it('keeps the HPOS framing in the wrong-heading for a WooCommerce entry', () => {
     const rendered = renderFree(hposEntry());
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('### ❌ Wrong (HPOS-unsafe)');
@@ -119,7 +160,7 @@ describe('formatFreeMarkdown', () => {
   });
 
   it('renders the freshness line from the entry verified-current date', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree(entry);
     expect(rendered.verifiedAt).toBe(entry.updatedAt);
     const md = formatFreeMarkdown(rendered);
@@ -127,14 +168,14 @@ describe('formatFreeMarkdown', () => {
   });
 
   it('is deterministic — same input produces identical string on repeated calls', () => {
-    const rendered = renderFree(hposEntry());
+    const rendered = renderFree(freeEntry());
     const first = formatFreeMarkdown(rendered);
     const second = formatFreeMarkdown(rendered);
     expect(first).toBe(second);
   });
 
   it('handles empty versions array gracefully', () => {
-    const entry = hposEntry();
+    const entry = freeEntry();
     const rendered = renderFree({ ...entry, versions: [] });
     expect(() => formatFreeMarkdown(rendered)).not.toThrow();
     const md = formatFreeMarkdown(rendered);

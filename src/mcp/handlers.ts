@@ -16,12 +16,19 @@ import {
 import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
 import type { Snapshot } from '../types.js';
 import type { CatchResult } from '../detection/catch.js';
+import { proTopicFor, buildProTopicTeaser } from '../lib/pro-topics.js';
 
 const NOT_FOUND_AUDIT =
   'No known WordPress risk patterns detected in this project — nothing to check here.';
 
-const NOT_FOUND_LOOKUP = (query: string) =>
-  `No curated entry found for "${query}" in the snapshot.`;
+const NOT_FOUND_LOOKUP = (query: string) => {
+  // A miss on a Pro-covered topic is not a miss — it is the paywall. Saying
+  // "nothing found" to someone who just typed "HPOS" both misleads (Lumo does
+  // know this) and wastes the highest-intent moment the free tier ever gets.
+  const proTopic = proTopicFor(query);
+  if (proTopic) return buildProTopicTeaser(proTopic);
+  return `No curated entry found for "${query}" in the snapshot.`;
+};
 
 // ---------------------------------------------------------------------------
 // lumo_audit handler
