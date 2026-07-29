@@ -1,7 +1,7 @@
 {
   "name": "lumo",
   "displayName": "UnleashWP Lumo",
-  "description": "HPOS guardrail for WooCommerce developers — audits order-data patterns against the current HPOS standard and surfaces the wrong-vs-correct contrast with a verified source.",
+  "description": "Catches stale or wrong AI-written WordPress the moment it's generated — block.json/apiVersion, theme.json, Core APIs, WooCommerce — and shows the wrong-vs-correct fix with a dated source. The official WordPress skills are the manual; Lumo is the watcher. Upgrade to Lumo Pro for the live currency layer, pre-release Core briefings, and premium-plugin coverage.",
   "version": "0.2.0",
   "author": { "name": "Benjamin Zekavica" },
   "license": "MIT"
