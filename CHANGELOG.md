@@ -14,7 +14,14 @@ No entry ships without evidence; no claim ships without a test step.
 
 ## [Unreleased]
 
-Landed on `main` since the 0.2.0 release; staged for the next tag.
+_Nothing yet._
+
+## [0.3.0] — 2026-07-29
+
+The catch-wedge release: the knowledge base grows from 20 to 142 entries, the
+detection registry generalizes beyond WooCommerce, and every surface (README,
+marketplace, plugin manifest, MCP tool copy) moves off the HPOS-first framing
+to the Core/Block catch wedge.
 
 ### Knowledge base
 
