@@ -1,0 +1,66 @@
+<!--
+  Evaluation for the Lumo Free MCP server (lumo_audit / lumo_lookup / lumo_check_code).
+
+  Every answer below was produced by running the question against the built
+  server (dist/mcp.mjs) and reading what it actually returned — none was written
+  from memory. Re-verify after any snapshot regeneration:
+      npm run build && node dist/mcp.mjs   (drive it over stdio)
+
+  The set deliberately covers the three behaviours that carry the product:
+    - the catch fires with the right replacement and the right version,
+    - it stays quiet on correct code and softens behind a compatibility shim,
+    - a licensed topic is named as licensed, while a genuine miss stays a miss.
+
+  Stable against the frozen Free snapshot (generatedAt 2026-06-25).
+-->
+<evaluation>
+  <qa_pair>
+    <question>A WordPress theme filters image markup with wp_img_tag_add_decoding_attr(). Check that code with Lumo. Which function does Lumo say to use instead?</question>
+    <answer>wp_img_tag_add_loading_optimization_attrs</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Check this WordPress code with Lumo: `$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );`. In which WordPress version did this break, exactly as Lumo reports it?</question>
+    <answer>6.4.0</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Block editor JavaScript calls wp.blocks.isValidBlockContent( blockType, attributes, content ). Run it through Lumo's code check. Which function replaces it?</question>
+    <answer>validateBlock</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Look up the Lumo entry with slug wp-7-0-php-minimum-7-4. What is the minimum PHP version WordPress 7.0 requires?</question>
+    <answer>7.4</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Check this line with Lumo: `$html = wp_img_tag_add_loading_optimization_attrs( $img, 'the_content' );`. Does Lumo report any issue with it — answer "clean" if it reports none, "flagged" if it does.</question>
+    <answer>clean</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>The same deprecated call, but guarded: `if ( function_exists( 'wp_img_tag_add_decoding_attr' ) ) { $h = wp_img_tag_add_decoding_attr( $x, 'c' ); }`. Lumo distinguishes a hard alarm from an advisory. Does it answer LOUD or SOFT here?</question>
+    <answer>SOFT</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Ask Lumo Free to look up the "woocommerce" category. WooCommerce knowledge is not in the free tier — which tier does Lumo say it belongs to, in one word?</question>
+    <answer>Pro</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Ask Lumo Free to look up the "acf" category. Which tier does Lumo say ACF knowledge belongs to, in one word?</question>
+    <answer>Pro</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Ask Lumo to look up the slug "definitely-not-a-real-entry", which exists in no tier. Does Lumo report an honest miss ("miss") or claim it is a paid topic ("Pro")?</question>
+    <answer>miss</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Look up the Lumo entry with slug wp-7-0-interactivity-watch. Which npm package does WordPress 7.0 want watch() imported from?</question>
+    <answer>@wordpress/interactivity</answer>
+  </qa_pair>
+</evaluation>
