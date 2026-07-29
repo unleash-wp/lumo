@@ -37,8 +37,19 @@ export const FREE_UPGRADE_HINT =
  * before appending. Not shown when the upgrade prompt block already fired.
  */
 export const FRESHNESS_REVEAL_LINE =
-  '_This snapshot is verified as of {date}. Lumo Pro re-checks against every WordPress release — it is the live layer._\n\n' +
-  '_Add the Pro MCP: `claude mcp add lumo-pro --transport http https://p-w8t2yy.project.space/mcp`_';
+  '_This snapshot is verified as of {date}. Lumo Pro re-checks against every WordPress release — it is the live layer._';
+
+/**
+ * Optional second line of the reveal: how to attach a Pro MCP endpoint.
+ *
+ * Only appended when `LUMO_PRO_MCP_URL` names a real server — the same
+ * dead-link rule the checkout prompt follows. Pro is delivered as a licensed
+ * knowledge pack, so there is no default hosted endpoint to advertise; a
+ * hardcoded URL here would print an install command for a server the reader
+ * cannot reach. Runtime substitutes `{url}`.
+ */
+export const PRO_MCP_ADD_LINE =
+  '_Add the Pro MCP: `claude mcp add lumo-pro --transport http {url}`_';
 
 // ---------------------------------------------------------------------------
 // W4 upgrade-prompt copy constants — single tested source of truth.

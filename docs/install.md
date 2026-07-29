@@ -8,7 +8,7 @@ The core value of Lumo is local — the HPOS knowledge runs entirely inside Clau
 
 ```
 /plugin marketplace add unleash-wp/lumo
-/plugin install lumo@lumo
+/plugin install lumo@unleashwp-lumo
 ```
 
 This is the recommended path. It resolves directly against the public `unleash-wp/lumo` GitHub repo (no separate hosting). The two commands are all you need.
