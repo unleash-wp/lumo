@@ -269,7 +269,12 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
     lines.push(
       ci
         ? `lumo scan: no changes to scan${dateNote}.`
-        : `lumo scan: no uncommitted changes to scan${dateNote}.`,
+        : // A watchdog that is silent on first contact has not shown anything.
+          // This is the most likely first run — a clean checkout — so point at
+          // the one command that proves the catch works before there is any
+          // change to catch.
+          `lumo scan: no uncommitted changes to scan${dateNote}.\n` +
+          'Run `lumo demo` to see the catch working on sample code.',
     );
     return { lines, exitCode: 0 };
   }

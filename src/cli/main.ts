@@ -17,6 +17,8 @@ const HELP = `UnleashWP Lumo — catches stale AI-written WordPress code.
 Usage: lumo <command>
 
 Commands:
+  demo     Show the catch working on four code samples that ship with Lumo —
+           no project, no setup. Prints real findings from the real engine.
   scan     Scan your current git diff for WordPress/WooCommerce patterns that
            broke in a real release. Prints findings (LOUD first) or the scope
            that was checked — never a verdict on your code.
@@ -31,6 +33,9 @@ async function main(): Promise<void> {
   const cmd = process.argv[2];
 
   switch (cmd) {
+    case 'demo':
+      await import('../demo/main.js');
+      return;
     case 'scan':
       await import('../scan/main.js');
       return;
