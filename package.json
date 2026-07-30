@@ -32,7 +32,8 @@
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "package:skills": "node scripts/package-skills.mjs"
   },
   "dependencies": {
     "@actions/core": "^3.0.1",
