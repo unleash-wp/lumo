@@ -192,10 +192,38 @@ export interface CheckCodeHandlerInput {
  *
  * Never throws.
  */
+/**
+ * Machine-readable verdict alongside the prose — same law as the Pro server
+ * (P2): a verdict is data, prose is presentation.
+ *
+ * `computed` is the layer's own honesty marker (product-gate condition): the
+ * counts come from the SAME engine pass that produced the text, and when the
+ * pipeline fell into its fail-open path, computed is false — a client must
+ * treat that as "not computed", never as "checked, nothing found". Without the
+ * marker, a degraded empty verdict is indistinguishable from a clean one,
+ * which is the false all-clear moved into the data channel.
+ */
+export interface CheckCodeVerdict {
+  text: string;
+  /** False = the structured layer did not run; decide nothing from the fields below. */
+  computed: boolean;
+  found: boolean;
+  loudCount: number;
+  softCount: number;
+  gaps: Array<{ plugin: string; proCovers: boolean }>;
+}
+
 export async function handleCheckCode(
   input: CheckCodeHandlerInput,
   snapshot?: Snapshot,
 ): Promise<string> {
+  return (await handleCheckCodeFull(input, snapshot)).text;
+}
+
+export async function handleCheckCodeFull(
+  input: CheckCodeHandlerInput,
+  snapshot?: Snapshot,
+): Promise<CheckCodeVerdict> {
   try {
     const { checkCodeWithGaps } = await import('../detection/catch.js');
     const snap = snapshot ?? loadSnapshot();
@@ -206,6 +234,15 @@ export async function handleCheckCode(
     );
     const covered = proGaps.filter((g) => g.hasProCoverage).map((g) => g.pluginName);
     const uncovered = proGaps.filter((g) => !g.hasProCoverage).map((g) => g.pluginName);
+    // Same pass, same truth: text and data can never diverge.
+    const verdict = (text: string): CheckCodeVerdict => ({
+      text,
+      computed: true,
+      found: results.length > 0 || proGaps.length > 0,
+      loudCount: results.filter((r) => r.tier === 'LOUD').length,
+      softCount: results.filter((r) => r.tier === 'SOFT').length,
+      gaps: proGaps.map((g) => ({ plugin: g.pluginName, proCovers: g.hasProCoverage })),
+    });
 
     if (results.length === 0) {
       // Signals fired into Pro-only knowledge: name EVERY touched plugin
@@ -215,9 +252,9 @@ export async function handleCheckCode(
         const parts: string[] = [];
         if (covered.length > 0) parts.push(buildCodeProTeaser(joinPluginNames(covered)));
         if (uncovered.length > 0) parts.push(buildCodeDetectionNote(joinPluginNames(uncovered)));
-        return parts.join('\n\n');
+        return verdict(parts.join('\n\n'));
       }
-      return CATCH_NEUTRAL_LINE;
+      return verdict(CATCH_NEUTRAL_LINE);
     }
 
     // Resolve project versions: explicit params > auto-detect from project_root > none.
@@ -261,11 +298,13 @@ export async function handleCheckCode(
     const withPrompt = appendUpgradePrompt(withGap, results);
     const upgradePromptFired = withPrompt !== withGap;
     if (upgradePromptFired) {
-      return withPrompt;
+      return verdict(withPrompt);
     }
-    return appendFreshnessReveal(withPrompt, results, snap?.generatedAt);
+    return verdict(appendFreshnessReveal(withPrompt, results, snap?.generatedAt));
   } catch {
-    return CATCH_NEUTRAL_LINE;
+    // Fail-open path: the prose still answers, and the marker says the layer
+    // did NOT run — never dress this as a clean verdict.
+    return { text: CATCH_NEUTRAL_LINE, computed: false, found: false, loudCount: 0, softCount: 0, gaps: [] };
   }
 }
 

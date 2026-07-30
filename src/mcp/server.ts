@@ -14,7 +14,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { handleAudit, handleLookup, handleCheckCode } from './handlers.js';
+import { handleAudit, handleLookup, handleCheckCodeFull } from './handlers.js';
 // Static JSON import: esbuild inlines it at build time, so the manifest is the
 // single version source and the bundle carries no runtime path dependency.
 // (A createRequire('../../package.json') variant stayed a RUNTIME require and
@@ -146,16 +146,45 @@ server.registerTool(
             'WP/WooCommerce version from composer.json or wp-cli when explicit versions are absent.',
         ),
     },
+    outputSchema: {
+      computed: z
+        .boolean()
+        .describe('False = the structured layer did not run (fail-open). Decide NOTHING from the other fields; read the prose.'),
+      found: z
+        .boolean()
+        .describe('Whether anything was found — a finding OR a named coverage gap. Decide on this, not on the prose.'),
+      loudCount: z.number().describe('LOUD findings (certain, sourced; may fail CI builds).'),
+      softCount: z.number().describe('Advisory findings (context-dependent; never block).'),
+      gaps: z
+        .array(
+          z.object({
+            plugin: z.string().describe('Plugin ecosystem the code touches without free coverage.'),
+            proCovers: z.boolean().describe('Whether Lumo Pro has curated knowledge for it.'),
+          }),
+        )
+        .describe('Every touched plugin the free tier cannot check — silence on any of them would be a false all-clear.'),
+    },
   },
   async ({ code, language, wp_version, woo_version, project_root }) => {
-    const text = await handleCheckCode({
+    const v = await handleCheckCodeFull({
       code,
       language: language as 'php' | 'js' | 'auto' | undefined,
       wp_version,
       woo_version,
       project_root,
     });
-    return { content: [{ type: 'text', text }] };
+    // The verdict travels as data next to the prose — same law the Pro server
+    // follows: clients decide on the flags, never by parsing ⚠️ out of text.
+    return {
+      content: [{ type: 'text', text: v.text }],
+      structuredContent: {
+        computed: v.computed,
+        found: v.found,
+        loudCount: v.loudCount,
+        softCount: v.softCount,
+        gaps: v.gaps,
+      },
+    };
   },
 );
 

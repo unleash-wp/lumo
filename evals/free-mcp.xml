@@ -63,4 +63,25 @@
     <question>Look up the Lumo entry with slug wp-7-0-interactivity-watch. Which npm package does WordPress 7.0 want watch() imported from?</question>
     <answer>@wordpress/interactivity</answer>
   </qa_pair>
+  <!-- Added 2026-07-31 alongside the feature wave: LOUD always-wrong route,
+       free-text search, premium coverage gaps, multi-gap naming. -->
+  <qa_pair>
+    <question>Check this line with Lumo: $wpdb->get_results( "SELECT * FROM t WHERE id = $id" ); — does the answer arrive as a LOUD warning (starts with the warning symbol) or as a soft advisory?</question>
+    <answer>LOUD</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Search the Lumo knowledge with the free-text query "nonce ajax" — which slug is the top match in the shortlist?</question>
+    <answer>wp-ajax-handler-without-nonce</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Check this line with Lumo: $v = rwmb_meta( 'field' ); — which plugin ecosystem does the answer name as touched but not covered by the free tier?</question>
+    <answer>Meta Box</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Check a blob containing BOTH update_post_meta( $order_id, ... ) AND add_action( 'gform_after_submission', ... ) with Lumo — how many distinct plugin ecosystems does the answer name as coverage gaps?</question>
+    <answer>2</answer>
+  </qa_pair>
 </evaluation>
