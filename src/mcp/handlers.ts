@@ -10,6 +10,7 @@ import {
   formatCatch,
   CATCH_NEUTRAL_LINE,
   buildCodeProTeaser,
+  buildCodeProGapLine,
   buildCodeDetectionNote,
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
@@ -189,10 +190,15 @@ export async function handleCheckCode(
       })
       .join('\n\n---\n\n');
 
+    // A Pro-only signal fired alongside the findings. Without this line the
+    // answer looks complete while a whole plugin went unchecked — the same false
+    // all-clear as silence, only harder to notice.
+    const withGap = proGap ? `${body}\n\n${buildCodeProGapLine(proGap.pluginName)}` : body;
+
     // Upgrade prompt fires first (LOUD + URL configured); freshness reveal fires
     // when the upgrade prompt does NOT (avoids double-printing on the same response).
-    const withPrompt = appendUpgradePrompt(body, results);
-    const upgradePromptFired = withPrompt !== body;
+    const withPrompt = appendUpgradePrompt(withGap, results);
+    const upgradePromptFired = withPrompt !== withGap;
     if (upgradePromptFired) {
       return withPrompt;
     }

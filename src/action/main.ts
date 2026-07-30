@@ -25,6 +25,7 @@ import * as github from '@actions/github';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { runCatch } from './catch-runner.js';
+import { ACTION_NO_MATCH_LINE, ACTION_SCOPE_LINE } from '../lib/render.js';
 
 // ---------------------------------------------------------------------------
 // Enforcement mode from workspace .lumo.json
@@ -112,7 +113,10 @@ async function main(): Promise<void> {
   });
 
   if (findings.length === 0) {
-    core.info('[lumo] No WordPress/WooCommerce issues detected — clean PR.');
+    // Reports the scope that was checked, never a verdict on the PR. Lumo saw the
+    // added lines only, and only against what Lumo Free covers — calling that a
+    // clean PR turns a coverage limit into an approval.
+    core.info(`[lumo] ${ACTION_NO_MATCH_LINE}`);
     return;
   }
 
@@ -139,6 +143,8 @@ async function main(): Promise<void> {
   }
 
   summaryLines.push(
+    '',
+    ACTION_SCOPE_LINE,
     '',
     '_Lumo proposes and cites — never auto-fixes. See each comment for the dated source and correct pattern._',
   );

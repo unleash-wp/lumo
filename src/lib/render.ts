@@ -265,6 +265,26 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   return lines.join('\n');
 }
 
+// ---------------------------------------------------------------------------
+// GitHub Action copy. Lives here with the other copy constants so it is one
+// tested source of truth: the "clean" phrasing has already regressed twice, once
+// per channel, because each channel carried its own literal.
+// ---------------------------------------------------------------------------
+
+/** Logged when the Action finds nothing. States scope, never a verdict on the PR. */
+export const ACTION_NO_MATCH_LINE =
+  'No covered pattern matched in the added lines. ' +
+  'Lumo Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
+  'this is not an all-clear.';
+
+/**
+ * Appended to the Action's review summary. Belongs there even when findings exist:
+ * without it, the absence of further comments reads as coverage.
+ */
+export const ACTION_SCOPE_LINE =
+  '_Scope: the added lines of this diff, checked against what Lumo Free covers. ' +
+  'Unchanged lines and anything outside that coverage were not checked._';
+
 // Neutral line when checkCode finds nothing to flag.
 //
 // It reports the scope that was checked, never the state of the code. Lumo cannot
@@ -280,15 +300,41 @@ export const CATCH_NEUTRAL_LINE =
  * Pro-only knowledge was hit by a fired signal in a code blob. Names the plugin
  * and what covers it. Sibling of buildProTeaser (project path) — the wording here
  * speaks about the code in hand, not about a project on disk.
+ *
+ * It names ONLY what was detected, and only what Lumo can substantiate: the
+ * detection itself and Lumo's own coverage. Two sentences were removed for the
+ * same reason — the rest of the Pro catalogue, and a claim that the reader's AI
+ * has stale training data. Neither was checked at the moment of output, and both
+ * appeared identically regardless of the code, which makes them sales copy inside
+ * a finding.
  */
 export function buildCodeProTeaser(pluginName: string): string {
   return (
     `Detected ${pluginName} in this code, and Lumo Free has no entry for it — ` +
     `this is not an all-clear. ${pluginName} is not covered by any free or official ` +
-    `WordPress skill set, and your AI's training data is stale on its current hooks ` +
-    `and APIs. Lumo Pro extends the catch to WooCommerce and the premium plugins: ` +
-    `ACF Pro, Gravity Forms, Elementor Pro, Meta Box, Carbon Fields.`
+    `WordPress skill set. Lumo Pro covers ${pluginName}.`
   );
+}
+
+/**
+ * Appended when findings ARE present and a Pro-only signal fired alongside them.
+ * One line, not the full teaser: the answer already carries content, this only
+ * has to stop it from reading as complete.
+ */
+export function buildCodeProGapLine(pluginName: string): string {
+  return (
+    `_Also detected ${pluginName} in this code, which Lumo Free does not cover — ` +
+    `the findings above are not the whole picture._`
+  );
+}
+
+/**
+ * Short form of the code teaser, for every repeat after the first. Keeps the
+ * honesty (the gap is still named) and drops the sales copy, so an hour of
+ * WooCommerce work does not produce an hour of upgrade prompts.
+ */
+export function buildCodeProTeaserShort(pluginName: string): string {
+  return `_${pluginName} is in this code and Lumo Free does not cover it — still not an all-clear._`;
 }
 
 /**

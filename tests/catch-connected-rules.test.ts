@@ -54,6 +54,37 @@ describe('connected rules — no rule fires on its own documented fix', () => {
   });
 });
 
+/**
+ * From the false-positive review (Gemini, Stufe 3). Two rules fired on correct
+ * code, and the documented pair could not see it:
+ *
+ *   wp_redirect — the signal was a bare `wp_redirect(`, so every use of an
+ *   ordinary WordPress function was flagged. The pair passed only because the
+ *   entry's correct example uses wp_safe_redirect(), so the signal never met
+ *   correct wp_redirect() code at all.
+ *
+ *   the order-shaped variable — any `_suffix` counted, so $order_status and
+ *   $order_number drew a WooCommerce upsell although neither is a post id.
+ */
+describe('connected rules — precision against correct code', () => {
+  const fires = (code: string, slug: string) => slugsCaught(code).includes(slug);
+  const REDIRECT = 'wp-redirect-with-user-input-use-wp-safe-redirect';
+
+  it('BELL: wp_redirect with request input is still caught', () => {
+    expect(fires(`<?php wp_redirect( $_GET['next'] );`, REDIRECT)).toBe(true);
+  });
+
+  it.each([
+    ['a static redirect', `<?php wp_redirect( home_url( '/thanks/' ) ); exit;`],
+    [
+      'a whitelisted one where the superglobal is only in the check',
+      `<?php if ( in_array( $_GET['p'], array( 'home' ), true ) ) { wp_redirect( site_url( 'home' ) ); }`,
+    ],
+  ])('SILENCE: %s must not be flagged', (_name, code) => {
+    expect(fires(code, REDIRECT)).toBe(false);
+  });
+});
+
 describe('connected rules — the registry really carries them', () => {
   it('all 7 slugs resolve to a snapshot entry', () => {
     for (const slug of CONNECTED_SLUGS) expect(entryFor(slug).slug).toBe(slug);

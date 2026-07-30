@@ -159,20 +159,21 @@ export const PATTERNS: readonly PatternDefinition[] = [
       // SOFT: $order_id-shaped variable passed to get_post_meta / update_post_meta /
       // get_post — CONTEXT_DEPENDENT because the variable could be any post id.
       //
-      // `order` must sit on a name boundary: either the whole name or a segment
-      // delimited by underscores. A bare \w*order\w* also matches $recorder_id,
-      // $border_id, $orderby_post_id and $reorder_id — none of them WooCommerce.
-      // Since a dropped Pro entry now surfaces a named teaser instead of silence,
-      // that imprecision would put a WooCommerce upsell on an audio plugin.
+      // The name must be order-shaped AND id-shaped. A bare \w*order\w* also matched
+      // $recorder_id, $border_id, $orderby_post_id and $reorder_id — none of them
+      // WooCommerce. Allowing any _suffix then still matched $order_status and
+      // $order_number, which are not post ids either. Since a dropped Pro entry now
+      // surfaces a named teaser instead of silence, that imprecision would put a
+      // WooCommerce upsell on an audio plugin.
       {
-        match: /\bget_post_meta\s*\(\s*\$(?:\w+_)?order(?:_\w+)?\b/,
+        match: /\bget_post_meta\s*\(\s*\$(?:\w+_)?order(?:_id|_ID)?\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'woocommerce-hpos-order-access',
         condition: '$order_id is a WooCommerce order',
         language: 'php',
       },
       {
-        match: /\bupdate_post_meta\s*\(\s*\$(?:\w+_)?order(?:_\w+)?\b/,
+        match: /\bupdate_post_meta\s*\(\s*\$(?:\w+_)?order(?:_id|_ID)?\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'woocommerce-hpos-order-access',
         condition: '$order_id is a WooCommerce order',
@@ -592,7 +593,22 @@ export const PATTERNS: readonly PatternDefinition[] = [
       // far the loudest rule in the set, and always wrong, because a snippet is
       // never a whole file. It belongs to a file-aware scan, not to the catch.
       {
-        match: /\bwp_redirect\s*\(/,
+        // Two conditions in one expression: request data appears in the blob, and
+        // the redirect target is a bare variable rather than a built URL.
+        //
+        // A bare \bwp_redirect\s*\( fired on every use of an ordinary WordPress
+        // function, including `wp_redirect( home_url( '/thanks/' ) )`. Requiring the
+        // superglobal INSIDE the call was too narrow the other way: the entry's own
+        // wrong form assigns `$_GET['redirect_to']` to a variable first and redirects
+        // with that. Neither error was visible in the documented pair, because the
+        // correct example uses wp_safe_redirect() and so never met the signal.
+        //
+        // `wp_redirect( site_url( 'home' ) )` next to a whitelist check on $_GET is
+        // therefore quiet — the target is a call, not a variable.
+        // Two shapes, because request data reaches the call either way: assigned to
+        // a variable first, or passed inline.
+        match:
+          /\$_(?:GET|POST|REQUEST)\b[\s\S]{0,400}?\bwp_redirect\s*\(\s*\$\w+|\bwp_redirect\s*\(\s*[^;)]{0,80}\$_(?:GET|POST|REQUEST)\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'wp-redirect-with-user-input-use-wp-safe-redirect',
         condition: 'the URL argument may be derived from user-controlled input ($_GET, $_POST, $_REQUEST, or any unsanitized variable) — wp_safe_redirect() restricts the destination to the same host + allowed hosts list, eliminating open redirect risk',
