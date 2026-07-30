@@ -8,6 +8,10 @@
 ##   Each finding is posted as a PR comment with the dated source and the
 ##   correct pattern. LOUD (certain + breaking) fails the check by default;
 ##   SOFT (context-dependent) is advisory only.
+##
+## This file also RUNS here, on this repository's own pull requests, so the
+## catch is exercised on every change to it. That is why `uses:` points at the
+## local action; a copy in your repo pins a released tag instead.
 ## ---------------------------------------------------------------------------
 
 name: Lumo WP Code Review
@@ -29,7 +33,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Lumo WP code review
-        uses: unleash-wp/lumo@v1  # pin to a released tag; @main is unstable (tag v1 at release)
+        # In THIS repository the action under test is the checked-out one, so
+        # every PR is reviewed by the code it changes. When you copy this file
+        # into your own repo, replace `./` with a pinned release, for example
+        # `unleash-wp/lumo@v0.4.0` — `@main` is unstable.
+        uses: ./
         with:
           ## fail_on_loud: "true" (default) — fails the PR check when Lumo finds
           ## a CERTAIN breaking-version pattern. Set to "false" for advisory-only mode.
