@@ -24,6 +24,7 @@ import {
   CATCH_NEUTRAL_LINE,
   ACTION_NO_MATCH_LINE,
   ACTION_SCOPE_LINE,
+  SCAN_NO_MATCH_TEMPLATE,
 } from '../src/lib/render.js';
 import { loadSnapshot } from '../src/lib/snapshot.js';
 
@@ -167,6 +168,7 @@ describe('law 2 — no channel may phrase a coverage limit as a verdict', () => 
   it.each([
     ['CATCH_NEUTRAL_LINE', CATCH_NEUTRAL_LINE],
     ['ACTION_NO_MATCH_LINE', ACTION_NO_MATCH_LINE],
+    ['SCAN_NO_MATCH_TEMPLATE', SCAN_NO_MATCH_TEMPLATE],
   ])('%s never says clean and always denies being an all-clear', (_name, line) => {
     expect(line.toLowerCase()).not.toContain('clean');
     expect(line).toContain('not an all-clear');
