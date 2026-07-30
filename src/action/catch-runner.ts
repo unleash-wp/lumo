@@ -12,9 +12,9 @@
 
 import { parseDiff } from './diff-parser.js';
 import type { FileDiff } from './diff-parser.js';
-import type { CatchResult, CatchTier } from '../detection/catch.js';
-import { checkCode } from '../detection/catch.js';
-import { formatCatch } from '../lib/render.js';
+import type { CatchResult, CatchTier, ProGap } from '../detection/catch.js';
+import { checkCodeWithGaps } from '../detection/catch.js';
+import { formatCatch, buildCodeProTeaser, buildCodeProGapLine } from '../lib/render.js';
 
 export interface Finding {
   filename: string;
@@ -100,6 +100,8 @@ async function catchFile(
   licenseKey?: string,
 ): Promise<Finding[]> {
   let results: Array<CatchResult | ProRenderedFinding>;
+  // Set only on the free path: Pro has the knowledge, so it reports no gap.
+  let proGap: ProGap | undefined;
 
   if (proUrl && licenseKey) {
     try {
@@ -107,13 +109,13 @@ async function catchFile(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[lumo] Pro MCP unreachable (${msg}), falling back to free catch`);
-      results = checkCode(file.blob, file.language);
+      ({ results, proGap } = checkCodeWithGaps(file.blob, file.language));
     }
   } else {
-    results = checkCode(file.blob, file.language);
+    ({ results, proGap } = checkCodeWithGaps(file.blob, file.language));
   }
 
-  return results.map((r) => {
+  const findings: Finding[] = results.map((r) => {
     if (isProRendered(r)) {
       // Pro server pre-renders; surface as SOFT so it never triggers fail_on_loud
       // (the Pro server itself controls blocking via its own tier model).
@@ -125,6 +127,25 @@ async function catchFile(
       body: formatCatch(r),
     };
   });
+
+  // A Pro-only signal fired on this file. Without this the Action reports "no
+  // findings" on a WooCommerce pull request — the same false all-clear the tool
+  // and hook paths already fixed, in the channel where nobody is watching live.
+  //
+  // Always SOFT: a coverage gap is not a defect in the contributor's code, so it
+  // must never fail a build through fail_on_loud.
+  if (proGap) {
+    findings.push({
+      filename: file.filename,
+      tier: 'SOFT' as CatchTier,
+      body:
+        findings.length === 0
+          ? buildCodeProTeaser(proGap.pluginName)
+          : buildCodeProGapLine(proGap.pluginName),
+    });
+  }
+
+  return findings;
 }
 
 // ---------------------------------------------------------------------------

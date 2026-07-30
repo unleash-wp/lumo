@@ -20,8 +20,11 @@ import {
   CATCH_NEUTRAL_LINE,
   buildCodeProTeaser,
   buildCodeDetectionNote,
+  buildCodeProTeaserShort,
+  buildCodeProGapLine,
 } from '../lib/render.js';
 import { validateEntry } from '../lib/snapshot.js';
+import { hasSeenProTeaser, markProTeaserSeen } from '../lib/events.js';
 import type { CatchTier, CatchOverrides } from '../detection/catch.js';
 import type { Snapshot } from '../types.js';
 
@@ -88,6 +91,12 @@ export function runHookCatch(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
   overrides?: CatchOverrides,
+  /**
+   * Where the teaser-seen marker lives. Omitted in production (resolves to the
+   * user's state dir); tests MUST pass a temp dir — without it a test run writes
+   * into the developer's real state and silently mutes their next teaser.
+   */
+  stateDir?: string,
 ): HookCatchResult {
   if (!SNAPSHOT) {
     return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
@@ -103,9 +112,17 @@ export function runHookCatch(
       // Pro-only knowledge was hit: say so. The hook stays non-blocking (tier
       // null), but silence here would be a false all-clear at the keyboard.
       if (proGap) {
-        const message = proGap.hasProCoverage
-          ? buildCodeProTeaser(proGap.pluginName)
-          : buildCodeDetectionNote(proGap.pluginName);
+        // The hook fires on every edit. Full teaser once per plugin, short line
+        // after that — the gap stays named, the sales copy does not repeat.
+        let message: string;
+        if (!proGap.hasProCoverage) {
+          message = buildCodeDetectionNote(proGap.pluginName);
+        } else if (hasSeenProTeaser(proGap.pluginName, stateDir)) {
+          message = buildCodeProTeaserShort(proGap.pluginName);
+        } else {
+          message = buildCodeProTeaser(proGap.pluginName);
+          markProTeaserSeen(proGap.pluginName, stateDir);
+        }
         return { tier: null, message, loudCount: 0, softCount: 0 };
       }
       return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
@@ -116,7 +133,13 @@ export function runHookCatch(
 
     // checkCode() already sorts LOUD before SOFT
     const top = results[0]!;
-    const message = formatCatch(top);
+    // Findings present AND a Pro-only signal fired: name the gap here too, or the
+    // hook shows a finding that reads as the whole answer. Deliberately NOT
+    // throttled like the teaser — the teaser is the pitch, this is the honesty,
+    // and silencing honesty on repeat edits would restore the false all-clear.
+    const message = proGap
+      ? `${formatCatch(top)}\n\n${buildCodeProGapLine(proGap.pluginName)}`
+      : formatCatch(top);
 
     return { tier: top.tier, message, loudCount, softCount };
   } catch {
