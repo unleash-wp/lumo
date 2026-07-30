@@ -12,6 +12,7 @@ import {
   buildCodeProTeaser,
   buildCodeProGapLine,
   buildCodeDetectionNote,
+  joinPluginNames,
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
   PRO_MCP_ADD_LINE,
@@ -198,19 +199,23 @@ export async function handleCheckCode(
   try {
     const { checkCodeWithGaps } = await import('../detection/catch.js');
     const snap = snapshot ?? loadSnapshot();
-    const { results, proGap } = checkCodeWithGaps(
+    const { results, proGaps } = checkCodeWithGaps(
       input.code ?? '',
       input.language ?? 'auto',
       snap,
     );
+    const covered = proGaps.filter((g) => g.hasProCoverage).map((g) => g.pluginName);
+    const uncovered = proGaps.filter((g) => !g.hasProCoverage).map((g) => g.pluginName);
 
     if (results.length === 0) {
-      // A signal fired into Pro-only knowledge: name the gap instead of the
-      // neutral line, or the user reads silence as "nothing wrong here".
-      if (proGap) {
-        return proGap.hasProCoverage
-          ? buildCodeProTeaser(proGap.pluginName)
-          : buildCodeDetectionNote(proGap.pluginName);
+      // Signals fired into Pro-only knowledge: name EVERY touched plugin
+      // instead of the neutral line — silence on the second plugin is the same
+      // false all-clear as silence on the first.
+      if (proGaps.length > 0) {
+        const parts: string[] = [];
+        if (covered.length > 0) parts.push(buildCodeProTeaser(joinPluginNames(covered)));
+        if (uncovered.length > 0) parts.push(buildCodeDetectionNote(joinPluginNames(uncovered)));
+        return parts.join('\n\n');
       }
       return CATCH_NEUTRAL_LINE;
     }
@@ -246,7 +251,10 @@ export async function handleCheckCode(
     // A Pro-only signal fired alongside the findings. Without this line the
     // answer looks complete while a whole plugin went unchecked — the same false
     // all-clear as silence, only harder to notice.
-    const withGap = proGap ? `${body}\n\n${buildCodeProGapLine(proGap.pluginName)}` : body;
+    const withGap =
+      proGaps.length > 0
+        ? `${body}\n\n${buildCodeProGapLine(joinPluginNames(proGaps.map((g) => g.pluginName)))}`
+        : body;
 
     // Upgrade prompt fires first (LOUD + URL configured); freshness reveal fires
     // when the upgrade prompt does NOT (avoids double-printing on the same response).

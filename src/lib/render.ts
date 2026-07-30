@@ -307,6 +307,12 @@ export const CATCH_NEUTRAL_LINE =
   'Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
   'anything outside that was not checked, so this is not an all-clear.';
 
+/** "A", "A and B", "A, B and C" — one grammar for every gap surface. */
+export function joinPluginNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
 /**
  * Pro-only knowledge was hit by a fired signal in a code blob. Names the plugin
  * and what covers it. Sibling of buildProTeaser (project path) — the wording here
