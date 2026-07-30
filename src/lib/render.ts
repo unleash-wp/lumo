@@ -306,6 +306,19 @@ export const ACTION_SCOPE_LINE =
   '_Scope: the added lines of this diff, checked against what Lumo Free covers. ' +
   'Unchanged lines and anything outside that coverage were not checked._';
 
+/**
+ * Posted into the PR when Pro credentials were configured but the Pro server
+ * could not be reached and the run fell back to the free catch. Must be
+ * visible in the run's own output, not only in the job log: a silently
+ * degraded Pro run reads as "Pro checked and found nothing" — a false
+ * all-clear on exactly the layer the customer pays for.
+ */
+export const ACTION_PRO_DEGRADED_LINE =
+  '**The Lumo Pro check did not run** — the Pro server was unreachable, so the ' +
+  'results in this run come from the free catch only. This is not a Pro ' +
+  'verdict. Check the server URL, the license key, and the server status, ' +
+  'then re-run the check.';
+
 // Neutral line when checkCode finds nothing to flag.
 //
 // It reports the scope that was checked, never the state of the code. Lumo cannot

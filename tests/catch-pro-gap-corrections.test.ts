@@ -178,6 +178,13 @@ describe('law 2 — no channel may phrase a coverage limit as a verdict', () => 
     expect(ACTION_SCOPE_LINE).toContain('added lines');
     expect(ACTION_SCOPE_LINE).toContain('were not checked');
   });
+
+  it('the Pro degradation notice names the failure and denies being a Pro verdict', async () => {
+    const { ACTION_PRO_DEGRADED_LINE } = await import('../src/lib/render.js');
+    expect(ACTION_PRO_DEGRADED_LINE).toContain('did not run');
+    expect(ACTION_PRO_DEGRADED_LINE).toContain('not a Pro verdict');
+    expect(ACTION_PRO_DEGRADED_LINE.toLowerCase()).not.toContain('clean');
+  });
 });
 
 describe('law 1 — the order-shaped variable must also be id-shaped', () => {

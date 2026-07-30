@@ -32,6 +32,13 @@ export interface RunResult {
   loudCount: number;
   softCount: number;
   findings: Finding[];
+  /**
+   * True when Pro credentials were configured but at least one file fell back
+   * to the free catch (Pro server unreachable). The caller MUST surface this
+   * in the run's visible output — a silently degraded Pro run reads as "Pro
+   * checked and found nothing", which is a false all-clear on the paid layer.
+   */
+  proDegraded: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -118,10 +125,11 @@ async function catchFile(
   file: FileDiff,
   proUrl?: string,
   licenseKey?: string,
-): Promise<Finding[]> {
+): Promise<{ findings: Finding[]; proDegraded: boolean }> {
   let results: Array<CatchResult | ProRenderedFinding>;
   // Set only on the free path: Pro has the knowledge, so it reports no gap.
   let proGaps: ProGap[] = [];
+  let proDegraded = false;
 
   if (proUrl && licenseKey) {
     try {
@@ -129,6 +137,7 @@ async function catchFile(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[lumo] Pro MCP unreachable (${msg}), falling back to free catch`);
+      proDegraded = true;
       ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
     }
   } else {
@@ -163,7 +172,7 @@ async function catchFile(
     });
   }
 
-  return findings;
+  return { findings, proDegraded };
 }
 
 // ---------------------------------------------------------------------------
@@ -179,14 +188,16 @@ export interface RunCatchOptions {
 export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const files = parseDiff(opts.diff);
   const findings: Finding[] = [];
+  let proDegraded = false;
 
   for (const file of files) {
-    const fileFindings = await catchFile(file, opts.proUrl, opts.licenseKey);
-    findings.push(...fileFindings);
+    const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey);
+    findings.push(...fileResult.findings);
+    proDegraded = proDegraded || fileResult.proDegraded;
   }
 
   const loudCount = findings.filter((f) => f.tier === 'LOUD').length;
   const softCount = findings.filter((f) => f.tier === 'SOFT').length;
 
-  return { loudCount, softCount, findings };
+  return { loudCount, softCount, findings, proDegraded };
 }

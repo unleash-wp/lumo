@@ -32,6 +32,15 @@ describe('prompt fences', () => {
     expect(p).toContain('NEVER state that an API changed/was deprecated in a specific version');
   });
 
+  it('pins the grounding contract: quote-or-delete, diff-only knowledge, silence in doubt', () => {
+    const p = buildReviewPrompt(INPUT);
+    // Copy-regression on the anti-hallucination fences — if one of these lines
+    // leaves the prompt, a model may again assert code it cannot see.
+    expect(p).toContain('No quote, no point.');
+    expect(p).toContain('Use ONLY the diff and the established findings above');
+    expect(p).toContain('If you are unsure whether a point is real, leave it out');
+  });
+
   it('says so when the engine found nothing, instead of hiding it', () => {
     const p = buildReviewPrompt({ ...INPUT, findings: [] });
     expect(p).toContain('none — the rule engine found nothing it covers');
