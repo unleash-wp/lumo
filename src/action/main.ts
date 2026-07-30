@@ -25,7 +25,11 @@ import * as github from '@actions/github';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { runCatch } from './catch-runner.js';
-import { ACTION_NO_MATCH_LINE, ACTION_SCOPE_LINE } from '../lib/render.js';
+import {
+  ACTION_NO_MATCH_LINE,
+  ACTION_SCOPE_LINE,
+  ACTION_PRO_DEGRADED_LINE,
+} from '../lib/render.js';
 
 // ---------------------------------------------------------------------------
 // Enforcement mode from workspace .lumo.json
@@ -106,11 +110,23 @@ async function main(): Promise<void> {
   // The diff comes back as the raw response body when mediaType.format='diff'.
   const diff = diffResponse.data as unknown as string;
 
-  const { loudCount, softCount, findings } = await runCatch({
+  const { loudCount, softCount, findings, proDegraded } = await runCatch({
     diff,
     proUrl: proUrl || undefined,
     licenseKey: licenseKey || undefined,
   });
+
+  // The degradation must speak in the PR itself, not only in the job log —
+  // same contract as the scanner's DID-NOT-RUN line. One comment per run.
+  if (proDegraded) {
+    await octokit.rest.issues.createComment({
+      owner: ctx.repo.owner,
+      repo: ctx.repo.repo,
+      issue_number: pullNumber,
+      body: `**[Lumo]** ${ACTION_PRO_DEGRADED_LINE}`,
+    });
+    core.info('[lumo] Pro check degraded to the free catch — posted the degradation notice');
+  }
 
   // Optional autonomous review stage — advisory, fenced, fail-open. Defined
   // here so BOTH paths run it: a diff with zero engine findings is exactly

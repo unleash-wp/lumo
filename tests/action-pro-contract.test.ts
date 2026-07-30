@@ -82,3 +82,35 @@ describe('action ↔ pro contract', () => {
     expect(res.findings).toHaveLength(1);
   });
 });
+
+// Product-gate condition on the toolkit wave: a Pro run that silently fell
+// back to the free catch reads as "Pro checked and found nothing" — the
+// degradation must be a first-class, visible fact of the run.
+describe('pro degradation announces itself', () => {
+  it('BELL: unreachable Pro server sets proDegraded on the run', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('ECONNREFUSED');
+      }),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+
+  it('SILENCE: a healthy Pro run is not marked degraded', async () => {
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: 'prose' }],
+        structuredContent: { found: false },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(false);
+  });
+
+  it('SILENCE: the free path (no Pro credentials) never claims a Pro degradation', async () => {
+    const res = await runCatch({ diff: DIFF });
+    expect(res.proDegraded).toBe(false);
+  });
+});
