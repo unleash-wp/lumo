@@ -75,6 +75,9 @@ async function fetchProResults(
   };
 
   const text = json?.result?.content?.[0]?.text ?? '';
+  // Mirrors the PRO server's neutral wording, not Lumo Free's CATCH_NEUTRAL_LINE —
+  // do not swap in that constant. See FINDINGS.md: the two strings currently differ,
+  // so a clean Pro response is still wrapped as a finding.
   const neutralLine = 'No WordPress/WooCommerce issues detected in this code — looks clean.';
 
   if (!text || text === neutralLine) return [];

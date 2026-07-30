@@ -265,6 +265,39 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   return lines.join('\n');
 }
 
-// Neutral line when checkCode finds nothing to flag — mirrors lumo_audit's tone.
+// Neutral line when checkCode finds nothing to flag.
+//
+// It reports the scope that was checked, never the state of the code. Lumo cannot
+// know that a blob is clean — only that nothing it covers matched. Saying "looks
+// clean" turns a coverage limit into a verdict, which is the one thing this
+// product must never do.
 export const CATCH_NEUTRAL_LINE =
-  'No WordPress/WooCommerce issues detected in this code — looks clean.';
+  'Checked against Lumo Free — no covered pattern matched. ' +
+  'Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
+  'anything outside that was not checked, so this is not an all-clear.';
+
+/**
+ * Pro-only knowledge was hit by a fired signal in a code blob. Names the plugin
+ * and what covers it. Sibling of buildProTeaser (project path) — the wording here
+ * speaks about the code in hand, not about a project on disk.
+ */
+export function buildCodeProTeaser(pluginName: string): string {
+  return (
+    `Detected ${pluginName} in this code, and Lumo Free has no entry for it — ` +
+    `this is not an all-clear. ${pluginName} is not covered by any free or official ` +
+    `WordPress skill set, and your AI's training data is stale on its current hooks ` +
+    `and APIs. Lumo Pro extends the catch to WooCommerce and the premium plugins: ` +
+    `ACF Pro, Gravity Forms, Elementor Pro, Meta Box, Carbon Fields.`
+  );
+}
+
+/**
+ * Same situation, but Pro has no curated knowledge either. States the limit and
+ * makes no upgrade promise that would be broken.
+ */
+export function buildCodeDetectionNote(pluginName: string): string {
+  return (
+    `Detected ${pluginName} in this code. Lumo has no curated knowledge for ` +
+    `${pluginName} yet, so this code was not checked against it — this is not an all-clear.`
+  );
+}

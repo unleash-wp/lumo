@@ -14,8 +14,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { checkCode } from '../detection/catch.js';
-import { formatCatch, CATCH_NEUTRAL_LINE } from '../lib/render.js';
+import { checkCodeWithGaps } from '../detection/catch.js';
+import {
+  formatCatch,
+  CATCH_NEUTRAL_LINE,
+  buildCodeProTeaser,
+  buildCodeDetectionNote,
+} from '../lib/render.js';
 import { validateEntry } from '../lib/snapshot.js';
 import type { CatchTier, CatchOverrides } from '../detection/catch.js';
 import type { Snapshot } from '../types.js';
@@ -92,9 +97,17 @@ export function runHookCatch(
     // Inject the pre-loaded snapshot so checkCode() does not re-resolve paths.
     // Thread overrides so disabled/downgraded rules are applied before the
     // tier decision reaches the hook.
-    const results = checkCode(code, language, SNAPSHOT, overrides);
+    const { results, proGap } = checkCodeWithGaps(code, language, SNAPSHOT, overrides);
 
     if (results.length === 0) {
+      // Pro-only knowledge was hit: say so. The hook stays non-blocking (tier
+      // null), but silence here would be a false all-clear at the keyboard.
+      if (proGap) {
+        const message = proGap.hasProCoverage
+          ? buildCodeProTeaser(proGap.pluginName)
+          : buildCodeDetectionNote(proGap.pluginName);
+        return { tier: null, message, loudCount: 0, softCount: 0 };
+      }
       return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
     }
 

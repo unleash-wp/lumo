@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleLookup, handleCheckCode } from '../src/mcp/handlers.js';
+import { CATCH_NEUTRAL_LINE } from '../src/lib/render.js';
 
 /**
  * The eval set, executed rather than admired.
@@ -62,7 +63,9 @@ describe('evals/free-mcp.xml stays true', () => {
       code: "<?php $h = wp_img_tag_add_loading_optimization_attrs( $x, 'the_content' );",
       language: 'php',
     });
-    expect(out).toContain('No WordPress/WooCommerce issues detected');
+    // Assert via the constant, not its wording: the neutral line reports scope
+    // and must stay free to change without breaking this eval.
+    expect(out).toBe(CATCH_NEUTRAL_LINE);
   });
 
   it('softens to an advisory behind a function_exists shim', async () => {

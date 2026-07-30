@@ -158,15 +158,21 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
       // SOFT: $order_id-shaped variable passed to get_post_meta / update_post_meta /
       // get_post — CONTEXT_DEPENDENT because the variable could be any post id.
+      //
+      // `order` must sit on a name boundary: either the whole name or a segment
+      // delimited by underscores. A bare \w*order\w* also matches $recorder_id,
+      // $border_id, $orderby_post_id and $reorder_id — none of them WooCommerce.
+      // Since a dropped Pro entry now surfaces a named teaser instead of silence,
+      // that imprecision would put a WooCommerce upsell on an audio plugin.
       {
-        match: /\bget_post_meta\s*\(\s*\$\w*order\w*/,
+        match: /\bget_post_meta\s*\(\s*\$(?:\w+_)?order(?:_\w+)?\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'woocommerce-hpos-order-access',
         condition: '$order_id is a WooCommerce order',
         language: 'php',
       },
       {
-        match: /\bupdate_post_meta\s*\(\s*\$\w*order\w*/,
+        match: /\bupdate_post_meta\s*\(\s*\$(?:\w+_)?order(?:_\w+)?\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'woocommerce-hpos-order-access',
         condition: '$order_id is a WooCommerce order',
