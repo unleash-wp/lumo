@@ -1,6 +1,6 @@
 {
   "name": "@unleashwp/lumo",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "UnleashWP Lumo — catches stale or wrong AI-written WordPress code the moment it is generated, with the wrong-vs-correct fix and a dated source (MCP server, CLI and GitHub Action).",
   "type": "module",
   "engines": {

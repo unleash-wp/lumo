@@ -8,7 +8,7 @@ Markers: **[after npm publish]** — requires `@unleashwp/lumo` live on npm firs
 
 - **Name:** UnleashWP Lumo — WordPress Code Quality
 - **One-liner:** Catches stale AI-written WordPress code — Core deprecations, Gutenberg/block.json, WooCommerce HPOS — with the wrong-vs-correct fix and a dated source.
-- **Description:** Lumo is a local stdio MCP server for WordPress code review. It checks PHP and JavaScript against 142 curated, source-verified entries covering WordPress Core deprecations, Gutenberg block development (block.json, apiVersion, theme.json), and WooCommerce HPOS breakage — and returns the wrong pattern, the correct replacement, the affected version range, and a dated source URL. Tools: `lumo_check_code` (review a snippet or diff), `lumo_audit` (audit a project), `lumo_lookup` (query the knowledge base).
+- **Description:** Lumo is a local stdio MCP server for WordPress code review. It checks PHP and JavaScript against 42 curated, source-verified entries covering WordPress Core deprecations, Gutenberg block development (block.json, apiVersion, theme.json), and security fundamentals — where it touches WooCommerce/HPOS it says so instead of going quiet (that coverage is Lumo Pro) — and returns the wrong pattern, the correct replacement, the affected version range, and a dated source URL. Tools: `lumo_check_code` (review a snippet or diff), `lumo_audit` (audit a project), `lumo_lookup` (query the knowledge base).
 - **Category:** Developer Tools (variant: Code Review / Code Quality where offered)
 - **Tags:** `wordpress` `woocommerce` `hpos` `gutenberg` `block-json` `code-review` `code-quality` `deprecations` `php` `mcp-server`
 - **Homepage / repo:** https://github.com/unleash-wp/lumo
@@ -74,7 +74,7 @@ No GitHub auto-crawl for stdio servers: requires an MCPB bundle upload (Smithery
 
 **Paste block (listing form):**
 > **Display name:** UnleashWP Lumo — WordPress Code Quality
-> **Description:** Local WordPress code-review server: checks PHP/JS against 142 source-verified entries for Core deprecations, Gutenberg/block.json changes, and WooCommerce HPOS breakage. Returns wrong vs. correct pattern, affected version range, and a dated source URL.
+> **Description:** Local WordPress code-review server: checks PHP/JS against 42 source-verified entries for Core deprecations, Gutenberg/block.json changes, and security fundamentals; WooCommerce/HPOS coverage is Lumo Pro and the free tier names that gap instead of going quiet. Returns wrong vs. correct pattern, affected version range, and a dated source URL.
 > **Repository:** https://github.com/unleash-wp/lumo
 > **Server type:** Local / stdio
 
@@ -87,7 +87,7 @@ The install command runs through npx, so the listing is only functional once the
 **Paste block:**
 > **Name:** UnleashWP Lumo — WordPress Code Quality
 > **One-liner:** Catches stale AI-written WordPress code — Core deprecations, Gutenberg/block.json, WooCommerce HPOS — with the wrong-vs-correct fix and a dated source.
-> **Description:** Local stdio MCP server for WordPress code review: 142 curated, source-verified entries covering WordPress Core deprecations, Gutenberg block development (block.json, apiVersion, theme.json), and WooCommerce HPOS. The bundled `.cursor/rules/lumo.mdc` makes Cursor consult it before writing WordPress code.
+> **Description:** Local stdio MCP server for WordPress code review: 42 curated, source-verified entries covering WordPress Core deprecations, Gutenberg block development (block.json, apiVersion, theme.json), and security fundamentals; WooCommerce/HPOS is Lumo Pro and the gap is named, never silent. The bundled `.cursor/rules/lumo.mdc` makes Cursor consult it before writing WordPress code.
 > **Repository:** https://github.com/unleash-wp/lumo
 > **Install (`.cursor/mcp.json`):**
 > ```json
@@ -116,6 +116,6 @@ VS Code's curated list sources from the official MCP Registry — #1 is the prer
 ## Open items before submitting anywhere
 
 1. **npm publish** — `@unleashwp/lumo@0.3.0` must be public on npm for #1, #5, #6 and for every `npx` install command above.
-2. **npx ergonomics** — package.json ships no bin named `lumo`, so `npx @unleashwp/lumo <anything>` fails to resolve. Either keep the explicit `-p … lumo-mcp` form everywhere (as written above) or add a `lumo` dispatcher bin before publish.
+2. **npx ergonomics** — resolved: package.json ships the `lumo` bin (release.yml verifies `lumo --version` from the packed tarball), so `npx -y -p @unleashwp/lumo lumo-mcp` and the `lumo` CLI both work.
 3. **`unleash-wp` org membership** — the registry namespace binds to the GitHub account used in `mcp-publisher login github`.
 4. **Smithery MCPB toolchain** — build command undocumented at research time; verify at smithery.ai/docs.
