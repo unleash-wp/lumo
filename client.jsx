@@ -21,6 +21,10 @@ const SNIPPETS = [
     label: 'GitHub Action — review every pull request',
     cmd: '- uses: unleash-wp/lumo@v0.4.0',
   },
+  {
+    label: 'Official WordPress skills — the manual to Lumo’s watcher (GPL, by the WordPress project)',
+    cmd: 'lumo skills',
+  },
 ];
 
 function StatusChip({ ok, children }) {
