@@ -510,4 +510,133 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
     ],
   },
+  // ---------------------------------------------------------------------------
+  // Curated code rules connected from the knowledge base. No plugin detection:
+  // empty composer/directory/sourceSignals keeps them out of the project-scan
+  // ladder, so they only ever fire on a blob.
+  //
+  // Held back deliberately: 14 further curated rules match on the mere presence
+  // of a call (add_action('wp_ajax_…'), register_rest_route(…)) rather than on the
+  // absence of the guard, so they also fire on the fix the entry itself
+  // recommends. Connecting them needs a suppressGuard each — judgement work, not
+  // translation. See PROGRESS.md.
+  // ---------------------------------------------------------------------------
+  {
+    // Security fundamentals — wrong in every WordPress version, so no version fact
+    // anchors them and classify() caps them at SOFT. Raising that is the open
+    // severity decision; this translation does not pre-empt it.
+    //
+    // Signals translated 1:1 from the knowledge base. Only rules whose documented
+    // wrong form is caught AND whose documented fix stays quiet are connected here.
+    pattern: 'wordpress-security-fundamentals',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /\$\w+\s*=\s*\$_(?:POST|GET|REQUEST)\s*\[/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'superglobal-without-sanitize',
+        condition: 'the assigned variable is used without a sanitize_*() / absint() / intval() / (int) cast wrapping the superglobal read',
+        language: 'php',
+      },
+      {
+        match: /\$wpdb\s*->\s*(?:query|get_results|get_var|get_row|get_col)\s*\(\s*"[^"]*\$\w/,
+        class: 'CERTAIN',
+        entrySlug: 'wpdb-query-without-prepare-sql-injection',
+        language: 'php',
+      },
+      {
+        match: /\$wpdb\s*->\s*(?:query|get_results|get_var|get_row|get_col)\s*\(\s*\$[a-zA-Z_]\w*\s*\./,
+        class: 'CERTAIN',
+        entrySlug: 'wpdb-query-without-prepare-sql-injection',
+        language: 'php',
+      },
+    ],
+  },
+  {
+    // Plugin-standard rules — structure and hygiene the WordPress handbook requires.
+    //
+    // Signals translated 1:1 from the knowledge base. Only rules whose documented
+    // wrong form is caught AND whose documented fix stays quiet are connected here.
+    pattern: 'wordpress-plugin-standards',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /\b__\s*\(\s*['"][^'"]+['"]\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'i18n-function-missing-text-domain',
+        condition: 'the call is missing the second argument (text-domain) — e.g. __( \'Hello\' ) instead of __( \'Hello\', \'myplugin\' )',
+        language: 'php',
+      },
+      {
+        match: /\b_e\s*\(\s*['"][^'"]+['"]\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'i18n-function-missing-text-domain',
+        condition: 'the call is missing the second argument (text-domain) — e.g. _e( \'Hello\' ) instead of _e( \'Hello\', \'myplugin\' )',
+        language: 'php',
+      },
+      {
+        match: /\besc_(?:html|attr)__\s*\(\s*['"][^'"]+['"]\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'i18n-function-missing-text-domain',
+        condition: 'the escaping i18n function is missing the text-domain second argument',
+        language: 'php',
+      },
+      // php-file-missing-abspath-guard is NOT connected, on purpose. Its signal
+      // asks a file-level question ("does this file open with an ABSPATH guard?")
+      // of a blob checker that is handed snippets. Measured against the 42
+      // documented correct examples in the snapshot it fired on 16 of them — by
+      // far the loudest rule in the set, and always wrong, because a snippet is
+      // never a whole file. It belongs to a file-aware scan, not to the catch.
+      {
+        match: /\bwp_redirect\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-redirect-with-user-input-use-wp-safe-redirect',
+        condition: 'the URL argument may be derived from user-controlled input ($_GET, $_POST, $_REQUEST, or any unsanitized variable) — wp_safe_redirect() restricts the destination to the same host + allowed hosts list, eliminating open redirect risk',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
+  },
+  {
+    // Core API breadth — the everyday Core surface: HTTP, roles and capabilities.
+    //
+    // Signals translated 1:1 from the knowledge base. Only rules whose documented
+    // wrong form is caught AND whose documented fix stays quiet are connected here.
+    pattern: 'wordpress-core-breadth',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /current_user_can\s*\(\s*['"](?:administrator|editor|author|contributor|subscriber)['"]\s*\)/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-current-user-can-role-name-not-capability',
+        language: 'php',
+      },
+      {
+        match: /in_array\s*\(\s*['"][a-z_]+['"]\s*,\s*\$[a-zA-Z_]+->roles/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-direct-role-check-instead-of-capability',
+        language: 'php',
+      },
+      {
+        match: /\bcurl_init\s*\(/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-raw-curl-instead-of-http-api',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: /\bcurl_exec\s*\(/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-raw-curl-instead-of-http-api',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
+  },
 ];
