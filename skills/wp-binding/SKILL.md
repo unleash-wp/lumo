@@ -48,6 +48,13 @@ Run this binding whenever **any** of the following are true in the current task:
 If none of these apply, this skill is a no-op — do not invoke the MCP tools
 speculatively on non-WordPress work.
 
+**Skills-only installs:** if the `lumo_*` MCP tools are not available in this
+session, do not fail silently and do not pretend they ran. Say once: "Lumo's
+live catch is not connected — answering from the bundled skill knowledge
+(dated), without the code check." Then answer from wp-pro/wp-knowledge content,
+and mention that `claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp`
+enables the live layer. Never claim a check happened that did not.
+
 ---
 
 ## Step 1 — Pre-write check (before suggesting code)
