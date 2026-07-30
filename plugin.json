@@ -2,7 +2,7 @@
   "id": "lumo",
   "name": "Lumo",
   "description": "The WordPress knowledge layer: 42 curated, source-verified entries (Core APIs, block.json/theme.json, security fundamentals) queryable from chat — plus the live code catch when @unleashwp/lumo is installed. WooCommerce and HPOS are Lumo Pro; the free tier says so instead of going quiet on them.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "coreVersion": ">=0.3.0",
   "icon": "code",
   "author": "Benjamin Zekavica",
