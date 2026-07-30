@@ -112,11 +112,44 @@ async function main(): Promise<void> {
     licenseKey: licenseKey || undefined,
   });
 
+  // Optional autonomous review stage — advisory, fenced, fail-open. Defined
+  // here so BOTH paths run it: a diff with zero engine findings is exactly
+  // where a human-style read adds the most. Never touches counts or exit code.
+  const maybeClaudeReview = async (): Promise<void> => {
+    const anthropicKey = core.getInput('anthropic_api_key').trim();
+    if (!anthropicKey) return;
+    core.setSecret(anthropicKey);
+    const { runClaudeReview } = await import('./claude-review.js');
+    const review = await runClaudeReview(anthropicKey, {
+      diff,
+      findings,
+      model: core.getInput('claude_model').trim() || 'claude-sonnet-5',
+    });
+    if (review) {
+      await octokit.rest.issues.createComment({
+        owner: ctx.repo.owner,
+        repo: ctx.repo.repo,
+        issue_number: pullNumber,
+        body: [
+          '**[Lumo] Autonomous WordPress review** _(advisory — never blocks the merge)_',
+          '',
+          review.body,
+          '',
+          '_Grounded on the rule-engine findings above; version claims stay with the engine and its sources._',
+        ].join('\n'),
+      });
+      core.info('[lumo] Posted the autonomous review comment');
+    } else {
+      core.info('[lumo] Autonomous review skipped (API unavailable or empty) — CI unaffected');
+    }
+  };
+
   if (findings.length === 0) {
     // Reports the scope that was checked, never a verdict on the PR. Lumo saw the
     // added lines only, and only against what Lumo Free covers — calling that a
     // clean PR turns a coverage limit into an approval.
     core.info(`[lumo] ${ACTION_NO_MATCH_LINE}`);
+    await maybeClaudeReview();
     return;
   }
 
@@ -182,6 +215,11 @@ async function main(): Promise<void> {
   core.info(
     `[lumo] Posted ${findings.length} finding(s) — ${loudCount} LOUD, ${softCount} advisory`,
   );
+
+  // Runs after the engine findings are posted so its prompt can build on them,
+  // and before the exit-code decision so a review outage can never mask a LOUD
+  // failure.
+  await maybeClaudeReview();
 
   if (loudCount > 0 && blockOnLoud) {
     core.setFailed(
