@@ -15,7 +15,7 @@
 //
 // Zero runtime dependencies, plain Node >=18 — matches the Forge contract.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -179,4 +179,65 @@ export const mcpTools = [
     },
     run: async (a) => (await checkCodeViaEngine(a.code, a.language || 'auto')).text,
   },
+];
+
+// ---------------------------------------------------------------------------
+// Browser-panel routes (AI Forge). `open: true` — this data comes from the
+// local snapshot and the local engine, not from wordpress.org, so the wp.org
+// cookie gate does not apply. The panel is a shop window: status, setup, one
+// live bark. The work itself stays in the assistant and the terminal.
+// ---------------------------------------------------------------------------
+
+function engineStatus() {
+  const bin = process.env.LUMO_MCP_BIN;
+  if (bin) return existsSync(bin) ? 'ready' : 'missing';
+  const path = process.env.PATH || '';
+  const sep = process.platform === 'win32' ? ';' : ':';
+  for (const dir of path.split(sep)) {
+    if (dir && existsSync(join(dir, 'lumo-mcp'))) return 'ready';
+  }
+  return 'missing';
+}
+
+async function statusHandler(req, res, url, { json }) {
+  try {
+    const snap = loadSnapshot();
+    json(res, 200, {
+      entries: snap.entries.length,
+      generatedAt: (snap.generatedAt || '').slice(0, 10),
+      engine: engineStatus(),
+      installHint: INSTALL_HINT,
+    });
+  } catch {
+    json(res, 200, { entries: 0, generatedAt: null, engine: engineStatus(), installHint: INSTALL_HINT });
+  }
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let b = '';
+    req.on('data', (c) => {
+      b += c;
+      if (b.length > 200_000) { reject(new Error('body too large')); req.destroy(); }
+    });
+    req.on('end', () => resolve(b));
+    req.on('error', reject);
+  });
+}
+
+async function checkHandler(req, res, url, { json }) {
+  try {
+    const body = JSON.parse((await readBody(req)) || '{}');
+    const code = String(body.code || '');
+    if (!code.trim()) { json(res, 400, { error: 'paste some PHP or JS first' }); return; }
+    const result = await checkCodeViaEngine(code.slice(0, 100_000), body.language || 'auto');
+    json(res, 200, { found: result.found === true, text: result.text });
+  } catch (e) {
+    json(res, 500, { error: String(e && e.message || e) });
+  }
+}
+
+export const routes = [
+  { method: 'GET', path: '/api/lumo/status', handler: statusHandler, open: true },
+  { method: 'POST', path: '/api/lumo/check', handler: checkHandler, open: true },
 ];
