@@ -212,7 +212,7 @@ export function versionRelativeLine(
  * output to calling without it (no fabricated claims).
  */
 export function formatCatch(result: CatchResult, projectVersion?: string): string {
-  const { tier, entry, versionFact, condition } = result;
+  const { tier, entry, versionFact, alwaysWrongFact, condition } = result;
   const rendered = renderFree(entry);
 
   // Trust footnote — verification axis (phase 00):
@@ -223,13 +223,24 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   const isSandboxed = entry.category_slug === 'woocommerce';
   const verificationNote = isSandboxed ? 'Fix proven to run' : 'Source-verified';
 
-  // Determine effective tier: LOUD requires versionFact to be present; without it
-  // the dated claim cannot be made, so we structurally degrade to SOFT.
-  const effectiveTier: 'LOUD' | 'SOFT' = tier === 'LOUD' && versionFact != null ? 'LOUD' : 'SOFT';
+  // Determine effective tier: LOUD requires an anchor — a version fact (dated
+  // release claim) or an always-wrong fact (source-carried claim). Without one
+  // the loud template has nothing to interpolate, so we structurally degrade to
+  // SOFT. This mirrors classify(): no LOUD without a citable anchor.
+  const effectiveTier: 'LOUD' | 'SOFT' =
+    tier === 'LOUD' && (versionFact != null || alwaysWrongFact != null) ? 'LOUD' : 'SOFT';
 
   let lead: string;
 
-  if (effectiveTier === 'LOUD' && versionFact != null) {
+  if (effectiveTier === 'LOUD' && versionFact == null && alwaysWrongFact != null) {
+    // Always-wrong route: the claim is not tied to a release, so no version line
+    // and no relative-version line. The source IS the claim's license; it leads.
+    const dateStr = alwaysWrongFact.date.slice(0, 10);
+    lead = [
+      `> ⚠️ This pattern is wrong in every supported WordPress version — a defect, not a version issue.`,
+      `> Documented: ${alwaysWrongFact.sourceUrl} (knowledge verified ${dateStr}).`,
+    ].join('\n');
+  } else if (effectiveTier === 'LOUD' && versionFact != null) {
     const ecosystem = versionFact.field === 'woo' ? 'WooCommerce' : 'WordPress';
     const action = versionFact.breaking ? 'broke' : 'changed';
     const dateStr = versionFact.date.slice(0, 10);
