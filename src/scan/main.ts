@@ -74,6 +74,24 @@ function knowledgeDate(): string | null {
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
+  // --help must answer, not scan. Found in QA: the documented bin ignored the
+  // flag and ran a scan instead — whoever tries the docs gets no help.
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log(
+      [
+        'lumo-scan — proactive catch for your current git changes.',
+        '',
+        'Usage: lumo-scan',
+        '',
+        'Scans `git diff HEAD` (staged + unstaged) for WordPress/WooCommerce',
+        'patterns that broke in a real release, plus new PHP files missing the',
+        'ABSPATH guard. Prints findings LOUD first, or the checked scope.',
+        'Exit code is always 0 — findings inform, they do not block.',
+      ].join('\n'),
+    );
+    return;
+  }
+
   const cwd = process.cwd();
 
   // 1. Obtain diff — fail-open: no git / not a repo → friendly message.
@@ -92,11 +110,13 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  // 2. Empty diff → no uncommitted changes, report clean.
+  // 2. Empty diff → nothing to scan. A git-status fact, phrased as one: the
+  // old wording welded "working tree is clean as of <knowledge date>" into a
+  // sentence that read like a dated verdict on the code.
   if (!diff.trim()) {
     const date = knowledgeDate();
-    const dateNote = date ? ` as of ${date}` : '';
-    console.log(`lumo scan: no uncommitted changes to scan — working tree is clean${dateNote}.`);
+    const dateNote = date ? ` (knowledge of ${date})` : '';
+    console.log(`lumo scan: no uncommitted changes to scan${dateNote}.`);
     process.exit(0);
   }
 
