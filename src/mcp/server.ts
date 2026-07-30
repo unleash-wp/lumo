@@ -14,7 +14,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { handleAudit, handleLookup, handleCheckCode } from './handlers.js';
+import { handleAudit, handleLookup, handleCheckCodeFull } from './handlers.js';
 // Static JSON import: esbuild inlines it at build time, so the manifest is the
 // single version source and the bundle carries no runtime path dependency.
 // (A createRequire('../../package.json') variant stayed a RUNTIME require and
@@ -83,10 +83,16 @@ server.registerTool(
         .string()
         .optional()
         .describe('Category slug to look up the first matching entry, e.g. "woocommerce".'),
+      query: z
+        .string()
+        .optional()
+        .describe(
+          'Free-text search, e.g. "sql injection prepare" — returns a ranked shortlist of slugs.',
+        ),
     },
   },
-  async ({ slug, category }) => {
-    const text = await handleLookup({ slug, category });
+  async ({ slug, category, query }) => {
+    const text = await handleLookup({ slug, category, query });
     return { content: [{ type: 'text', text }] };
   },
 );
@@ -140,18 +146,81 @@ server.registerTool(
             'WP/WooCommerce version from composer.json or wp-cli when explicit versions are absent.',
         ),
     },
+    outputSchema: {
+      computed: z
+        .boolean()
+        .describe('False = the structured layer did not run (fail-open). Decide NOTHING from the other fields; read the prose.'),
+      found: z
+        .boolean()
+        .describe('Whether anything was found — a finding OR a named coverage gap. Decide on this, not on the prose.'),
+      loudCount: z.number().describe('LOUD findings (certain, sourced; may fail CI builds).'),
+      softCount: z.number().describe('Advisory findings (context-dependent; never block).'),
+      gaps: z
+        .array(
+          z.object({
+            plugin: z.string().describe('Plugin ecosystem the code touches without free coverage.'),
+            proCovers: z.boolean().describe('Whether Lumo Pro has curated knowledge for it.'),
+          }),
+        )
+        .describe('Every touched plugin the free tier cannot check — silence on any of them would be a false all-clear.'),
+    },
   },
   async ({ code, language, wp_version, woo_version, project_root }) => {
-    const text = await handleCheckCode({
+    const v = await handleCheckCodeFull({
       code,
       language: language as 'php' | 'js' | 'auto' | undefined,
       wp_version,
       woo_version,
       project_root,
     });
-    return { content: [{ type: 'text', text }] };
+    // The verdict travels as data next to the prose — same law the Pro server
+    // follows: clients decide on the flags, never by parsing ⚠️ out of text.
+    return {
+      content: [{ type: 'text', text: v.text }],
+      structuredContent: {
+        computed: v.computed,
+        found: v.found,
+        loudCount: v.loudCount,
+        softCount: v.softCount,
+        gaps: v.gaps,
+      },
+    };
   },
 );
+
+// ---------------------------------------------------------------------------
+// Resources — the catalogue, discoverable without insider slug knowledge.
+//
+// Every Free-snapshot entry is a static resource lumo://entry/<slug>, so a
+// client can LIST the knowledge instead of guessing slugs. The listed set is
+// exactly the Free snapshot — the same no-leak boundary every other surface
+// enforces. Fail-open: if the snapshot cannot load, the server still starts
+// with tools only (the catch must never die for the catalogue's sake).
+// ---------------------------------------------------------------------------
+
+try {
+  const { loadSnapshot } = await import('../lib/snapshot.js');
+  const { renderFree, formatFreeMarkdown } = await import('../lib/render.js');
+  const snap = loadSnapshot();
+  for (const entry of snap.entries) {
+    server.registerResource(
+      entry.slug,
+      `lumo://entry/${entry.slug}`,
+      {
+        title: entry.title,
+        description: entry.summary.split(/(?<=\.)\s/)[0] ?? '',
+        mimeType: 'text/markdown',
+      },
+      async (uri) => ({
+        contents: [
+          { uri: uri.href, mimeType: 'text/markdown', text: formatFreeMarkdown(renderFree(entry)) },
+        ],
+      }),
+    );
+  }
+} catch {
+  // snapshot unavailable — tools stay up, catalogue simply absent
+}
 
 // ---------------------------------------------------------------------------
 // Start

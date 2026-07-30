@@ -1,0 +1,47 @@
+# Lumo reviews its own pull requests.
+#
+# This is the dogfood, and it deliberately does NOT go through action.yml:
+# the composite action installs @unleashwp/lumo from npm, so it can only ever
+# review against the last published release. Here the point is the opposite —
+# every pull request must be reviewed by the code in that pull request.
+#
+# The customer-facing example lives in docs/ci/github-action-example.yml.
+
+name: Self review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write   # post review comments
+  contents: read         # checkout
+
+jobs:
+  self-review:
+    name: WordPress/WooCommerce catch (this branch)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Run the catch from this branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The action entry reads its inputs from INPUT_* variables, the same
+          # ones action.yml sets for customers.
+          INPUT_FAIL_ON_LOUD: 'true'
+          # CI enforcement is licensed, and this repository is no exception.
+          # Until these secrets exist the job prints DID NOT RUN and stays
+          # green — visibly inert rather than quietly passing.
+          INPUT_LUMO_LICENSE_KEY: ${{ secrets.LUMO_LICENSE_KEY }}
+          INPUT_LUMO_PRO_URL: ${{ secrets.LUMO_PRO_URL }}
+        run: node dist/lumo.mjs action

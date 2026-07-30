@@ -14,6 +14,49 @@ No entry ships without evidence; no claim ships without a test step.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-30
+
+**Why you should update:** 0.3.0 installs carry a pre-gating snapshot that
+included paid-tier content and advertised coverage the free tier does not have.
+0.4.0 ships the corrected 42-entry snapshot, honest coverage claims, and a
+watchdog that actually barks.
+
+### Added
+- **Second LOUD route** — security fundamentals that are wrong in every
+  WordPress version (unprepared `$wpdb` queries, role names passed to
+  `current_user_can()`) now answer LOUD, anchored on their documentation
+  source instead of a release version. No citation, no bark.
+- Seven curated rules connected to the live catch (superglobal sanitisation,
+  SQL injection, i18n text domains, unsafe redirects, role-vs-capability,
+  raw cURL), each tested against its entry's own documented wrong and
+  correct forms.
+- A fired signal into Pro-only knowledge (WooCommerce/HPOS) now surfaces a
+  named coverage gap in every channel — MCP tool, editor hook, GitHub
+  Action — instead of being dropped silently.
+
+### Changed
+- The neutral line reports the scope that was checked instead of pronouncing
+  the code clean; the same applies to the Action's log line and review
+  summary.
+- The Pro teaser names only what was detected and what Lumo Pro actually
+  covers — no catalogue recitation, no claims about your AI's training data.
+- The editor hook shows the full upgrade teaser once per plugin and install;
+  afterwards a short line keeps the gap named without repeating the pitch.
+- Plugin manifests and marketplace descriptions state the real entry count
+  (42) and name WooCommerce/HPOS as Lumo Pro coverage.
+
+### Fixed
+- WooCommerce order-variable detection no longer fires on `$recorder_id`,
+  `$border_id`, `$order_status` or `$order_number`.
+- `wp_redirect()` is only flagged when request input actually reaches the
+  redirect target — static redirects stay quiet.
+- The test suite can no longer write into the developer's real state
+  directory.
+
+**How to update:** AI Forge → Plugins → "Check for updates" → Update (the
+update is offered because the version number changed). npm installs:
+`npm install -g @unleashwp/lumo@latest`.
+
 _Nothing yet._
 
 ## [0.3.0] — 2026-07-29

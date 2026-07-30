@@ -14,7 +14,7 @@
 
 import { loadSnapshot, findEntry } from '../lib/snapshot.js';
 import { PATTERNS } from './registry.js';
-import type { CatchSignal } from './registry.js';
+import type { CatchSignal, PatternDefinition } from './registry.js';
 import type { SnapshotEntry, Snapshot } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -34,12 +34,25 @@ export interface VersionFact {
   breaking: boolean;
 }
 
+/**
+ * The anchor for the second LOUD reason: the pattern is wrong in every supported
+ * version, and the claim is carried by the entry's source, not by a release.
+ */
+export interface AlwaysWrongFact {
+  /** The entry's source_url — the citation that licenses the loud claim. */
+  sourceUrl: string;
+  /** ISO date string from entry.updatedAt — when the knowledge was verified. */
+  date: string;
+}
+
 export interface CatchResult {
   tier: CatchTier;
   entry: SnapshotEntry;
   signal: CatchSignal;
-  /** Present when tier is LOUD — the dated version anchor. */
+  /** Present when tier is LOUD via the version route — the dated version anchor. */
   versionFact?: VersionFact;
+  /** Present when tier is LOUD via the always-wrong route — the source anchor. */
+  alwaysWrongFact?: AlwaysWrongFact;
   /** Present when tier is SOFT for a CONTEXT_DEPENDENT signal. */
   condition?: string;
 }
@@ -47,21 +60,62 @@ export interface CatchResult {
 // ---------------------------------------------------------------------------
 // Phase 00: classify() — the pure decision function
 //
-// Three-guard LOUD rule (all three must hold):
+// Two routes to LOUD; everything else caps at SOFT or SILENT.
+//
+// Route 1 — version fact (three guards, all must hold):
 //   1. Signal class is CERTAIN
 //   2. Entry carries a non-null version min (wp or woo)
 //   3. That version row has breaking_change === true
 //
-// Empty-version-slot fallback: if guard 2 or 3 fails, the LOUD template has
-// nothing to interpolate, so it structurally cannot fire — we degrade to SOFT.
-// This is a data-level guarantee, not a runtime check that can be forgotten.
+// Route 2 — always wrong (owner decision, 30.07.2026):
+//   1. Signal class is CERTAIN
+//   2. Entry slug is on the explicit ALWAYS_WRONG_SLUGS list
+//   3. Entry carries a non-empty source_url
+// Security fundamentals like an unprepared $wpdb query do not break at a
+// version — they are wrong in every supported release, which is why they have
+// no version stamp and were structurally barred from LOUD before this route.
+//
+// Both routes share the same guarantee: no LOUD without a citable anchor. If
+// neither a version fact nor a source anchor exists, the LOUD template has
+// nothing to interpolate and we degrade to SOFT — a data-level guarantee, not a
+// runtime check that can be forgotten.
 // ---------------------------------------------------------------------------
+
+/**
+ * Explicit on purpose: nothing in the data says "wrong regardless of version" —
+ * no column carries it — so deriving this from the category would silently
+ * promote every future entry added there. An explicit list makes each
+ * promotion a decision.
+ *
+ * wp-ability-missing-input-schema-properties has no connected signal yet; its
+ * listing here is inert until one exists, and deliberate: the free/pro question
+ * that held it back is settled (the wp-abilities category ships free).
+ *
+ * Held back from the list after review (Gemini pass A + PM gate, measured):
+ *   wp-raw-curl-instead-of-http-api — legitimate uses exist (mTLS client certs,
+ *     streaming, parallel handles) where the WP HTTP API demonstrably cannot
+ *     serve; "a defect in every version" over-claims there, and LOUD breaks PR
+ *     builds under the Action's default fail_on_loud=true.
+ *   wp-direct-role-check-instead-of-capability — a deliberate role check for
+ *     display logic (role badge, UI branching) is not an authorization defect.
+ * Both stay SOFT. Promoting them back is one escalation line to the owner.
+ */
+export const ALWAYS_WRONG_SLUGS: readonly string[] = [
+  'wpdb-query-without-prepare-sql-injection',
+  'wp-current-user-can-role-name-not-capability',
+  'wp-ability-missing-input-schema-properties',
+];
 
 export function classify(
   entry: SnapshotEntry,
   signal: CatchSignal,
   shimPresent: boolean,
-): { tier: CatchTier; versionFact?: VersionFact; condition?: string } {
+): {
+  tier: CatchTier;
+  versionFact?: VersionFact;
+  alwaysWrongFact?: AlwaysWrongFact;
+  condition?: string;
+} {
   // REPO_STATE signals on a bare blob → always SILENT (domain of lumo_audit)
   if (signal.class === 'REPO_STATE') {
     return { tier: 'SILENT' };
@@ -75,6 +129,17 @@ export function classify(
   // CERTAIN from here — but first check for shim/polyfill guard
   if (shimPresent) {
     return { tier: 'SOFT', condition: 'this call is inside a shim or compatibility wrapper' };
+  }
+
+  // Route 2 — always wrong. Checked before the version route: these entries may
+  // also carry a non-breaking version stamp, which would otherwise cap them at
+  // SOFT. The source is the anchor; an empty source_url means no anchor, so the
+  // route cannot fire (same data-level guarantee as the version route).
+  if (ALWAYS_WRONG_SLUGS.includes(entry.slug) && entry.source_url) {
+    return {
+      tier: 'LOUD',
+      alwaysWrongFact: { sourceUrl: entry.source_url, date: entry.updatedAt },
+    };
   }
 
   // Find the first version row with a non-null version min
@@ -191,6 +256,12 @@ function detectLanguage(code: string): Language {
     (code.includes('<?php') ? 3 : 0) +
     (code.includes('->') ? 1 : 0) +
     (/\$\w/.test(code) ? 2 : 0) +
+    // A quoted string directly before => is PHP array syntax ('key' => value).
+    // A JS arrow has a parameter there, never a string literal. Without this, a
+    // pasted PHP fragment like array( 'post_type' => 'shop_order' ) — no <?php,
+    // no $ — scored PHP 0 / JS 1 and silently lost all its PHP signals.
+    (/['"]\s*=>/.test(code) ? 2 : 0) +
+    (/\barray\s*\(/.test(code) ? 2 : 0) +
     (code.includes('function_exists') ? 1 : 0);
 
   const jsScore =
@@ -271,12 +342,49 @@ export function applyCatchOverrides(
 
 const CATCH_CAP = 3;
 
+/**
+ * A signal fired, but the entry it points at is Pro-only — Free has nothing to
+ * render. Carries the data a caller needs to say so; the copy itself lives with
+ * the other user-facing text, not in the engine.
+ */
+export interface ProGap {
+  pluginName: string;
+  /** Pro has curated knowledge for this plugin, so an upgrade promise is honest. */
+  hasProCoverage: boolean;
+}
+
+export interface CheckCodeOutcome {
+  results: CatchResult[];
+  /**
+   * First Pro gap, kept for existing callers. Prefer `proGaps`.
+   */
+  proGap?: ProGap;
+  /**
+   * EVERY plugin whose signal fired without a Free entry behind it, deduped by
+   * name, registry order. A blob touching WooCommerce AND ACF Pro must name
+   * both — reporting only the first is the same silence, one plugin later.
+   * Callers MUST surface these instead of a neutral line when `results` is
+   * empty.
+   */
+  proGaps: ProGap[];
+}
+
+/** Thin wrapper — the ranked results only. See checkCodeWithGaps for Pro gaps. */
 export function checkCode(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
   snapshot?: Snapshot,
   overrides?: CatchOverrides,
 ): CatchResult[] {
+  return checkCodeWithGaps(code, language, snapshot, overrides).results;
+}
+
+export function checkCodeWithGaps(
+  code: string,
+  language: 'php' | 'js' | 'auto' = 'auto',
+  snapshot?: Snapshot,
+  overrides?: CatchOverrides,
+): CheckCodeOutcome {
   try {
     const snap = snapshot ?? loadSnapshot();
 
@@ -293,20 +401,23 @@ export function checkCode(
     const strippedComments = stripComments(diffFiltered);
     const strippedAll = stripCommentsAndStrings(diffFiltered);
 
-    // Collect all catch signals from the registry for the detected language
-    const allSignals: CatchSignal[] = [];
+    // Collect all catch signals from the registry for the detected language.
+    // The owning pattern travels with the signal: when a signal fires into a
+    // Pro-only entry, the pattern is what names the plugin for the teaser.
+    const allSignals: { signal: CatchSignal; pattern: PatternDefinition }[] = [];
     for (const pattern of PATTERNS) {
       for (const sig of pattern.catchSignals ?? []) {
         if (sig.language === lang || lang === undefined) {
-          allSignals.push(sig);
+          allSignals.push({ signal: sig, pattern });
         }
       }
     }
 
     // 2. Run each signal against the blob
     const seen = new Map<string, CatchResult>(); // keyed by entrySlug
+    const gapByPlugin = new Map<string, ProGap>(); // deduped, insertion order
 
-    for (const signal of allSignals) {
+    for (const { signal, pattern } of allSignals) {
       // Select test blob per signal:
       //   CERTAIN + stripStrings → strip both comments and string bodies
       //   CERTAIN (no stripStrings) → strip comments only (string literals are the signal)
@@ -325,7 +436,22 @@ export function checkCode(
       if (!hit) continue;
 
       const entry = findEntry(snap, signal.entrySlug);
-      if (!entry) continue;
+      if (!entry) {
+        // The signal fired but Free carries no entry for it — Pro-only knowledge.
+        // Record the gap so the caller can name it. Dropping it silently is the
+        // false all-clear this engine must never produce — and dropping every
+        // gap after the first is the same silence, one plugin later.
+        if (pattern.proTeaser) {
+          const name = pattern.proTeaserName ?? pattern.pattern;
+          if (!gapByPlugin.has(name)) {
+            gapByPlugin.set(name, {
+              pluginName: name,
+              hasProCoverage: pattern.hasProCoverage === true,
+            });
+          }
+        }
+        continue;
+      }
 
       // Check suppress-guard: if the correct form is already present, fire nothing.
       // Used for absence-in-presence signals (the flag we expect to be missing is there).
@@ -344,6 +470,7 @@ export function checkCode(
         entry,
         signal,
         versionFact: result.versionFact,
+        alwaysWrongFact: result.alwaysWrongFact,
         condition: result.condition,
       };
 
@@ -359,9 +486,10 @@ export function checkCode(
       .sort((a, b) => tierRank(b.tier) - tierRank(a.tier))
       .slice(0, CATCH_CAP);
 
-    return applyCatchOverrides(raw, overrides);
+    const proGaps = [...gapByPlugin.values()];
+    return { results: applyCatchOverrides(raw, overrides), proGap: proGaps[0], proGaps };
   } catch {
-    return [];
+    return { results: [], proGaps: [] };
   }
 }
 

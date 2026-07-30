@@ -12,9 +12,14 @@
 
 import { parseDiff } from './diff-parser.js';
 import type { FileDiff } from './diff-parser.js';
-import type { CatchResult, CatchTier } from '../detection/catch.js';
-import { checkCode } from '../detection/catch.js';
-import { formatCatch } from '../lib/render.js';
+import type { CatchResult, CatchTier, ProGap } from '../detection/catch.js';
+import { checkCodeWithGaps } from '../detection/catch.js';
+import {
+  formatCatch,
+  buildCodeProTeaser,
+  buildCodeProGapLine,
+  joinPluginNames,
+} from '../lib/render.js';
 
 export interface Finding {
   filename: string;
@@ -27,6 +32,13 @@ export interface RunResult {
   loudCount: number;
   softCount: number;
   findings: Finding[];
+  /**
+   * True when Pro credentials were configured but at least one file fell back
+   * to the free catch (Pro server unreachable). The caller MUST surface this
+   * in the run's visible output — a silently degraded Pro run reads as "Pro
+   * checked and found nothing", which is a false all-clear on the paid layer.
+   */
+  proDegraded: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -71,13 +83,31 @@ async function fetchProResults(
   }
 
   const json = (await res.json()) as {
-    result?: { content?: Array<{ type: string; text?: string }> };
+    result?: {
+      content?: Array<{ type: string; text?: string }>;
+      structuredContent?: { found?: boolean };
+    };
   };
 
   const text = json?.result?.content?.[0]?.text ?? '';
-  const neutralLine = 'No WordPress/WooCommerce issues detected in this code — looks clean.';
 
-  if (!text || text === neutralLine) return [];
+  // The Pro server states its verdict as data: structuredContent.found. Decide
+  // on the flag, never on the prose — the old string comparison matched a
+  // sentence the server never sent, so every clean Pro answer was wrapped as a
+  // finding. Fallback for servers predating the flag: the server's ACTUAL
+  // neutral wording. Fail direction on total uncertainty: treat as a finding
+  // (a false alarm), never as an all-clear.
+  const found = json?.result?.structuredContent?.found;
+  if (found === false) return [];
+  // trim: a single trailing newline from the transport must not turn the
+  // neutral sentence into a phantom finding.
+  if (
+    found === undefined &&
+    (!text.trim() || text.trim() === 'No known issues detected in the submitted code.')
+  ) {
+    return [];
+  }
+  if (!text.trim()) return [];
 
   // Pro result is already rendered Markdown from the Pro server.
   return [{ _proRendered: true as const, body: text }];
@@ -95,8 +125,11 @@ async function catchFile(
   file: FileDiff,
   proUrl?: string,
   licenseKey?: string,
-): Promise<Finding[]> {
+): Promise<{ findings: Finding[]; proDegraded: boolean }> {
   let results: Array<CatchResult | ProRenderedFinding>;
+  // Set only on the free path: Pro has the knowledge, so it reports no gap.
+  let proGaps: ProGap[] = [];
+  let proDegraded = false;
 
   if (proUrl && licenseKey) {
     try {
@@ -104,13 +137,14 @@ async function catchFile(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[lumo] Pro MCP unreachable (${msg}), falling back to free catch`);
-      results = checkCode(file.blob, file.language);
+      proDegraded = true;
+      ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
     }
   } else {
-    results = checkCode(file.blob, file.language);
+    ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
   }
 
-  return results.map((r) => {
+  const findings: Finding[] = results.map((r) => {
     if (isProRendered(r)) {
       // Pro server pre-renders; surface as SOFT so it never triggers fail_on_loud
       // (the Pro server itself controls blocking via its own tier model).
@@ -122,6 +156,23 @@ async function catchFile(
       body: formatCatch(r),
     };
   });
+
+  // A Pro-only signal fired on this file. Without this the Action reports "no
+  // findings" on a WooCommerce pull request — the same false all-clear the tool
+  // and hook paths already fixed, in the channel where nobody is watching live.
+  //
+  // Always SOFT: a coverage gap is not a defect in the contributor's code, so it
+  // must never fail a build through fail_on_loud.
+  if (proGaps.length > 0) {
+    const names = joinPluginNames(proGaps.map((g) => g.pluginName));
+    findings.push({
+      filename: file.filename,
+      tier: 'SOFT' as CatchTier,
+      body: findings.length === 0 ? buildCodeProTeaser(names) : buildCodeProGapLine(names),
+    });
+  }
+
+  return { findings, proDegraded };
 }
 
 // ---------------------------------------------------------------------------
@@ -137,14 +188,16 @@ export interface RunCatchOptions {
 export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const files = parseDiff(opts.diff);
   const findings: Finding[] = [];
+  let proDegraded = false;
 
   for (const file of files) {
-    const fileFindings = await catchFile(file, opts.proUrl, opts.licenseKey);
-    findings.push(...fileFindings);
+    const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey);
+    findings.push(...fileResult.findings);
+    proDegraded = proDegraded || fileResult.proDegraded;
   }
 
   const loudCount = findings.filter((f) => f.tier === 'LOUD').length;
   const softCount = findings.filter((f) => f.tier === 'SOFT').length;
 
-  return { loudCount, softCount, findings };
+  return { loudCount, softCount, findings, proDegraded };
 }

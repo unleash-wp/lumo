@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleLookup, handleCheckCode } from '../src/mcp/handlers.js';
+import { CATCH_NEUTRAL_LINE } from '../src/lib/render.js';
 
 /**
  * The eval set, executed rather than admired.
@@ -25,8 +26,8 @@ const DEPRECATED_CALL = "<?php $h = wp_img_tag_add_decoding_attr( $x, 'the_conte
 describe('evals/free-mcp.xml stays true', () => {
   const xml = readFileSync(evalsPath, 'utf8');
 
-  it('declares exactly ten question/answer pairs', () => {
-    expect(xml.match(/<qa_pair>/g)?.length).toBe(10);
+  it('declares exactly fourteen question/answer pairs', () => {
+    expect(xml.match(/<qa_pair>/g)?.length).toBe(14);
   });
 
   it('every documented answer still appears in the file it claims to describe', () => {
@@ -62,7 +63,9 @@ describe('evals/free-mcp.xml stays true', () => {
       code: "<?php $h = wp_img_tag_add_loading_optimization_attrs( $x, 'the_content' );",
       language: 'php',
     });
-    expect(out).toContain('No WordPress/WooCommerce issues detected');
+    // Assert via the constant, not its wording: the neutral line reports scope
+    // and must stay free to change without breaking this eval.
+    expect(out).toBe(CATCH_NEUTRAL_LINE);
   });
 
   it('softens to an advisory behind a function_exists shim', async () => {
@@ -86,5 +89,37 @@ describe('evals/free-mcp.xml stays true', () => {
     expect(await handleLookup({ slug: 'wp-7-0-interactivity-watch' })).toContain(
       '@wordpress/interactivity',
     );
+  });
+});
+
+// The four pairs added with the feature wave — executed, not admired, like the
+// original ten. Each pins a capability the old set predated.
+describe('feature-wave evals stay true', () => {
+  it('unprepared $wpdb interpolation answers LOUD', async () => {
+    const out = await handleCheckCode({
+      code: `<?php $r = $wpdb->get_results( "SELECT * FROM t WHERE id = $id" );`,
+      language: 'php',
+    });
+    expect(out).toContain('⚠️');
+  });
+
+  it('free-text query "nonce ajax" tops with the ajax-nonce slug', async () => {
+    const out = await handleLookup({ query: 'nonce ajax' });
+    expect(out.indexOf('wp-ajax-handler-without-nonce')).toBeGreaterThan(-1);
+    expect(out.indexOf('Top matches')).toBeLessThan(out.indexOf('wp-ajax-handler-without-nonce'));
+  });
+
+  it('rwmb_meta names Meta Box as the touched, uncovered ecosystem', async () => {
+    const out = await handleCheckCode({ code: `<?php $v = rwmb_meta( 'field' );`, language: 'php' });
+    expect(out).toContain('Meta Box');
+  });
+
+  it('a two-plugin blob names both ecosystems', async () => {
+    const out = await handleCheckCode({
+      code: `<?php update_post_meta( $order_id, 'k', 1 ); add_action( 'gform_after_submission', 'h' );`,
+      language: 'php',
+    });
+    expect(out).toContain('WooCommerce');
+    expect(out).toContain('Gravity Forms');
   });
 });

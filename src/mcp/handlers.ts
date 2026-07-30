@@ -9,12 +9,16 @@ import {
   formatFreeMarkdown,
   formatCatch,
   CATCH_NEUTRAL_LINE,
+  buildCodeProTeaser,
+  buildCodeProGapLine,
+  buildCodeDetectionNote,
+  joinPluginNames,
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
   PRO_MCP_ADD_LINE,
 } from '../lib/render.js';
 import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
-import type { Snapshot } from '../types.js';
+import type { Snapshot, SnapshotEntry } from '../types.js';
 import type { CatchResult } from '../detection/catch.js';
 import { proTopicFor, buildProTopicTeaser } from '../lib/pro-topics.js';
 
@@ -72,6 +76,55 @@ export async function handleAudit(input: AuditHandlerInput): Promise<string> {
 export interface LookupHandlerInput {
   slug?: string;
   category?: string;
+  /** Free-text search over the snapshot. Returns a ranked shortlist, not a full entry. */
+  query?: string;
+}
+
+// Deterministic scoring, ported 1:1 from the ai-forge adapter (server.mjs
+// scoreEntry) so both lookup surfaces rank identically: slug 4, title 3,
+// category 2, summary 1 per matched term.
+function scoreEntry(entry: SnapshotEntry, terms: string[]): number {
+  const slug = entry.slug.toLowerCase();
+  const title = entry.title.toLowerCase();
+  const summary = (entry.summary || '').toLowerCase();
+  const category = (entry.category_slug || '').toLowerCase();
+  let score = 0;
+  for (const t of terms) {
+    if (slug.includes(t)) score += 4;
+    if (title.includes(t)) score += 3;
+    if (category.includes(t)) score += 2;
+    if (summary.includes(t)) score += 1;
+  }
+  return score;
+}
+
+/**
+ * Ranked shortlist for a free-text query. Top 5, each as slug + title + first
+ * summary sentence — enough to pick, small enough to stay cheap. The second
+ * call then fetches the full entry by slug. Searches ONLY the Free snapshot;
+ * a miss on a Pro topic goes through the same honest teaser as a slug miss.
+ */
+function searchEntries(snap: Snapshot, query: string): string {
+  const terms = query.toLowerCase().split(/\s+/).filter((t) => t.length > 1);
+  if (terms.length === 0) return NOT_FOUND_LOOKUP(query);
+
+  const ranked = snap.entries
+    .map((e) => ({ e, score: scoreEntry(e, terms) }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score || a.e.slug.localeCompare(b.e.slug))
+    .slice(0, 5);
+
+  if (ranked.length === 0) return NOT_FOUND_LOOKUP(query);
+
+  const lines = ranked.map(({ e }) => {
+    const firstSentence = (e.summary || '').split(/(?<=\.)\s/)[0] ?? '';
+    return `- \`${e.slug}\` — ${e.title}\n  ${firstSentence}`;
+  });
+  return [
+    `Top matches for "${query}" (call lumo_lookup with the slug for the full entry):`,
+    '',
+    ...lines,
+  ].join('\n');
 }
 
 /**
@@ -103,7 +156,11 @@ export async function handleLookup(
       return NOT_FOUND_LOOKUP(input.category);
     }
 
-    return 'Provide either a "slug" or a "category" to look up an entry.';
+    if (input.query) {
+      return searchEntries(snap, input.query.trim());
+    }
+
+    return 'Provide a "slug", a "category", or a free-text "query" to look up an entry.';
   } catch {
     return 'Snapshot unavailable — cannot look up entries right now.';
   }
@@ -135,17 +192,69 @@ export interface CheckCodeHandlerInput {
  *
  * Never throws.
  */
+/**
+ * Machine-readable verdict alongside the prose — same law as the Pro server
+ * (P2): a verdict is data, prose is presentation.
+ *
+ * `computed` is the layer's own honesty marker (product-gate condition): the
+ * counts come from the SAME engine pass that produced the text, and when the
+ * pipeline fell into its fail-open path, computed is false — a client must
+ * treat that as "not computed", never as "checked, nothing found". Without the
+ * marker, a degraded empty verdict is indistinguishable from a clean one,
+ * which is the false all-clear moved into the data channel.
+ */
+export interface CheckCodeVerdict {
+  text: string;
+  /** False = the structured layer did not run; decide nothing from the fields below. */
+  computed: boolean;
+  found: boolean;
+  loudCount: number;
+  softCount: number;
+  gaps: Array<{ plugin: string; proCovers: boolean }>;
+}
+
 export async function handleCheckCode(
   input: CheckCodeHandlerInput,
   snapshot?: Snapshot,
 ): Promise<string> {
+  return (await handleCheckCodeFull(input, snapshot)).text;
+}
+
+export async function handleCheckCodeFull(
+  input: CheckCodeHandlerInput,
+  snapshot?: Snapshot,
+): Promise<CheckCodeVerdict> {
   try {
-    const { checkCode } = await import('../detection/catch.js');
+    const { checkCodeWithGaps } = await import('../detection/catch.js');
     const snap = snapshot ?? loadSnapshot();
-    const results = checkCode(input.code ?? '', input.language ?? 'auto', snap);
+    const { results, proGaps } = checkCodeWithGaps(
+      input.code ?? '',
+      input.language ?? 'auto',
+      snap,
+    );
+    const covered = proGaps.filter((g) => g.hasProCoverage).map((g) => g.pluginName);
+    const uncovered = proGaps.filter((g) => !g.hasProCoverage).map((g) => g.pluginName);
+    // Same pass, same truth: text and data can never diverge.
+    const verdict = (text: string): CheckCodeVerdict => ({
+      text,
+      computed: true,
+      found: results.length > 0 || proGaps.length > 0,
+      loudCount: results.filter((r) => r.tier === 'LOUD').length,
+      softCount: results.filter((r) => r.tier === 'SOFT').length,
+      gaps: proGaps.map((g) => ({ plugin: g.pluginName, proCovers: g.hasProCoverage })),
+    });
 
     if (results.length === 0) {
-      return CATCH_NEUTRAL_LINE;
+      // Signals fired into Pro-only knowledge: name EVERY touched plugin
+      // instead of the neutral line — silence on the second plugin is the same
+      // false all-clear as silence on the first.
+      if (proGaps.length > 0) {
+        const parts: string[] = [];
+        if (covered.length > 0) parts.push(buildCodeProTeaser(joinPluginNames(covered)));
+        if (uncovered.length > 0) parts.push(buildCodeDetectionNote(joinPluginNames(uncovered)));
+        return verdict(parts.join('\n\n'));
+      }
+      return verdict(CATCH_NEUTRAL_LINE);
     }
 
     // Resolve project versions: explicit params > auto-detect from project_root > none.
@@ -176,16 +285,26 @@ export async function handleCheckCode(
       })
       .join('\n\n---\n\n');
 
+    // A Pro-only signal fired alongside the findings. Without this line the
+    // answer looks complete while a whole plugin went unchecked — the same false
+    // all-clear as silence, only harder to notice.
+    const withGap =
+      proGaps.length > 0
+        ? `${body}\n\n${buildCodeProGapLine(joinPluginNames(proGaps.map((g) => g.pluginName)))}`
+        : body;
+
     // Upgrade prompt fires first (LOUD + URL configured); freshness reveal fires
     // when the upgrade prompt does NOT (avoids double-printing on the same response).
-    const withPrompt = appendUpgradePrompt(body, results);
-    const upgradePromptFired = withPrompt !== body;
+    const withPrompt = appendUpgradePrompt(withGap, results);
+    const upgradePromptFired = withPrompt !== withGap;
     if (upgradePromptFired) {
-      return withPrompt;
+      return verdict(withPrompt);
     }
-    return appendFreshnessReveal(withPrompt, results, snap?.generatedAt);
+    return verdict(appendFreshnessReveal(withPrompt, results, snap?.generatedAt));
   } catch {
-    return CATCH_NEUTRAL_LINE;
+    // Fail-open path: the prose still answers, and the marker says the layer
+    // did NOT run — never dress this as a clean verdict.
+    return { text: CATCH_NEUTRAL_LINE, computed: false, found: false, loudCount: 0, softCount: 0, gaps: [] };
   }
 }
 

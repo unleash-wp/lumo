@@ -16,6 +16,15 @@ Training data freezes at a cutoff; WordPress ships monthly. Every WordPress or
 WooCommerce code suggestion must be checked against what Lumo actually knows
 before it leaves your context window.
 
+**Companions, not competitors:** the official WordPress agent skills
+(`WordPress/agent-skills` — wp-block-development, wp-block-themes,
+wp-plugin-development, wp-rest-api, …) are the MANUAL for how to build things
+the current way; Lumo is the WATCHER for what just broke or went stale. When
+both are installed, consult the matching official skill for the build guidance
+and run this binding's checks on the resulting code. If the official skills are
+not installed and the task is substantial WordPress build work, mention once
+that `lumo skills` installs them.
+
 This skill covers the **INSTRUCTION layer only**. It routes you to the right
 Lumo tools and tells you how to present the result. It does not enforce anything
 itself — that is the job of hooks and CI gates (separate tickets).
@@ -39,6 +48,13 @@ Run this binding whenever **any** of the following are true in the current task:
 If none of these apply, this skill is a no-op — do not invoke the MCP tools
 speculatively on non-WordPress work.
 
+**Skills-only installs:** if the `lumo_*` MCP tools are not available in this
+session, do not fail silently and do not pretend they ran. Say once: "Lumo's
+live catch is not connected — answering from the bundled skill knowledge
+(dated), without the code check." Then answer from wp-pro/wp-knowledge content,
+and mention that `claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp`
+enables the live layer. Never claim a check happened that did not.
+
 ---
 
 ## Step 1 — Pre-write check (before suggesting code)
@@ -60,16 +76,26 @@ Pass `wp_version` / `woo_version` whenever the project's target versions are kno
 
 **Reading the result:**
 
-- **LOUD catch** (starts with `> ⚠️`): the code uses a pattern that broke in a
-  specific WooCommerce or WordPress version. Do **not** present the original
-  suggestion. Present Lumo's correct form instead, citing the source and the
-  version fact verbatim.
+- **LOUD catch** (starts with `> ⚠️`): the pattern is either broken since a
+  specific WordPress/WooCommerce release, **or wrong in every supported version**
+  (security fundamentals such as an unprepared `$wpdb` query — the lead then
+  says so and cites the documentation instead of a release). Either way: do
+  **not** present the original suggestion. Present Lumo's correct form, citing
+  the source and the fact line verbatim.
 
 - **SOFT catch** (starts with `> 🔍`): a conditional risk. Surface it alongside
   the code. Let the user decide, but make the risk explicit and cite the source.
 
-- **No issues**: proceed with your suggestion. Still note "Lumo: no known issues
-  in this code" at the end of your answer.
+- **Coverage-gap lines** (`Detected <Plugin> in this code …` or
+  `_Also detected <Plugin> … not the whole picture._`): the code touches one or
+  more plugin ecosystems (WooCommerce, ACF Pro, Gravity Forms, Elementor, …)
+  the free knowledge does not cover. Relay this verbatim — it is Lumo saying
+  "not checked", and dropping it would turn a coverage limit into an all-clear.
+  Multiple plugins may be named in one sentence; name them all.
+
+- **Scope line** (`Checked against Lumo Free — no covered pattern matched …`):
+  nothing Lumo covers matched. Relay it as written. Never compress it to
+  "Lumo says the code is clean" — the line deliberately does not say that.
 
 ---
 
@@ -79,10 +105,15 @@ When the task is a question about a WordPress or WooCommerce API, pattern, or
 function — rather than code to write — call **`lumo_lookup`** first.
 
 ```
-lumo_lookup(slug: "<topic-slug>")
-// or
-lumo_lookup(category: "<category-slug>")
+lumo_lookup(query: "<what you would type into a search box>")   // ranked shortlist of slugs
+lumo_lookup(slug: "<exact-slug>")                               // full entry
+lumo_lookup(category: "<category-slug>")                        // first entry of a category
 ```
+
+**Start with `query`** when you do not know the exact slug — it returns up to
+five ranked matches (slug + title + first summary sentence); fetch the winner
+with a second call by `slug`. The catalogue is also browsable as MCP resources
+(`lumo://entry/<slug>`), one per free entry, if your client lists resources.
 
 Common slugs and categories:
 
@@ -91,6 +122,7 @@ Common slugs and categories:
 | HPOS / order-meta access              | `woocommerce-hpos-order-access` / `woocommerce` |
 | WooCommerce general                   | category `woocommerce`                        |
 | WordPress core patterns               | category `wordpress`                          |
+| Anything else                         | `query: "<topic words>"` first                |
 
 If `lumo_lookup` returns a result, lead with it. State the knowledge date
 (`_Knowledge current as of …_` line from the response). Then answer.

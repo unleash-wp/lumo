@@ -1,0 +1,59 @@
+name: Mirror skills
+
+# Prepared, founder-gated mirror. This workflow stays inert until the founder
+# creates the public skills repository and configures two things on THIS repo:
+#   - repository variable SKILLS_MIRROR_REPO  (owner/repo of the mirror)
+#   - repository secret   SKILLS_MIRROR_TOKEN (a token with push access there)
+# It exists for one scenario: if this repo ever goes npm-only or private, the
+# skills install path (docs/skills-only.md) keeps a public home. Until the
+# variable is set, every run is skipped by the job-level guard.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'docs/skills-only.md'
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    name: Push skills tree to the mirror repo
+    runs-on: ubuntu-latest
+    if: vars.SKILLS_MIRROR_REPO != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync skills/ and docs/skills-only.md to the mirror
+        env:
+          MIRROR_REPO: ${{ vars.SKILLS_MIRROR_REPO }}
+          MIRROR_TOKEN: ${{ secrets.SKILLS_MIRROR_TOKEN }}
+        run: |
+          # A set variable with a missing secret would surface as a cryptic
+          # clone/auth failure — name the actual problem instead.
+          if [ -z "$MIRROR_TOKEN" ]; then
+            echo "SKILLS_MIRROR_REPO is set but the SKILLS_MIRROR_TOKEN secret is missing."
+            exit 1
+          fi
+
+          WORK="$(mktemp -d)"
+          git clone --depth 1 "https://x-access-token:${MIRROR_TOKEN}@github.com/${MIRROR_REPO}.git" "$WORK"
+
+          # Replace the skills tree wholesale (so deletions propagate) and
+          # overwrite the one doc; everything else in the mirror stays untouched.
+          rm -rf "$WORK/skills"
+          cp -R skills "$WORK/skills"
+          mkdir -p "$WORK/docs"
+          cp docs/skills-only.md "$WORK/docs/skills-only.md"
+
+          cd "$WORK"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Mirror already up to date."
+            exit 0
+          fi
+          git commit -m "Sync skills from unleash-wp/lumo@${GITHUB_SHA}"
+          git push

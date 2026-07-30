@@ -1,6 +1,8 @@
 name: 'Lumo WP Code Review'
 description: >
   Run Lumo's WordPress/WooCommerce catch on PR-changed PHP/JS files.
+  Requires a Lumo Pro licence: set lumo_pro_url and lumo_license_key.
+  Without them the check prints that it did not run and stays green.
   Posts a review comment per finding (propose + cite, never auto-fix).
   LOUD (CERTAIN + breaking version) → fails the check when fail_on_loud is true.
   SOFT (CONTEXT_DEPENDENT) → comment only, never fails.
@@ -12,6 +14,18 @@ branding:
   color: 'blue'
 
 inputs:
+  anthropic_api_key:
+    description: >
+      Optional. When set, Lumo adds an autonomous WordPress-engineer review of
+      the diff as one advisory PR comment, grounded on the rule engine's
+      findings. Never affects the exit code. Pass it from a repository secret;
+      without it this stage is skipped entirely.
+    default: ''
+  claude_model:
+    description: >
+      Model for the autonomous review stage. Only read when anthropic_api_key
+      is set.
+    default: 'claude-sonnet-5'
   fail_on_loud:
     description: >
       Fail the check (exit 1) when at least one LOUD catch fires.
@@ -31,7 +45,10 @@ inputs:
   lumo_license_key:
     description: >
       Lemon Squeezy license key for Lumo Pro. Required when lumo_pro_url is set.
-      Pass as a secret: ${{ secrets.LUMO_LICENSE_KEY }}.
+      Pass it from a repository secret, e.g. secrets.LUMO_LICENSE_KEY.
+      (Written without expression braces on purpose: GitHub parses every
+      expression in this file when it loads the action, and a secrets
+      reference in metadata makes the whole action fail to load.)
     required: false
     default: ''
 
