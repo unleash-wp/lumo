@@ -47,3 +47,39 @@ describe('lookup query — honest misses', () => {
     expect(out).toContain('$wpdb->prepare()');
   });
 });
+
+// The structured verdict (product-gate condition): same pass as the prose, and
+// the fail-open path must be marked, never dressed as a clean verdict.
+describe('check_code structured verdict', () => {
+  it('BELL: computed verdict mirrors the prose exactly (one pass, no divergence)', async () => {
+    const { handleCheckCodeFull } = await import('../src/mcp/handlers.js');
+    const v = await handleCheckCodeFull(
+      { code: `<?php $r = $wpdb->get_results( "SELECT * FROM t WHERE id = $id" ); $f = rwmb_meta('x');`, language: 'php' },
+      snap,
+    );
+    expect(v.computed).toBe(true);
+    expect(v.found).toBe(true);
+    expect(v.loudCount).toBe(1);
+    expect(v.gaps).toEqual([{ plugin: 'Meta Box', proCovers: true }]);
+    expect(v.text).toContain('⚠️');
+  });
+
+  it('SILENCE: clean code is computed:true found:false — a real verdict, not a shrug', async () => {
+    const { handleCheckCodeFull } = await import('../src/mcp/handlers.js');
+    const v = await handleCheckCodeFull(
+      { code: `<?php echo esc_html__( 'Hi', 'my-plugin' );`, language: 'php' },
+      snap,
+    );
+    expect(v.computed).toBe(true);
+    expect(v.found).toBe(false);
+  });
+
+  it('DEGRADATION: a failing pipeline is marked computed:false, never a clean verdict', async () => {
+    const { handleCheckCodeFull } = await import('../src/mcp/handlers.js');
+    const poisoned = { get code(): string { throw new Error('boom'); }, language: 'php' as const };
+    const v = await handleCheckCodeFull(poisoned, snap);
+    expect(v.computed).toBe(false);
+    expect(v.found).toBe(false);
+    expect(v.text.length).toBeGreaterThan(0); // the prose still answers
+  });
+});
