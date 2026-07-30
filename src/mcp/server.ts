@@ -83,10 +83,16 @@ server.registerTool(
         .string()
         .optional()
         .describe('Category slug to look up the first matching entry, e.g. "woocommerce".'),
+      query: z
+        .string()
+        .optional()
+        .describe(
+          'Free-text search, e.g. "sql injection prepare" — returns a ranked shortlist of slugs.',
+        ),
     },
   },
-  async ({ slug, category }) => {
-    const text = await handleLookup({ slug, category });
+  async ({ slug, category, query }) => {
+    const text = await handleLookup({ slug, category, query });
     return { content: [{ type: 'text', text }] };
   },
 );

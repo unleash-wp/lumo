@@ -256,6 +256,12 @@ function detectLanguage(code: string): Language {
     (code.includes('<?php') ? 3 : 0) +
     (code.includes('->') ? 1 : 0) +
     (/\$\w/.test(code) ? 2 : 0) +
+    // A quoted string directly before => is PHP array syntax ('key' => value).
+    // A JS arrow has a parameter there, never a string literal. Without this, a
+    // pasted PHP fragment like array( 'post_type' => 'shop_order' ) — no <?php,
+    // no $ — scored PHP 0 / JS 1 and silently lost all its PHP signals.
+    (/['"]\s*=>/.test(code) ? 2 : 0) +
+    (/\barray\s*\(/.test(code) ? 2 : 0) +
     (code.includes('function_exists') ? 1 : 0);
 
   const jsScore =

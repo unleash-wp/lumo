@@ -17,7 +17,7 @@ import {
   PRO_MCP_ADD_LINE,
 } from '../lib/render.js';
 import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
-import type { Snapshot } from '../types.js';
+import type { Snapshot, SnapshotEntry } from '../types.js';
 import type { CatchResult } from '../detection/catch.js';
 import { proTopicFor, buildProTopicTeaser } from '../lib/pro-topics.js';
 
@@ -75,6 +75,55 @@ export async function handleAudit(input: AuditHandlerInput): Promise<string> {
 export interface LookupHandlerInput {
   slug?: string;
   category?: string;
+  /** Free-text search over the snapshot. Returns a ranked shortlist, not a full entry. */
+  query?: string;
+}
+
+// Deterministic scoring, ported 1:1 from the ai-forge adapter (server.mjs
+// scoreEntry) so both lookup surfaces rank identically: slug 4, title 3,
+// category 2, summary 1 per matched term.
+function scoreEntry(entry: SnapshotEntry, terms: string[]): number {
+  const slug = entry.slug.toLowerCase();
+  const title = entry.title.toLowerCase();
+  const summary = (entry.summary || '').toLowerCase();
+  const category = (entry.category_slug || '').toLowerCase();
+  let score = 0;
+  for (const t of terms) {
+    if (slug.includes(t)) score += 4;
+    if (title.includes(t)) score += 3;
+    if (category.includes(t)) score += 2;
+    if (summary.includes(t)) score += 1;
+  }
+  return score;
+}
+
+/**
+ * Ranked shortlist for a free-text query. Top 5, each as slug + title + first
+ * summary sentence — enough to pick, small enough to stay cheap. The second
+ * call then fetches the full entry by slug. Searches ONLY the Free snapshot;
+ * a miss on a Pro topic goes through the same honest teaser as a slug miss.
+ */
+function searchEntries(snap: Snapshot, query: string): string {
+  const terms = query.toLowerCase().split(/\s+/).filter((t) => t.length > 1);
+  if (terms.length === 0) return NOT_FOUND_LOOKUP(query);
+
+  const ranked = snap.entries
+    .map((e) => ({ e, score: scoreEntry(e, terms) }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score || a.e.slug.localeCompare(b.e.slug))
+    .slice(0, 5);
+
+  if (ranked.length === 0) return NOT_FOUND_LOOKUP(query);
+
+  const lines = ranked.map(({ e }) => {
+    const firstSentence = (e.summary || '').split(/(?<=\.)\s/)[0] ?? '';
+    return `- \`${e.slug}\` — ${e.title}\n  ${firstSentence}`;
+  });
+  return [
+    `Top matches for "${query}" (call lumo_lookup with the slug for the full entry):`,
+    '',
+    ...lines,
+  ].join('\n');
 }
 
 /**
@@ -106,7 +155,11 @@ export async function handleLookup(
       return NOT_FOUND_LOOKUP(input.category);
     }
 
-    return 'Provide either a "slug" or a "category" to look up an entry.';
+    if (input.query) {
+      return searchEntries(snap, input.query.trim());
+    }
+
+    return 'Provide a "slug", a "category", or a free-text "query" to look up an entry.';
   } catch {
     return 'Snapshot unavailable — cannot look up entries right now.';
   }

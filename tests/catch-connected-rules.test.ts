@@ -26,6 +26,18 @@ const CONNECTED_SLUGS = [
   'wp-current-user-can-role-name-not-capability',
   'wp-direct-role-check-instead-of-capability',
   'wp-raw-curl-instead-of-http-api',
+  // Connected with validated suppressGuards — the guard silences the entry's
+  // own documented fix, which is what held these back before.
+  'admin-action-without-capability-check',
+  'rest-route-missing-permission-callback',
+  'the-content-filter-without-loop-guard',
+  'wp-ajax-handler-without-nonce',
+  'enqueue-scripts-styles-global-scope',
+  'wp-add-option-large-data-missing-autoload-false',
+  'wp-cron-missing-deactivation-unschedule',
+  'wp-is-admin-not-authorization-check',
+  'wp-remote-missing-is-wp-error-check',
+  'wp-transient-missing-false-check-fallback',
 ] as const;
 
 function entryFor(slug: string) {
@@ -85,8 +97,26 @@ describe('connected rules — precision against correct code', () => {
   });
 });
 
+/**
+ * Known limit, pinned deliberately (Gemini pass B, measured): suppressGuards
+ * work at blob level. Two AJAX handlers in one blob, one verified, one not —
+ * the guard sees the one check and silences both. Per law 1 the mechanism errs
+ * quiet; scoping guards per handler needs real parsing, not regex, and is a
+ * separate decision. If this test starts failing, the limit was lifted —
+ * delete the test alongside that change, not before.
+ */
+describe('connected rules — blob-level guard limit (documented)', () => {
+  it('a guarded handler silences an unguarded sibling in the same blob', () => {
+    const two = `<?php
+add_action('wp_ajax_safe', function() { check_ajax_referer('n'); update_option('a', 1); });
+add_action('wp_ajax_unsafe', function() { update_option('b', $_POST['v']); });
+`;
+    expect(slugsCaught(two)).not.toContain('wp-ajax-handler-without-nonce');
+  });
+});
+
 describe('connected rules — the registry really carries them', () => {
-  it('all 7 slugs resolve to a snapshot entry', () => {
+  it('all 17 slugs resolve to a snapshot entry', () => {
     for (const slug of CONNECTED_SLUGS) expect(entryFor(slug).slug).toBe(slug);
   });
 });

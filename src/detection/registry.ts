@@ -553,6 +553,55 @@ export const PATTERNS: readonly PatternDefinition[] = [
         entrySlug: 'wpdb-query-without-prepare-sql-injection',
         language: 'php',
       },
+      // The presence-matchers below were held back until each carried a
+      // suppressGuard on the correct form its own entry recommends — without
+      // the guard they fired on the documented fix (measured, 13 of 13).
+      // Guards were validated against both documented forms per rule before
+      // connecting: signal catches bad_pattern, guard recognises code_example,
+      // guard does not suppress the real hit.
+      {
+        match: /add_action\s*\(\s*['"]admin_post_/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'admin-action-without-capability-check',
+        condition: 'the handler does not call current_user_can() before performing the operation',
+        suppressGuard: /current_user_can\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /add_action\s*\(\s*['"]admin_action_/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'admin-action-without-capability-check',
+        condition: 'the handler does not call current_user_can() before performing the operation',
+        suppressGuard: /current_user_can\s*\(/,
+        language: 'php',
+      },
+      {
+        // CERTAIN on the literal: '__return_true' as permission_callback is
+        // self-evident. The guard encodes the one documented-correct case — a
+        // read-only public route, where __return_true is intentional.
+        match: /'permission_callback'\s*=>\s*'__return_true'/,
+        class: 'CERTAIN',
+        entrySlug: 'rest-route-missing-permission-callback',
+        condition: 'the route performs a mutating operation (POST/PUT/PATCH/DELETE)',
+        suppressGuard: /['"]methods['"]\s*=>\s*(?:WP_REST_Server::READABLE|['"]GET['"])/,
+        language: 'php',
+      },
+      {
+        match: /add_filter\s*\(\s*['"]the_content['"]/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'the-content-filter-without-loop-guard',
+        condition: 'the callback does not guard on is_main_query()/in_the_loop()',
+        suppressGuard: /is_main_query\s*\(|in_the_loop\s*\(|is_singular\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /add_action\s*\(\s*['"]wp_ajax_/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-ajax-handler-without-nonce',
+        condition: 'the handler does not verify a nonce before acting',
+        suppressGuard: /check_ajax_referer\s*\(|wp_verify_nonce\s*\(|check_admin_referer\s*\(/,
+        language: 'php',
+      },
     ],
   },
   {
@@ -615,6 +664,16 @@ export const PATTERNS: readonly PatternDefinition[] = [
         stripStrings: true,
         language: 'php',
       },
+      // Presence-matcher, connected with its validated suppressGuard (see the
+      // note in wordpress-security-fundamentals).
+      {
+        match: /\bwp_enqueue_(?:script|style)\s*\(\s*['"][^'"]+['"]/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'enqueue-scripts-styles-global-scope',
+        condition: 'the enqueue is not gated to the pages that actually use the asset',
+        suppressGuard: /is_singular\s*\(|is_page\s*\(|is_front_page\s*\(|get_current_screen\s*\(|is_product\s*\(|is_admin\s*\(/,
+        language: 'php',
+      },
     ],
   },
   {
@@ -651,6 +710,48 @@ export const PATTERNS: readonly PatternDefinition[] = [
         class: 'CERTAIN',
         entrySlug: 'wp-raw-curl-instead-of-http-api',
         stripStrings: true,
+        language: 'php',
+      },
+      // Presence-matchers, connected with their validated suppressGuards (see
+      // the note in wordpress-security-fundamentals).
+      {
+        match: /\badd_option\s*\([^;]*(?:json_encode|get_posts|serialize)\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-add-option-large-data-missing-autoload-false',
+        condition: 'the option stores large data and autoload is not set to false',
+        suppressGuard: /,\s*(?:''|"")\s*,\s*false\b/,
+        language: 'php',
+      },
+      {
+        match: /\bregister_activation_hook\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-cron-missing-deactivation-unschedule',
+        condition: 'the plugin schedules cron events and does not unschedule them on deactivation',
+        suppressGuard: /wp_clear_scheduled_hook\s*\(|wp_unschedule_event\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /\bis_admin\s*\(\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-is-admin-not-authorization-check',
+        condition: 'is_admin() is used as an authorization check — it only tests whether an admin PAGE is rendering, not whether the user may act',
+        suppressGuard: /current_user_can\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /\bwp_remote_(?:get|post|put|delete|patch|request)\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-remote-missing-is-wp-error-check',
+        condition: 'the response is used without an is_wp_error() check first',
+        suppressGuard: /is_wp_error\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /\bget_transient\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-transient-missing-false-check-fallback',
+        condition: 'the transient value is used without a strict false check and regeneration fallback',
+        suppressGuard: /false\s*===|===\s*false/,
         language: 'php',
       },
     ],
