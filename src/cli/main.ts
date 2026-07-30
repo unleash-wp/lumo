@@ -18,9 +18,11 @@ Usage: lumo <command>
 
 Commands:
   scan     Scan your current git diff for WordPress/WooCommerce patterns that
-           broke in a real release. Prints findings (LOUD first) or an honest
-           "clean as of <date>" line.
+           broke in a real release. Prints findings (LOUD first) or the scope
+           that was checked — never a verdict on your code.
   mcp      Start the MCP server on stdio (for Claude Code, Cursor, VS Code).
+  skills   Install the official WordPress agent skills (WordPress/agent-skills)
+           — the manual to Lumo's watcher. Delegates to their installer.
   action   GitHub Action runner (used by the bundled action.yml in CI).
 
 Run without arguments to print this help.`;
@@ -34,6 +36,9 @@ async function main(): Promise<void> {
       return;
     case 'mcp':
       await import('../mcp/server.js');
+      return;
+    case 'skills':
+      await (await import('./skills.js')).installOfficialSkills();
       return;
     case 'action':
       await import('../action/main.js');
