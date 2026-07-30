@@ -313,6 +313,23 @@ export const ACTION_SCOPE_LINE =
  * degraded Pro run reads as "Pro checked and found nothing" — a false
  * all-clear on exactly the layer the customer pays for.
  */
+/**
+ * Logged when the CI gate runs without a licence. CI enforcement is a Lumo Pro
+ * feature: the gate answers from the licensed server, and running the free
+ * local knowledge as a pipeline gate would promise a verdict it cannot back.
+ *
+ * The check stays green — a missing subscription is not a reason to block a
+ * merge — so the line must carry the whole weight of saying that nothing was
+ * checked. It also names what the free tier still does, so this reads as a
+ * boundary rather than a nag.
+ */
+export const ACTION_REQUIRES_PRO_LINE =
+  'DID NOT RUN — CI enforcement is part of Lumo Pro, and no licence was configured, ' +
+  'so no code was checked. This is not a clean result. ' +
+  'Set lumo_pro_url and lumo_license_key to run the gate. ' +
+  'Without a subscription, `lumo scan` still checks your working tree locally, ' +
+  'and the MCP server and skills stay free.';
+
 export const ACTION_PRO_DEGRADED_LINE =
   '**The Lumo Pro check did not run** — the Pro server was unreachable, so the ' +
   'results in this run come from the free catch only. This is not a Pro ' +

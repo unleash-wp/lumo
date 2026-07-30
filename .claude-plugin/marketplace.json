@@ -10,7 +10,8 @@
       "description": "Catches stale or wrong AI-written WordPress the moment it's generated — block.json/apiVersion, theme.json, Core APIs, security fundamentals — and shows the wrong-vs-correct fix with a dated source. Where it touches WooCommerce or a premium plugin it says so instead of going quiet. The official WordPress skills are the manual; Lumo is the watcher. Lumo Pro adds WooCommerce and HPOS, the live currency layer, pre-release Core briefings, and premium-plugin coverage.",
       "version": "0.4.0",
       "author": {
-        "name": "Benjamin Zekavica"
+        "name": "UnleashWP",
+        "url": "https://unleash-wp.com"
       },
       "source": "./",
       "tags": [
