@@ -300,6 +300,28 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'advanced-custom-fields-pro',
     sourceSignals: ['acf_add_local_field_group(', 'acf_register_block_type('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      { match: 'acf_get_field(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
+      { match: 'get_sub_field(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
+      { match: 'have_rows(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
+      {
+        match: "acf_add_local_field_group(",
+        class: 'CERTAIN',
+        entrySlug: 'acf-get-field-unescaped-output',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "acf_register_block_type(",
+        class: 'CERTAIN',
+        entrySlug: 'acf-get-field-unescaped-output',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-acf-extended',
@@ -312,6 +334,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'acf-extended',
     sourceSignals: ['acfe_add_options_page(', 'acfe_get_post_field_groups('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "acfe_add_options_page(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-acf-extended-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "acfe_get_post_field_groups(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-acf-extended-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-gravity-forms',
@@ -325,6 +366,24 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'gravityforms',
     sourceSignals: ['GFForms::', 'gform_after_submission'],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      { match: 'GFAPI::', class: 'CERTAIN', entrySlug: 'gf-server-side-validation', stripStrings: true, language: 'php' },
+      {
+        match: "GFForms::",
+        class: 'CERTAIN',
+        entrySlug: 'gf-server-side-validation',
+        language: 'php',
+      },
+      {
+        match: "gform_after_submission",
+        class: 'CERTAIN',
+        entrySlug: 'gf-server-side-validation',
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-meta-box',
@@ -338,6 +397,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'meta-box',
     sourceSignals: ['rwmb_meta(', 'rwmb_the_field('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "rwmb_meta(",
+        class: 'CERTAIN',
+        entrySlug: 'meta-box-rwmb-meta-object-type-arg',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "rwmb_the_field(",
+        class: 'CERTAIN',
+        entrySlug: 'meta-box-rwmb-meta-object-type-arg',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-pods',
@@ -350,6 +428,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'pods',
     sourceSignals: ['pods_field(', 'pods_field_display('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "pods_field(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-pods-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "pods_field_display(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-pods-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-carbon-fields',
@@ -362,6 +459,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
       'web/app/plugins/carbon-fields/carbon-fields-plugin.php',
     ],
     sourceSignals: ['carbon_get_post_meta(', 'Carbon_Fields\\Container\\Container'],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "carbon_get_post_meta(",
+        class: 'CERTAIN',
+        entrySlug: 'carbon-fields-raw-get-post-meta-complex-field-wrong-shape',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: 'Carbon_Fields\\Container\\Container',
+        class: 'CERTAIN',
+        entrySlug: 'carbon-fields-raw-get-post-meta-complex-field-wrong-shape',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-toolset-types',
@@ -374,6 +490,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'types',
     sourceSignals: ['types_render_field(', 'types_field('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "types_render_field(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-toolset-types-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "types_field(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-toolset-types-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-elementor-pro',
@@ -387,6 +522,19 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'elementor-pro',
     sourceSignals: ['\\Elementor\\Widget_Base'],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      { match: '\\Elementor\\Plugin', class: 'CERTAIN', entrySlug: 'elementor-register-controls-not-underscore-register-controls', stripStrings: true, language: 'php' },
+      {
+        match: '\\Elementor\\Widget_Base',
+        class: 'CERTAIN',
+        entrySlug: 'elementor-register-controls-not-underscore-register-controls',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wpbakery',
@@ -399,6 +547,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'js-composer',
     sourceSignals: ['vc_map(', 'vc_add_param('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "vc_map(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wpbakery-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "vc_add_param(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wpbakery-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-polylang',
@@ -413,6 +580,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'polylang',
     sourceSignals: ['pll_e(', 'pll_current_language('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "pll_e(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-polylang-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "pll_current_language(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-polylang-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-rank-math',
@@ -427,6 +613,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'seo-by-rank-math',
     sourceSignals: ['RankMath\\JSON_LD\\', 'rank_math_get_head('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: 'RankMath\\JSON_LD\\',
+        class: 'CERTAIN',
+        entrySlug: 'premium-rank-math-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "rank_math_get_head(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-rank-math-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wp-rocket',
@@ -439,6 +644,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'wp-rocket',
     sourceSignals: ['rocket_clean_domain(', 'rocket_clean_post('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "rocket_clean_domain(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wp-rocket-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "rocket_clean_post(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wp-rocket-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wordfence',
@@ -451,6 +675,23 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'wordfence',
     sourceSignals: ['wfBlock::', 'wordfence::liveTraf('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "wfBlock::",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wordfence-coverage-gap',
+        language: 'php',
+      },
+      {
+        match: "wordfence::liveTraf(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wordfence-coverage-gap',
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wc-subscriptions',
@@ -464,6 +705,24 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'woocommerce-subscriptions',
     sourceSignals: ['WC_Subscriptions::', 'wcs_get_subscription('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "WC_Subscriptions::",
+        class: 'CERTAIN',
+        entrySlug: 'woocommerce-subscriptions-hpos-order-access',
+        language: 'php',
+      },
+      {
+        match: "wcs_get_subscription(",
+        class: 'CERTAIN',
+        entrySlug: 'woocommerce-subscriptions-hpos-order-access',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
     // Detection + teaser only, like the other Pro-covered premium plugins
     // (acf-pro, elementor-pro): the WooCommerce Subscriptions knowledge lives in
     // Lumo Pro, so there is no Free-snapshot entry to render a catch against here.

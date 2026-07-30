@@ -14,7 +14,12 @@ import { parseDiff } from './diff-parser.js';
 import type { FileDiff } from './diff-parser.js';
 import type { CatchResult, CatchTier, ProGap } from '../detection/catch.js';
 import { checkCodeWithGaps } from '../detection/catch.js';
-import { formatCatch, buildCodeProTeaser, buildCodeProGapLine } from '../lib/render.js';
+import {
+  formatCatch,
+  buildCodeProTeaser,
+  buildCodeProGapLine,
+  joinPluginNames,
+} from '../lib/render.js';
 
 export interface Finding {
   filename: string;
@@ -116,7 +121,7 @@ async function catchFile(
 ): Promise<Finding[]> {
   let results: Array<CatchResult | ProRenderedFinding>;
   // Set only on the free path: Pro has the knowledge, so it reports no gap.
-  let proGap: ProGap | undefined;
+  let proGaps: ProGap[] = [];
 
   if (proUrl && licenseKey) {
     try {
@@ -124,10 +129,10 @@ async function catchFile(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[lumo] Pro MCP unreachable (${msg}), falling back to free catch`);
-      ({ results, proGap } = checkCodeWithGaps(file.blob, file.language));
+      ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
     }
   } else {
-    ({ results, proGap } = checkCodeWithGaps(file.blob, file.language));
+    ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
   }
 
   const findings: Finding[] = results.map((r) => {
@@ -149,14 +154,12 @@ async function catchFile(
   //
   // Always SOFT: a coverage gap is not a defect in the contributor's code, so it
   // must never fail a build through fail_on_loud.
-  if (proGap) {
+  if (proGaps.length > 0) {
+    const names = joinPluginNames(proGaps.map((g) => g.pluginName));
     findings.push({
       filename: file.filename,
       tier: 'SOFT' as CatchTier,
-      body:
-        findings.length === 0
-          ? buildCodeProTeaser(proGap.pluginName)
-          : buildCodeProGapLine(proGap.pluginName),
+      body: findings.length === 0 ? buildCodeProTeaser(names) : buildCodeProGapLine(names),
     });
   }
 

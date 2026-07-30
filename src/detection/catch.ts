@@ -356,11 +356,17 @@ export interface ProGap {
 export interface CheckCodeOutcome {
   results: CatchResult[];
   /**
-   * Set when a fired signal had no Free entry behind it. Callers MUST surface
-   * this instead of a neutral line when `results` is empty: staying silent on a
-   * signal that fired reads as a clean bill of health on code Lumo cannot see.
+   * First Pro gap, kept for existing callers. Prefer `proGaps`.
    */
   proGap?: ProGap;
+  /**
+   * EVERY plugin whose signal fired without a Free entry behind it, deduped by
+   * name, registry order. A blob touching WooCommerce AND ACF Pro must name
+   * both — reporting only the first is the same silence, one plugin later.
+   * Callers MUST surface these instead of a neutral line when `results` is
+   * empty.
+   */
+  proGaps: ProGap[];
 }
 
 /** Thin wrapper — the ranked results only. See checkCodeWithGaps for Pro gaps. */
@@ -409,7 +415,7 @@ export function checkCodeWithGaps(
 
     // 2. Run each signal against the blob
     const seen = new Map<string, CatchResult>(); // keyed by entrySlug
-    let proGap: ProGap | undefined;
+    const gapByPlugin = new Map<string, ProGap>(); // deduped, insertion order
 
     for (const { signal, pattern } of allSignals) {
       // Select test blob per signal:
@@ -433,12 +439,16 @@ export function checkCodeWithGaps(
       if (!entry) {
         // The signal fired but Free carries no entry for it — Pro-only knowledge.
         // Record the gap so the caller can name it. Dropping it silently is the
-        // false all-clear this engine must never produce.
-        if (pattern.proTeaser && !proGap) {
-          proGap = {
-            pluginName: pattern.proTeaserName ?? pattern.pattern,
-            hasProCoverage: pattern.hasProCoverage === true,
-          };
+        // false all-clear this engine must never produce — and dropping every
+        // gap after the first is the same silence, one plugin later.
+        if (pattern.proTeaser) {
+          const name = pattern.proTeaserName ?? pattern.pattern;
+          if (!gapByPlugin.has(name)) {
+            gapByPlugin.set(name, {
+              pluginName: name,
+              hasProCoverage: pattern.hasProCoverage === true,
+            });
+          }
         }
         continue;
       }
@@ -476,9 +486,10 @@ export function checkCodeWithGaps(
       .sort((a, b) => tierRank(b.tier) - tierRank(a.tier))
       .slice(0, CATCH_CAP);
 
-    return { results: applyCatchOverrides(raw, overrides), proGap };
+    const proGaps = [...gapByPlugin.values()];
+    return { results: applyCatchOverrides(raw, overrides), proGap: proGaps[0], proGaps };
   } catch {
-    return { results: [] };
+    return { results: [], proGaps: [] };
   }
 }
 
