@@ -14,6 +14,8 @@ export default defineConfig({
     // One-shot proactive scan CLI — `npx @unleashwp/lumo scan` / `lumo-scan`.
     // Runs git diff → diff-parser → catch → prints findings or dated-clean message.
     scan: 'src/scan/main.ts',
+    // First-contact demo — runs the engine over bundled samples.
+    demo: 'src/demo/main.ts',
   },
   format: ['esm'],
   outDir: 'dist',

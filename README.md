@@ -10,6 +10,16 @@ Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shi
 
 ## The 30-second proof
 
+Nothing to paste, nothing to set up — this runs the real engine over four
+bundled samples and prints what it finds:
+
+```bash
+npx @unleashwp/lumo demo
+```
+
+It says in its first line that those are samples, not your project. When you
+want it on your own code, read on.
+
 Ask any AI assistant for a WordPress image filter. Sooner or later it writes this:
 
 ```php
