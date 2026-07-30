@@ -282,6 +282,16 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
 // per channel, because each channel carried its own literal.
 // ---------------------------------------------------------------------------
 
+/**
+ * Printed when lumo-scan finds nothing. Same law as every other channel: state
+ * the scope that was checked, never pronounce the changes clean — the fifth
+ * channel carrying a "clean" verdict, retired like the other four.
+ * Caller substitutes {files} and {date}.
+ */
+export const SCAN_NO_MATCH_TEMPLATE =
+  'lumo scan: {files} checked against Lumo Free{date} — no covered pattern matched. ' +
+  'Outside that coverage nothing was checked, so this is not an all-clear.';
+
 /** Logged when the Action finds nothing. States scope, never a verdict on the PR. */
 export const ACTION_NO_MATCH_LINE =
   'No covered pattern matched in the added lines. ' +

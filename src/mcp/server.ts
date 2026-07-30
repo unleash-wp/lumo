@@ -160,6 +160,40 @@ server.registerTool(
 );
 
 // ---------------------------------------------------------------------------
+// Resources — the catalogue, discoverable without insider slug knowledge.
+//
+// Every Free-snapshot entry is a static resource lumo://entry/<slug>, so a
+// client can LIST the knowledge instead of guessing slugs. The listed set is
+// exactly the Free snapshot — the same no-leak boundary every other surface
+// enforces. Fail-open: if the snapshot cannot load, the server still starts
+// with tools only (the catch must never die for the catalogue's sake).
+// ---------------------------------------------------------------------------
+
+try {
+  const { loadSnapshot } = await import('../lib/snapshot.js');
+  const { renderFree, formatFreeMarkdown } = await import('../lib/render.js');
+  const snap = loadSnapshot();
+  for (const entry of snap.entries) {
+    server.registerResource(
+      entry.slug,
+      `lumo://entry/${entry.slug}`,
+      {
+        title: entry.title,
+        description: entry.summary.split(/(?<=\.)\s/)[0] ?? '',
+        mimeType: 'text/markdown',
+      },
+      async (uri) => ({
+        contents: [
+          { uri: uri.href, mimeType: 'text/markdown', text: formatFreeMarkdown(renderFree(entry)) },
+        ],
+      }),
+    );
+  }
+} catch {
+  // snapshot unavailable — tools stay up, catalogue simply absent
+}
+
+// ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
 

@@ -17,7 +17,9 @@ import { spawnSync } from 'node:child_process';
 import { parseDiff } from '../action/diff-parser.js';
 import { runCatch } from '../action/catch-runner.js';
 import { loadSnapshot } from '../lib/snapshot.js';
+import { formatCatch, SCAN_NO_MATCH_TEMPLATE } from '../lib/render.js';
 import { orderFindingsLoudFirst } from './order-findings.js';
+import { abspathFindings } from './abspath.js';
 
 // ---------------------------------------------------------------------------
 // Git diff — staged + unstaged working changes against HEAD.
@@ -106,6 +108,18 @@ async function main(): Promise<void> {
   let result;
   try {
     result = await runCatch({ diff });
+    // File-level ABSPATH check — only the scan can carry it honestly, and only
+    // for NEW files, where the diff is the whole file. Advisory, never LOUD.
+    try {
+      const snap = loadSnapshot();
+      for (const r of abspathFindings(diff, snap)) {
+        const filename = r.condition?.match(/the new file (\S+) is/)?.[1] ?? 'new file';
+        result.findings.push({ filename, tier: r.tier, body: formatCatch(r) });
+        result.softCount += 1;
+      }
+    } catch {
+      // fail-open — the diff-based findings stand on their own
+    }
   } catch {
     const date = knowledgeDate();
     const dateNote = date ? ` (knowledge current as of ${date})` : '';
@@ -148,10 +162,14 @@ async function main(): Promise<void> {
     return;
   }
 
-  // 5b. No findings — clean message with file count and dated knowledge stamp.
+  // 5b. No findings — scope statement, never a verdict on the changes.
   const fileLabel = fileCount === 1 ? '1 changed file' : `${fileCount} changed files`;
-  const scannedNote = fileCount > 0 ? `Scanned ${fileLabel}` : 'Scanned your changes';
-  console.log(`lumo scan: ${scannedNote} — clean${dateNote}.`);
+  console.log(
+    SCAN_NO_MATCH_TEMPLATE.replace('lumo scan: {files}', `lumo scan: ${fileCount > 0 ? fileLabel : 'your changes'}`).replace(
+      '{date}',
+      date ? ` (knowledge of ${date})` : '',
+    ),
+  );
 }
 
 main().catch(() => {
