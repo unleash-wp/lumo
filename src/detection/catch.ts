@@ -34,12 +34,25 @@ export interface VersionFact {
   breaking: boolean;
 }
 
+/**
+ * The anchor for the second LOUD reason: the pattern is wrong in every supported
+ * version, and the claim is carried by the entry's source, not by a release.
+ */
+export interface AlwaysWrongFact {
+  /** The entry's source_url — the citation that licenses the loud claim. */
+  sourceUrl: string;
+  /** ISO date string from entry.updatedAt — when the knowledge was verified. */
+  date: string;
+}
+
 export interface CatchResult {
   tier: CatchTier;
   entry: SnapshotEntry;
   signal: CatchSignal;
-  /** Present when tier is LOUD — the dated version anchor. */
+  /** Present when tier is LOUD via the version route — the dated version anchor. */
   versionFact?: VersionFact;
+  /** Present when tier is LOUD via the always-wrong route — the source anchor. */
+  alwaysWrongFact?: AlwaysWrongFact;
   /** Present when tier is SOFT for a CONTEXT_DEPENDENT signal. */
   condition?: string;
 }
@@ -47,21 +60,62 @@ export interface CatchResult {
 // ---------------------------------------------------------------------------
 // Phase 00: classify() — the pure decision function
 //
-// Three-guard LOUD rule (all three must hold):
+// Two routes to LOUD; everything else caps at SOFT or SILENT.
+//
+// Route 1 — version fact (three guards, all must hold):
 //   1. Signal class is CERTAIN
 //   2. Entry carries a non-null version min (wp or woo)
 //   3. That version row has breaking_change === true
 //
-// Empty-version-slot fallback: if guard 2 or 3 fails, the LOUD template has
-// nothing to interpolate, so it structurally cannot fire — we degrade to SOFT.
-// This is a data-level guarantee, not a runtime check that can be forgotten.
+// Route 2 — always wrong (owner decision, 30.07.2026):
+//   1. Signal class is CERTAIN
+//   2. Entry slug is on the explicit ALWAYS_WRONG_SLUGS list
+//   3. Entry carries a non-empty source_url
+// Security fundamentals like an unprepared $wpdb query do not break at a
+// version — they are wrong in every supported release, which is why they have
+// no version stamp and were structurally barred from LOUD before this route.
+//
+// Both routes share the same guarantee: no LOUD without a citable anchor. If
+// neither a version fact nor a source anchor exists, the LOUD template has
+// nothing to interpolate and we degrade to SOFT — a data-level guarantee, not a
+// runtime check that can be forgotten.
 // ---------------------------------------------------------------------------
+
+/**
+ * Explicit on purpose: nothing in the data says "wrong regardless of version" —
+ * no column carries it — so deriving this from the category would silently
+ * promote every future entry added there. An explicit list makes each
+ * promotion a decision.
+ *
+ * wp-ability-missing-input-schema-properties has no connected signal yet; its
+ * listing here is inert until one exists, and deliberate: the free/pro question
+ * that held it back is settled (the wp-abilities category ships free).
+ *
+ * Held back from the list after review (Gemini pass A + PM gate, measured):
+ *   wp-raw-curl-instead-of-http-api — legitimate uses exist (mTLS client certs,
+ *     streaming, parallel handles) where the WP HTTP API demonstrably cannot
+ *     serve; "a defect in every version" over-claims there, and LOUD breaks PR
+ *     builds under the Action's default fail_on_loud=true.
+ *   wp-direct-role-check-instead-of-capability — a deliberate role check for
+ *     display logic (role badge, UI branching) is not an authorization defect.
+ * Both stay SOFT. Promoting them back is one escalation line to the owner.
+ */
+export const ALWAYS_WRONG_SLUGS: readonly string[] = [
+  'wpdb-query-without-prepare-sql-injection',
+  'wp-current-user-can-role-name-not-capability',
+  'wp-ability-missing-input-schema-properties',
+];
 
 export function classify(
   entry: SnapshotEntry,
   signal: CatchSignal,
   shimPresent: boolean,
-): { tier: CatchTier; versionFact?: VersionFact; condition?: string } {
+): {
+  tier: CatchTier;
+  versionFact?: VersionFact;
+  alwaysWrongFact?: AlwaysWrongFact;
+  condition?: string;
+} {
   // REPO_STATE signals on a bare blob → always SILENT (domain of lumo_audit)
   if (signal.class === 'REPO_STATE') {
     return { tier: 'SILENT' };
@@ -75,6 +129,17 @@ export function classify(
   // CERTAIN from here — but first check for shim/polyfill guard
   if (shimPresent) {
     return { tier: 'SOFT', condition: 'this call is inside a shim or compatibility wrapper' };
+  }
+
+  // Route 2 — always wrong. Checked before the version route: these entries may
+  // also carry a non-breaking version stamp, which would otherwise cap them at
+  // SOFT. The source is the anchor; an empty source_url means no anchor, so the
+  // route cannot fire (same data-level guarantee as the version route).
+  if (ALWAYS_WRONG_SLUGS.includes(entry.slug) && entry.source_url) {
+    return {
+      tier: 'LOUD',
+      alwaysWrongFact: { sourceUrl: entry.source_url, date: entry.updatedAt },
+    };
   }
 
   // Find the first version row with a non-null version min
@@ -389,6 +454,7 @@ export function checkCodeWithGaps(
         entry,
         signal,
         versionFact: result.versionFact,
+        alwaysWrongFact: result.alwaysWrongFact,
         condition: result.condition,
       };
 
