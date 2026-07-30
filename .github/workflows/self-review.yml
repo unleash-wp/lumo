@@ -39,4 +39,9 @@ jobs:
           # The action entry reads its inputs from INPUT_* variables, the same
           # ones action.yml sets for customers.
           INPUT_FAIL_ON_LOUD: 'true'
+          # CI enforcement is licensed, and this repository is no exception.
+          # Until these secrets exist the job prints DID NOT RUN and stays
+          # green — visibly inert rather than quietly passing.
+          INPUT_LUMO_LICENSE_KEY: ${{ secrets.LUMO_LICENSE_KEY }}
+          INPUT_LUMO_PRO_URL: ${{ secrets.LUMO_PRO_URL }}
         run: node dist/lumo.mjs action
