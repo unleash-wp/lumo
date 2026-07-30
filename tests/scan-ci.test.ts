@@ -64,7 +64,7 @@ const CI_ARGS = ['--ci', '--base', 'main'];
 
 describe('scan --ci: exit-code gate', () => {
   it('BELL: a diff adding an unprepared $wpdb interpolation exits 1', async () => {
-    const r = await runScan({ argv: CI_ARGS, env: {}, getDiff: () => LOUD_DIFF });
+    const r = await runScan({ argv: CI_ARGS, env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => LOUD_DIFF });
     expect(r.exitCode).toBe(1);
     const joined = r.lines.join('\n');
     expect(joined).toContain('LOUD');
@@ -72,13 +72,13 @@ describe('scan --ci: exit-code gate', () => {
   });
 
   it('SILENCE: a clean diff exits 0 and states scope, not a verdict', async () => {
-    const r = await runScan({ argv: CI_ARGS, env: {}, getDiff: () => CLEAN_DIFF });
+    const r = await runScan({ argv: CI_ARGS, env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => CLEAN_DIFF });
     expect(r.exitCode).toBe(0);
     expect(r.lines.join('\n')).toContain('not an all-clear');
   });
 
   it('SILENCE: a SOFT-only diff exits 0 — advisory never blocks', async () => {
-    const r = await runScan({ argv: CI_ARGS, env: {}, getDiff: () => SOFT_DIFF });
+    const r = await runScan({ argv: CI_ARGS, env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => SOFT_DIFF });
     expect(r.exitCode).toBe(0);
     expect(r.lines.join('\n')).toContain('advisory');
   });
@@ -86,7 +86,7 @@ describe('scan --ci: exit-code gate', () => {
   it('LUMO_FAIL_ON_LOUD=false keeps the job green but still prints the finding', async () => {
     const r = await runScan({
       argv: CI_ARGS,
-      env: { LUMO_FAIL_ON_LOUD: 'false' },
+      env: { LUMO_LICENSE_KEY: 'test-licence', LUMO_FAIL_ON_LOUD: 'false' },
       getDiff: () => LOUD_DIFF,
     });
     expect(r.exitCode).toBe(0);
@@ -96,7 +96,7 @@ describe('scan --ci: exit-code gate', () => {
   });
 
   it('an empty MR diff exits 0 without claiming uncommitted changes', async () => {
-    const r = await runScan({ argv: CI_ARGS, env: {}, getDiff: () => '' });
+    const r = await runScan({ argv: CI_ARGS, env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => '' });
     expect(r.exitCode).toBe(0);
     expect(r.lines.join('\n')).toContain('no changes to scan');
     expect(r.lines.join('\n')).not.toContain('uncommitted');
@@ -112,7 +112,7 @@ describe('scan --ci: diff source', () => {
     const bases: Array<string | null> = [];
     const r = await runScan({
       argv: ['--ci', '--base', 'abc123'],
-      env: { CI_MERGE_REQUEST_DIFF_BASE_SHA: 'ignored-when-base-given' },
+      env: { LUMO_LICENSE_KEY: 'test-licence', CI_MERGE_REQUEST_DIFF_BASE_SHA: 'ignored-when-base-given' },
       getDiff: (_cwd, base) => {
         bases.push(base);
         return CLEAN_DIFF;
@@ -126,7 +126,7 @@ describe('scan --ci: diff source', () => {
     const bases: Array<string | null> = [];
     await runScan({
       argv: ['--ci'],
-      env: { CI_MERGE_REQUEST_DIFF_BASE_SHA: 'deadbee' },
+      env: { LUMO_LICENSE_KEY: 'test-licence', CI_MERGE_REQUEST_DIFF_BASE_SHA: 'deadbee' },
       getDiff: (_cwd, base) => {
         bases.push(base);
         return CLEAN_DIFF;
@@ -139,7 +139,7 @@ describe('scan --ci: diff source', () => {
     const bases: Array<string | null> = [];
     const r = await runScan({
       argv: ['--ci'],
-      env: {},
+      env: { LUMO_LICENSE_KEY: 'test-licence',},
       getDiff: (_cwd, base) => {
         bases.push(base);
         return CLEAN_DIFF;
@@ -155,7 +155,7 @@ describe('scan --ci: diff source', () => {
     const bases: Array<string | null> = [];
     const r = await runScan({
       argv: ['--ci', '--base', ''],
-      env: {},
+      env: { LUMO_LICENSE_KEY: 'test-licence',},
       getDiff: (_cwd, base) => {
         bases.push(base);
         return CLEAN_DIFF;
@@ -172,7 +172,7 @@ describe('scan --ci: diff source', () => {
 
 describe('scan --ci: fail-open honesty', () => {
   it('no diff obtainable: says DID NOT RUN and not clean, exits 0', async () => {
-    const r = await runScan({ argv: ['--ci', '--base', 'deadbee'], env: {}, getDiff: () => null });
+    const r = await runScan({ argv: ['--ci', '--base', 'deadbee'], env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => null });
     expect(r.exitCode).toBe(0);
     const joined = r.lines.join('\n');
     expect(joined).toContain('DID NOT RUN');
@@ -184,7 +184,7 @@ describe('scan --ci: fail-open honesty', () => {
   it('a throwing diff provider tells the same honest story', async () => {
     const r = await runScan({
       argv: ['--ci'],
-      env: {},
+      env: { LUMO_LICENSE_KEY: 'test-licence',},
       getDiff: () => {
         throw new Error('git exploded');
       },
@@ -205,7 +205,7 @@ describe('scan --ci: fail-open honesty', () => {
     }));
     try {
       const { runScan: mockedRunScan } = await import('../src/scan/run-scan.js');
-      const r = await mockedRunScan({ argv: CI_ARGS, env: {}, getDiff: () => LOUD_DIFF });
+      const r = await mockedRunScan({ argv: CI_ARGS, env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => LOUD_DIFF });
       expect(r.exitCode).toBe(0);
       const joined = r.lines.join('\n');
       expect(joined).toContain('DID NOT RUN');
@@ -224,7 +224,7 @@ describe('scan --ci: fail-open honesty', () => {
 
 describe('scan without --ci stays advisory', () => {
   it('a LOUD diff still exits 0 — findings inform, they do not block', async () => {
-    const r = await runScan({ argv: [], env: {}, getDiff: () => LOUD_DIFF });
+    const r = await runScan({ argv: [], env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => LOUD_DIFF });
     expect(r.exitCode).toBe(0);
     expect(r.lines.join('\n')).toContain('⚠️');
   });
@@ -232,18 +232,79 @@ describe('scan without --ci stays advisory', () => {
   it('LUMO_FAIL_ON_LOUD has no effect outside CI mode', async () => {
     const r = await runScan({
       argv: [],
-      env: { LUMO_FAIL_ON_LOUD: 'true' },
+      env: { LUMO_LICENSE_KEY: 'test-licence', LUMO_FAIL_ON_LOUD: 'true' },
       getDiff: () => LOUD_DIFF,
     });
     expect(r.exitCode).toBe(0);
   });
 
   it('non-CI output for a clean diff is the untouched scope line', async () => {
-    const r = await runScan({ argv: [], env: {}, getDiff: () => CLEAN_DIFF });
+    const r = await runScan({ argv: [], env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => CLEAN_DIFF });
     expect(r.exitCode).toBe(0);
     expect(r.lines).toHaveLength(1);
     expect(r.lines[0]).toMatch(/^lumo scan: 1 changed file checked against Lumo Free/);
     expect(r.lines[0]).toContain('not an all-clear');
     expect(r.lines[0]).not.toContain('DID NOT RUN');
+  });
+});
+
+/**
+ * CI enforcement is a Lumo Pro feature (founder decision, 31.07.2026). The
+ * gate must refuse to run without a licence — and refusing must never look
+ * like a passed review, and never block someone's merge either.
+ */
+describe('scan --ci: the gate is licensed', () => {
+  const LOUD_DIFF = [
+    'diff --git a/inc/q.php b/inc/q.php',
+    '--- a/inc/q.php',
+    '+++ b/inc/q.php',
+    '@@ -1,1 +1,2 @@',
+    '+<?php',
+    '+$r = $wpdb->get_results( "SELECT * FROM t WHERE id = $id" );',
+  ].join('\n');
+
+  it('SILENCE: without a licence key nothing is checked, and the job stays green', async () => {
+    const r = await runScan({
+      argv: ['--ci', '--base', 'abc123'],
+      env: {},
+      getDiff: () => LOUD_DIFF,
+    });
+    expect(r.exitCode).toBe(0);
+    expect(r.lines.join('\n')).toContain('part of Lumo Pro');
+    expect(r.lines.join('\n')).toContain('DID NOT RUN');
+    expect(r.lines.join('\n')).toContain('not a clean result');
+    // The LOUD finding must NOT appear: nothing ran, so nothing may be claimed.
+    expect(r.lines.join('\n')).not.toContain('wpdb');
+  });
+
+  it('the refusal names what stays free, so it reads as a boundary, not a nag', async () => {
+    const r = await runScan({ argv: ['--ci'], env: {}, getDiff: () => LOUD_DIFF });
+    expect(r.lines.join('\n')).toContain('lumo scan');
+    expect(r.lines.join('\n')).toContain('MCP server and skills stay free');
+  });
+
+  it('BELL: with a licence key the gate runs and LOUD still fails the job', async () => {
+    const r = await runScan({
+      argv: ['--ci', '--base', 'abc123'],
+      env: { LUMO_LICENSE_KEY: 'test-licence' },
+      getDiff: () => LOUD_DIFF,
+    });
+    expect(r.exitCode).toBe(1);
+  });
+
+  it('a licensed run without a server URL says it used free knowledge only', async () => {
+    const r = await runScan({
+      argv: ['--ci', '--base', 'abc123'],
+      env: { LUMO_LICENSE_KEY: 'test-licence' },
+      getDiff: () => LOUD_DIFF,
+    });
+    expect(r.lines.join('\n')).toContain('LUMO_PRO_URL is not set');
+  });
+
+  it('SILENCE: the local scan without --ci needs no licence at all', async () => {
+    const r = await runScan({ argv: [], env: {}, getDiff: () => LOUD_DIFF });
+    expect(r.exitCode).toBe(0);
+    expect(r.lines.join('\n')).not.toContain('part of Lumo Pro');
+    expect(r.lines.join('\n')).toContain('wpdb');
   });
 });

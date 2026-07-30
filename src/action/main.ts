@@ -29,6 +29,7 @@ import {
   ACTION_NO_MATCH_LINE,
   ACTION_SCOPE_LINE,
   ACTION_PRO_DEGRADED_LINE,
+  ACTION_REQUIRES_PRO_LINE,
 } from '../lib/render.js';
 
 // ---------------------------------------------------------------------------
@@ -75,6 +76,15 @@ async function main(): Promise<void> {
   // When enforce.mode is "off", skip comments entirely.
   if (enforceMode === 'off') {
     core.info('[lumo] enforce.mode=off — skipping all catch output');
+    return;
+  }
+
+  // CI enforcement is licensed. Without a licence there is no gate: the check
+  // stays green — a missing subscription must never block someone's merge —
+  // but it says plainly that nothing was checked, so a green tick can never be
+  // mistaken for a passed review.
+  if (!licenseKey) {
+    core.info(`[lumo] ${ACTION_REQUIRES_PRO_LINE}`);
     return;
   }
 

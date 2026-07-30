@@ -28,7 +28,7 @@ test or a code path, not a request politely made in a prompt.
 |---|---|
 | Rule engine (`classify`) | LOUD requires CERTAIN plus a version stamp, or the documented always-wrong route with a non-empty source URL; the renderer refuses to format a LOUD result without its anchor. |
 | `lumo_check_code` (free MCP) | Structured verdict carries `computed`; `false` means the layer did not run and clients must decide nothing from the other fields. Bell, silence and degradation cases are pinned by tests. |
-| `lumo scan --ci` (GitLab/CLI gate) | Every fail-open path prints an explicit DID NOT RUN line; a skipped scan is never presented as a clean result. Exit 1 only on LOUD. |
+| `lumo scan --ci` (CI gate, Pro) | Runs only with a licence key; without one it prints DID NOT RUN and stays green. Every fail-open path prints the same explicit line, so a skipped gate is never presented as a clean result. Exit 1 only on LOUD. |
 | GitHub Action review stage | The prompt hands engine findings over as the only established facts, forbids fresh version claims, requires a verbatim quote per point (no quote, no point), restricts knowledge to the visible diff, and licenses silence. The fences are pinned by copy-regression tests. |
 | Skills (`wp-binding`, `wp-knowledge`) | Both degrade honestly without the MCP: they announce that the live layer is not connected and refuse to simulate a check or improvise WooCommerce version facts. |
 | Lumo Pro agent team | Each agent verifies its Pro MCP tools are reachable before working and stops with "the review could not run" when they are not; findings without a tool-returned source are labeled heuristic suspicion, separated from sourced findings. |

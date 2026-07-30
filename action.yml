@@ -1,6 +1,8 @@
 name: 'Lumo WP Code Review'
 description: >
   Run Lumo's WordPress/WooCommerce catch on PR-changed PHP/JS files.
+  Requires a Lumo Pro licence: set lumo_pro_url and lumo_license_key.
+  Without them the check prints that it did not run and stays green.
   Posts a review comment per finding (propose + cite, never auto-fix).
   LOUD (CERTAIN + breaking version) → fails the check when fail_on_loud is true.
   SOFT (CONTEXT_DEPENDENT) → comment only, never fails.

@@ -1,5 +1,14 @@
 # Lumo WP code gate for GitLab CI merge requests.
 #
+# CI enforcement is part of Lumo Pro: the gate answers from the licensed
+# server, which carries the daily-tended knowledge and the premium-plugin
+# coverage. Without LUMO_PRO_URL and LUMO_LICENSE_KEY the job prints an
+# explicit DID NOT RUN line and stays green — a missing subscription never
+# blocks a merge, and a green job never reads as a passed review.
+#
+# Free without a subscription: the local `lumo scan` over your working tree,
+# the MCP server, and the skills.
+#
 # Runs Lumo's WordPress/WooCommerce catch on the merge request diff
 # (base...HEAD). Lumo proposes a fix and cites a dated source — it never
 # auto-fixes and never rewrites your code.
@@ -24,6 +33,9 @@
 #                      reproducible pipelines.
 #   LUMO_FAIL_ON_LOUD  Set to the string "false" to keep the job green even
 #                      on LOUD findings. Findings still print in the job log.
+#   LUMO_PRO_URL       Base URL of your licensed Lumo Pro server (required).
+#   LUMO_LICENSE_KEY   Your licence key (required). Store it as a masked,
+#                      protected CI/CD variable, never in this file.
 
 lumo_check:
   image: node:22-slim

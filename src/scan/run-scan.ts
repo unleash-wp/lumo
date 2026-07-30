@@ -26,7 +26,11 @@ import { spawnSync } from 'node:child_process';
 import { parseDiff } from '../action/diff-parser.js';
 import { runCatch } from '../action/catch-runner.js';
 import { loadSnapshot } from '../lib/snapshot.js';
-import { formatCatch, SCAN_NO_MATCH_TEMPLATE } from '../lib/render.js';
+import {
+  formatCatch,
+  SCAN_NO_MATCH_TEMPLATE,
+  ACTION_PRO_DEGRADED_LINE,
+} from '../lib/render.js';
 import { orderFindingsLoudFirst } from './order-findings.js';
 import { abspathFindings } from './abspath.js';
 
@@ -67,6 +71,32 @@ const HELP_TEXT = [
 /** CI-mode fail-open marker. Every path that skips the scan must carry both parts. */
 const CI_DID_NOT_RUN = 'lumo scan: DID NOT RUN —';
 const CI_NOT_CLEAN = 'This is not a clean result.';
+
+/**
+ * CI enforcement is a Lumo Pro feature: the gate calls the licensed Pro
+ * server, which carries the daily-tended knowledge and the premium-plugin
+ * coverage. Running the free local catch as a pipeline gate would promise a
+ * verdict the free knowledge cannot back.
+ *
+ * Without a licence the job stays green — a missing subscription is not a
+ * reason to block someone's merge — but it says plainly that nothing was
+ * checked, so the green tick can never be mistaken for a passed review.
+ */
+const CI_REQUIRES_PRO =
+  `${CI_DID_NOT_RUN} CI enforcement is part of Lumo Pro, and no licence key was configured, ` +
+  `so no code was checked. ${CI_NOT_CLEAN}\n` +
+  'Set LUMO_LICENSE_KEY (and LUMO_PRO_URL) to run the gate. ' +
+  'Without a subscription, `lumo scan` still checks your working tree locally, ' +
+  'and the MCP server and skills stay free.';
+
+/**
+ * Licensed, but no Pro server configured. The gate still runs — the licence is
+ * the entitlement — but on the free knowledge, which a paying customer would
+ * otherwise reasonably mistake for their Pro coverage.
+ */
+const CI_NO_PRO_URL =
+  'lumo scan: LUMO_PRO_URL is not set, so this gate ran on the free knowledge only — ' +
+  'no premium-plugin coverage. Point it at your Lumo Pro server for the licensed catch.';
 
 // ---------------------------------------------------------------------------
 // Git diff.
@@ -168,6 +198,15 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   const ci = argv.includes('--ci');
   const base = ci ? resolveBase(argv, env) : null;
 
+  // CI enforcement is licensed. Checked before anything else in CI mode: no
+  // licence means no gate, said out loud, with the job left green.
+  const proUrl = env['LUMO_PRO_URL']?.trim();
+  const licenseKey = env['LUMO_LICENSE_KEY']?.trim();
+  if (ci && !licenseKey) {
+    lines.push(CI_REQUIRES_PRO);
+    return { lines, exitCode: 0 };
+  }
+
   // CI preflight: checkCodeWithGaps swallows snapshot failures and returns
   // zero findings, which downstream reads as a clean scan. A gate that
   // checked against nothing must say so instead.
@@ -187,6 +226,12 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
       'lumo scan: no base ref given — comparing your uncommitted working tree changes, not a merge request diff. ' +
         'If this is a CI pipeline, the base ref was not resolved and the merge request was NOT checked.',
     );
+  }
+
+  // Licensed, but no server configured: the gate runs on the free knowledge.
+  // Say so — a Pro subscriber has every reason to assume Pro coverage.
+  if (ci && !proUrl) {
+    lines.push(CI_NO_PRO_URL);
   }
 
   // 1. Obtain diff — fail-open: no git / not a repo → friendly message.
@@ -237,7 +282,9 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   // explicit DID NOT RUN line.
   let result;
   try {
-    result = await runCatch({ diff });
+    // In CI the licence is present by the time we get here (checked above), so
+    // the gate runs against the licensed Pro server. Locally it stays free.
+    result = ci && proUrl ? await runCatch({ diff, proUrl, licenseKey }) : await runCatch({ diff });
     // File-level ABSPATH check — only the scan can carry it honestly, and only
     // for NEW files, where the diff is the whole file. Advisory, never LOUD.
     try {
@@ -267,6 +314,12 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   }
 
   const date = knowledgeDate();
+
+  // The licensed gate fell back to the free catch. Same rule as the Action:
+  // say it in the run itself, or a degraded gate reads as a Pro pass.
+  if (ci && result.proDegraded) {
+    lines.push(`lumo scan: ${ACTION_PRO_DEGRADED_LINE}`);
+  }
 
   // CI gate: LOUD is the only signal that may fail the job, and only while
   // LUMO_FAIL_ON_LOUD is not the literal string 'false'. SOFT never blocks.
