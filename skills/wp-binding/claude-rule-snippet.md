@@ -16,11 +16,17 @@ standard:
 
 **Before suggesting code:** call `lumo_check_code` with the code blob.
 - LOUD catch (starts `> ⚠️`): do not present the original; present Lumo's
-  correct form, cite the source and version fact verbatim.
+  correct form, cite the fact line (version OR "wrong in every supported
+  version" + documentation source) verbatim.
 - SOFT catch (starts `> 🔍`): surface the risk alongside the code, cite source.
-- No issues: proceed; note "Lumo: no known issues" at the end of your answer.
+- Coverage-gap lines (`Detected <Plugin> …` / `_Also detected …_`): relay
+  verbatim and name every plugin listed — that is Lumo saying "not checked".
+- Scope line ("Checked against Lumo Free … not an all-clear"): relay as
+  written; never compress it to "the code is clean".
 
-**Before answering a WordPress API question:** call `lumo_lookup` first.
+**Before answering a WordPress API question:** call `lumo_lookup` — with
+`query: "<topic words>"` when you do not know the slug (ranked shortlist),
+then by `slug` for the full entry.
 - If it returns a result, lead with it and cite the `_Knowledge current as of_`
   date.
 - If it returns "No curated entry found", answer from training but flag it:

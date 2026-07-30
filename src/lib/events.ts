@@ -392,3 +392,41 @@ export function getOrAssignPromptVariant(stateDir?: string): PromptVariant {
     return 'calm';
   }
 }
+
+// ---------------------------------------------------------------------------
+// Pro-teaser dedupe — the hook runs on every edit, so an unguarded teaser
+// repeats dozens of times in one sitting and turns an honest coverage note into
+// nagging. State is a plugin-keyed marker file: the full teaser once, a single
+// short line afterwards.
+// ---------------------------------------------------------------------------
+
+const PRO_TEASER_FILE = 'pro-teaser-seen.json';
+
+function readProTeaserSeen(stateDir?: string): Record<string, true> {
+  try {
+    const dir = stateDir ?? resolveStateDir();
+    const parsed: unknown = JSON.parse(readFileSync(join(dir, PRO_TEASER_FILE), 'utf8'));
+    if (parsed === null || typeof parsed !== 'object') return {};
+    return parsed as Record<string, true>;
+  } catch {
+    return {};
+  }
+}
+
+/** True when the full teaser for this plugin has already been shown. Never throws. */
+export function hasSeenProTeaser(pluginName: string, stateDir?: string): boolean {
+  return readProTeaserSeen(stateDir)[pluginName] === true;
+}
+
+/** Record that the full teaser for this plugin has been shown. Never throws. */
+export function markProTeaserSeen(pluginName: string, stateDir?: string): void {
+  try {
+    const dir = stateDir ?? resolveStateDir();
+    mkdirSync(dir, { recursive: true });
+    const seen = readProTeaserSeen(dir);
+    seen[pluginName] = true;
+    writeFileSync(join(dir, PRO_TEASER_FILE), JSON.stringify(seen), 'utf8');
+  } catch {
+    // fail-open: never interrupt a value path over a marker file
+  }
+}

@@ -212,7 +212,7 @@ export function versionRelativeLine(
  * output to calling without it (no fabricated claims).
  */
 export function formatCatch(result: CatchResult, projectVersion?: string): string {
-  const { tier, entry, versionFact, condition } = result;
+  const { tier, entry, versionFact, alwaysWrongFact, condition } = result;
   const rendered = renderFree(entry);
 
   // Trust footnote — verification axis (phase 00):
@@ -223,13 +223,24 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   const isSandboxed = entry.category_slug === 'woocommerce';
   const verificationNote = isSandboxed ? 'Fix proven to run' : 'Source-verified';
 
-  // Determine effective tier: LOUD requires versionFact to be present; without it
-  // the dated claim cannot be made, so we structurally degrade to SOFT.
-  const effectiveTier: 'LOUD' | 'SOFT' = tier === 'LOUD' && versionFact != null ? 'LOUD' : 'SOFT';
+  // Determine effective tier: LOUD requires an anchor — a version fact (dated
+  // release claim) or an always-wrong fact (source-carried claim). Without one
+  // the loud template has nothing to interpolate, so we structurally degrade to
+  // SOFT. This mirrors classify(): no LOUD without a citable anchor.
+  const effectiveTier: 'LOUD' | 'SOFT' =
+    tier === 'LOUD' && (versionFact != null || alwaysWrongFact != null) ? 'LOUD' : 'SOFT';
 
   let lead: string;
 
-  if (effectiveTier === 'LOUD' && versionFact != null) {
+  if (effectiveTier === 'LOUD' && versionFact == null && alwaysWrongFact != null) {
+    // Always-wrong route: the claim is not tied to a release, so no version line
+    // and no relative-version line. The source IS the claim's license; it leads.
+    const dateStr = alwaysWrongFact.date.slice(0, 10);
+    lead = [
+      `> ⚠️ This pattern is wrong in every supported WordPress version — a defect, not a version issue.`,
+      `> Documented: ${alwaysWrongFact.sourceUrl} (knowledge verified ${dateStr}).`,
+    ].join('\n');
+  } else if (effectiveTier === 'LOUD' && versionFact != null) {
     const ecosystem = versionFact.field === 'woo' ? 'WooCommerce' : 'WordPress';
     const action = versionFact.breaking ? 'broke' : 'changed';
     const dateStr = versionFact.date.slice(0, 10);
@@ -265,6 +276,131 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   return lines.join('\n');
 }
 
-// Neutral line when checkCode finds nothing to flag — mirrors lumo_audit's tone.
+// ---------------------------------------------------------------------------
+// GitHub Action copy. Lives here with the other copy constants so it is one
+// tested source of truth: the "clean" phrasing has already regressed twice, once
+// per channel, because each channel carried its own literal.
+// ---------------------------------------------------------------------------
+
+/**
+ * Printed when lumo-scan finds nothing. Same law as every other channel: state
+ * the scope that was checked, never pronounce the changes clean — the fifth
+ * channel carrying a "clean" verdict, retired like the other four.
+ * Caller substitutes {files} and {date}.
+ */
+export const SCAN_NO_MATCH_TEMPLATE =
+  'lumo scan: {files} checked against Lumo Free{date} — no covered pattern matched. ' +
+  'Outside that coverage nothing was checked, so this is not an all-clear.';
+
+/** Logged when the Action finds nothing. States scope, never a verdict on the PR. */
+export const ACTION_NO_MATCH_LINE =
+  'No covered pattern matched in the added lines. ' +
+  'Lumo Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
+  'this is not an all-clear.';
+
+/**
+ * Appended to the Action's review summary. Belongs there even when findings exist:
+ * without it, the absence of further comments reads as coverage.
+ */
+export const ACTION_SCOPE_LINE =
+  '_Scope: the added lines of this diff, checked against what Lumo Free covers. ' +
+  'Unchanged lines and anything outside that coverage were not checked._';
+
+/**
+ * Posted into the PR when Pro credentials were configured but the Pro server
+ * could not be reached and the run fell back to the free catch. Must be
+ * visible in the run's own output, not only in the job log: a silently
+ * degraded Pro run reads as "Pro checked and found nothing" — a false
+ * all-clear on exactly the layer the customer pays for.
+ */
+/**
+ * Logged when the CI gate runs without a licence. CI enforcement is a Lumo Pro
+ * feature: the gate answers from the licensed server, and running the free
+ * local knowledge as a pipeline gate would promise a verdict it cannot back.
+ *
+ * The check stays green — a missing subscription is not a reason to block a
+ * merge — so the line must carry the whole weight of saying that nothing was
+ * checked. It also names what the free tier still does, so this reads as a
+ * boundary rather than a nag.
+ */
+export const ACTION_REQUIRES_PRO_LINE =
+  'DID NOT RUN — CI enforcement is part of Lumo Pro, and no licence was configured, ' +
+  'so no code was checked. This is not a clean result. ' +
+  'Set lumo_pro_url and lumo_license_key to run the gate. ' +
+  'Without a subscription, `lumo scan` still checks your working tree locally, ' +
+  'and the MCP server and skills stay free.';
+
+export const ACTION_PRO_DEGRADED_LINE =
+  '**The Lumo Pro check did not run** — the Pro server was unreachable, so the ' +
+  'results in this run come from the free catch only. This is not a Pro ' +
+  'verdict. Check the server URL, the license key, and the server status, ' +
+  'then re-run the check.';
+
+// Neutral line when checkCode finds nothing to flag.
+//
+// It reports the scope that was checked, never the state of the code. Lumo cannot
+// know that a blob is clean — only that nothing it covers matched. Saying "looks
+// clean" turns a coverage limit into a verdict, which is the one thing this
+// product must never do.
 export const CATCH_NEUTRAL_LINE =
-  'No WordPress/WooCommerce issues detected in this code — looks clean.';
+  'Checked against Lumo Free — no covered pattern matched. ' +
+  'Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
+  'anything outside that was not checked, so this is not an all-clear.';
+
+/** "A", "A and B", "A, B and C" — one grammar for every gap surface. */
+export function joinPluginNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/**
+ * Pro-only knowledge was hit by a fired signal in a code blob. Names the plugin
+ * and what covers it. Sibling of buildProTeaser (project path) — the wording here
+ * speaks about the code in hand, not about a project on disk.
+ *
+ * It names ONLY what was detected, and only what Lumo can substantiate: the
+ * detection itself and Lumo's own coverage. Two sentences were removed for the
+ * same reason — the rest of the Pro catalogue, and a claim that the reader's AI
+ * has stale training data. Neither was checked at the moment of output, and both
+ * appeared identically regardless of the code, which makes them sales copy inside
+ * a finding.
+ */
+export function buildCodeProTeaser(pluginName: string): string {
+  return (
+    `Detected ${pluginName} in this code, and Lumo Free has no entry for it — ` +
+    `this is not an all-clear. ${pluginName} is not covered by any free or official ` +
+    `WordPress skill set. Lumo Pro covers ${pluginName}.`
+  );
+}
+
+/**
+ * Appended when findings ARE present and a Pro-only signal fired alongside them.
+ * One line, not the full teaser: the answer already carries content, this only
+ * has to stop it from reading as complete.
+ */
+export function buildCodeProGapLine(pluginName: string): string {
+  return (
+    `_Also detected ${pluginName} in this code, which Lumo Free does not cover — ` +
+    `the findings above are not the whole picture._`
+  );
+}
+
+/**
+ * Short form of the code teaser, for every repeat after the first. Keeps the
+ * honesty (the gap is still named) and drops the sales copy, so an hour of
+ * WooCommerce work does not produce an hour of upgrade prompts.
+ */
+export function buildCodeProTeaserShort(pluginName: string): string {
+  return `_${pluginName} is in this code and Lumo Free does not cover it — still not an all-clear._`;
+}
+
+/**
+ * Same situation, but Pro has no curated knowledge either. States the limit and
+ * makes no upgrade promise that would be broken.
+ */
+export function buildCodeDetectionNote(pluginName: string): string {
+  return (
+    `Detected ${pluginName} in this code. Lumo has no curated knowledge for ` +
+    `${pluginName} yet, so this code was not checked against it — this is not an all-clear.`
+  );
+}

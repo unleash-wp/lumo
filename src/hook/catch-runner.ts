@@ -14,9 +14,18 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { checkCode } from '../detection/catch.js';
-import { formatCatch, CATCH_NEUTRAL_LINE } from '../lib/render.js';
+import { checkCodeWithGaps } from '../detection/catch.js';
+import {
+  formatCatch,
+  CATCH_NEUTRAL_LINE,
+  buildCodeProTeaser,
+  buildCodeDetectionNote,
+  buildCodeProTeaserShort,
+  buildCodeProGapLine,
+  joinPluginNames,
+} from '../lib/render.js';
 import { validateEntry } from '../lib/snapshot.js';
+import { hasSeenProTeaser, markProTeaserSeen } from '../lib/events.js';
 import type { CatchTier, CatchOverrides } from '../detection/catch.js';
 import type { Snapshot } from '../types.js';
 
@@ -83,6 +92,12 @@ export function runHookCatch(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
   overrides?: CatchOverrides,
+  /**
+   * Where the teaser-seen marker lives. Omitted in production (resolves to the
+   * user's state dir); tests MUST pass a temp dir — without it a test run writes
+   * into the developer's real state and silently mutes their next teaser.
+   */
+  stateDir?: string,
 ): HookCatchResult {
   if (!SNAPSHOT) {
     return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
@@ -92,9 +107,30 @@ export function runHookCatch(
     // Inject the pre-loaded snapshot so checkCode() does not re-resolve paths.
     // Thread overrides so disabled/downgraded rules are applied before the
     // tier decision reaches the hook.
-    const results = checkCode(code, language, SNAPSHOT, overrides);
+    const { results, proGaps } = checkCodeWithGaps(code, language, SNAPSHOT, overrides);
 
     if (results.length === 0) {
+      // Pro-only knowledge was hit: name EVERY touched plugin. The hook stays
+      // non-blocking (tier null), but silence here — on any of them — would be
+      // a false all-clear at the keyboard.
+      if (proGaps.length > 0) {
+        const covered = proGaps.filter((g) => g.hasProCoverage).map((g) => g.pluginName);
+        const uncovered = proGaps.filter((g) => !g.hasProCoverage).map((g) => g.pluginName);
+        const parts: string[] = [];
+        if (covered.length > 0) {
+          // Full teaser once per plugin and install, short line after that —
+          // the gap stays named, the sales copy does not repeat. One unseen
+          // plugin in the set is reason enough for the full form.
+          const anyUnseen = covered.some((n) => !hasSeenProTeaser(n, stateDir));
+          const joined = joinPluginNames(covered);
+          parts.push(anyUnseen ? buildCodeProTeaser(joined) : buildCodeProTeaserShort(joined));
+          for (const n of covered) markProTeaserSeen(n, stateDir);
+        }
+        if (uncovered.length > 0) {
+          parts.push(buildCodeDetectionNote(joinPluginNames(uncovered)));
+        }
+        return { tier: null, message: parts.join('\n\n'), loudCount: 0, softCount: 0 };
+      }
       return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
     }
 
@@ -103,7 +139,14 @@ export function runHookCatch(
 
     // checkCode() already sorts LOUD before SOFT
     const top = results[0]!;
-    const message = formatCatch(top);
+    // Findings present AND a Pro-only signal fired: name the gap here too, or the
+    // hook shows a finding that reads as the whole answer. Deliberately NOT
+    // throttled like the teaser — the teaser is the pitch, this is the honesty,
+    // and silencing honesty on repeat edits would restore the false all-clear.
+    const message =
+      proGaps.length > 0
+        ? `${formatCatch(top)}\n\n${buildCodeProGapLine(joinPluginNames(proGaps.map((g) => g.pluginName)))}`
+        : formatCatch(top);
 
     return { tier: top.tier, message, loudCount, softCount };
   } catch {

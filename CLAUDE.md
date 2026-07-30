@@ -57,3 +57,10 @@ als schlank **dupliziertes** File (kein privater Registry-Zwang im Open-Source-R
 
 Public/GPL-MIT — **keine Pro-Inhalte, keine Secrets** ins Repo. Upgrade-Werbung ehrlich + hilfreich
 (Cobra-Effekt vermeiden). Halluziniertes Wissen ist fataler als ein Code-Bug. SDK-Versionen pinnen.
+
+## Arbeitsanweisung (kanonisch, repo-uebergreifend)
+
+Die Orchestrierungs- und Ablaufregeln fuer alle UnleashWP-Arbeiten (Rollen,
+Reviewer-Werkzeuge, Arbeitszyklus pro Paket, Eskalation, Produktgesetze) stehen an
+einer Stelle: `/Users/benjaminzekavica/ai-forge-test/CLAUDE.md`. Bei Arbeiten in
+diesem Repo zuerst lesen. Die repo-eigenen Standards oben haben Vorrang.

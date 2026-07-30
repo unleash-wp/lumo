@@ -1,0 +1,55 @@
+# Lumo WP code gate for GitLab CI merge requests.
+#
+# CI enforcement is part of Lumo Pro: the gate answers from the licensed
+# server, which carries the daily-tended knowledge and the premium-plugin
+# coverage. Without LUMO_PRO_URL and LUMO_LICENSE_KEY the job prints an
+# explicit DID NOT RUN line and stays green — a missing subscription never
+# blocks a merge, and a green job never reads as a passed review.
+#
+# Free without a subscription: the local `lumo scan` over your working tree,
+# the MCP server, and the skills.
+#
+# Runs Lumo's WordPress/WooCommerce catch on the merge request diff
+# (base...HEAD). Lumo proposes a fix and cites a dated source — it never
+# auto-fixes and never rewrites your code.
+#
+# Exit contract (same gate the GitHub Action provides):
+#   - LOUD findings (certain breaks, each carried by a source) fail the job.
+#   - SOFT/advisory findings never fail the job.
+#   - If the scan cannot run at all, it prints an explicit DID NOT RUN line
+#     and leaves the job green — a skipped scan announces itself and is
+#     never presented as a clean result.
+#
+# Usage — include this template from your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/unleash-wp/lumo/main/gitlab/lumo.gitlab-ci.yml'
+#
+#   (or copy this file into your repository and include it with `local:`)
+#
+# Variables (set under `variables:` in .gitlab-ci.yml or in the GitLab UI):
+#   LUMO_VERSION       Version of the @unleashwp/lumo npm package to run.
+#                      Defaults to latest; pin it (for example "0.4.0") for
+#                      reproducible pipelines.
+#   LUMO_FAIL_ON_LOUD  Set to the string "false" to keep the job green even
+#                      on LOUD findings. Findings still print in the job log.
+#   LUMO_PRO_URL       Base URL of your licensed Lumo Pro server (required).
+#   LUMO_LICENSE_KEY   Your licence key (required). Store it as a masked,
+#                      protected CI/CD variable, never in this file.
+
+lumo_check:
+  image: node:22-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    # Full history instead of the default shallow fetch: the scan diffs
+    # against $CI_MERGE_REQUEST_DIFF_BASE_SHA, and on a shallow clone that
+    # commit may not exist locally — the scan would then report DID NOT RUN
+    # instead of checking the diff. On very large repositories a full fetch
+    # is slow; you may override GIT_DEPTH with a depth that still contains
+    # the merge base (the scan tells you when it does not).
+    GIT_DEPTH: "0"
+  script:
+    # node:22-slim ships without git; the scan needs it to read the MR diff.
+    - command -v git >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq --no-install-recommends git)
+    - npx -y -p "@unleashwp/lumo@${LUMO_VERSION:-latest}" lumo scan --ci --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"

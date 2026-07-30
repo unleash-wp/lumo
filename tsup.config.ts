@@ -25,4 +25,13 @@ export default defineConfig({
   // Bundle all deps so the MCP bin works without a node_modules install and
   // the Action entry point is a single self-contained file for GitHub's runner.
   noExternal: ['@modelcontextprotocol/sdk', 'zod', '@actions/core', '@actions/github'],
+  // @actions/github and its transitive deps are CommonJS and reach for node
+  // built-ins through require() at runtime. In an ESM bundle that call hits
+  // esbuild's stub and throws 'Dynamic require of "net" is not supported' —
+  // which is exactly how far `lumo action` got: it died before reading a
+  // single input, in the published package as well as in CI. Handing the
+  // bundle a real require closes that gap.
+  banner: {
+    js: "import { createRequire as __lumoCreateRequire } from 'node:module';\nconst require = __lumoCreateRequire(import.meta.url);",
+  },
 });

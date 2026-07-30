@@ -158,15 +158,22 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
       // SOFT: $order_id-shaped variable passed to get_post_meta / update_post_meta /
       // get_post — CONTEXT_DEPENDENT because the variable could be any post id.
+      //
+      // The name must be order-shaped AND id-shaped. A bare \w*order\w* also matched
+      // $recorder_id, $border_id, $orderby_post_id and $reorder_id — none of them
+      // WooCommerce. Allowing any _suffix then still matched $order_status and
+      // $order_number, which are not post ids either. Since a dropped Pro entry now
+      // surfaces a named teaser instead of silence, that imprecision would put a
+      // WooCommerce upsell on an audio plugin.
       {
-        match: /\bget_post_meta\s*\(\s*\$\w*order\w*/,
+        match: /\bget_post_meta\s*\(\s*\$(?:\w+_)?order(?:_id|_ID)?\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'woocommerce-hpos-order-access',
         condition: '$order_id is a WooCommerce order',
         language: 'php',
       },
       {
-        match: /\bupdate_post_meta\s*\(\s*\$\w*order\w*/,
+        match: /\bupdate_post_meta\s*\(\s*\$(?:\w+_)?order(?:_id|_ID)?\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'woocommerce-hpos-order-access',
         condition: '$order_id is a WooCommerce order',
@@ -293,6 +300,28 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'advanced-custom-fields-pro',
     sourceSignals: ['acf_add_local_field_group(', 'acf_register_block_type('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      { match: 'acf_get_field(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
+      { match: 'get_sub_field(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
+      { match: 'have_rows(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
+      {
+        match: "acf_add_local_field_group(",
+        class: 'CERTAIN',
+        entrySlug: 'acf-get-field-unescaped-output',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "acf_register_block_type(",
+        class: 'CERTAIN',
+        entrySlug: 'acf-get-field-unescaped-output',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-acf-extended',
@@ -305,6 +334,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'acf-extended',
     sourceSignals: ['acfe_add_options_page(', 'acfe_get_post_field_groups('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "acfe_add_options_page(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-acf-extended-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "acfe_get_post_field_groups(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-acf-extended-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-gravity-forms',
@@ -318,6 +366,24 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'gravityforms',
     sourceSignals: ['GFForms::', 'gform_after_submission'],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      { match: 'GFAPI::', class: 'CERTAIN', entrySlug: 'gf-server-side-validation', stripStrings: true, language: 'php' },
+      {
+        match: "GFForms::",
+        class: 'CERTAIN',
+        entrySlug: 'gf-server-side-validation',
+        language: 'php',
+      },
+      {
+        match: "gform_after_submission",
+        class: 'CERTAIN',
+        entrySlug: 'gf-server-side-validation',
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-meta-box',
@@ -331,6 +397,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'meta-box',
     sourceSignals: ['rwmb_meta(', 'rwmb_the_field('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "rwmb_meta(",
+        class: 'CERTAIN',
+        entrySlug: 'meta-box-rwmb-meta-object-type-arg',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "rwmb_the_field(",
+        class: 'CERTAIN',
+        entrySlug: 'meta-box-rwmb-meta-object-type-arg',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-pods',
@@ -343,6 +428,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'pods',
     sourceSignals: ['pods_field(', 'pods_field_display('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "pods_field(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-pods-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "pods_field_display(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-pods-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-carbon-fields',
@@ -355,6 +459,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
       'web/app/plugins/carbon-fields/carbon-fields-plugin.php',
     ],
     sourceSignals: ['carbon_get_post_meta(', 'Carbon_Fields\\Container\\Container'],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "carbon_get_post_meta(",
+        class: 'CERTAIN',
+        entrySlug: 'carbon-fields-raw-get-post-meta-complex-field-wrong-shape',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: 'Carbon_Fields\\Container\\Container',
+        class: 'CERTAIN',
+        entrySlug: 'carbon-fields-raw-get-post-meta-complex-field-wrong-shape',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-toolset-types',
@@ -367,6 +490,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'types',
     sourceSignals: ['types_render_field(', 'types_field('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "types_render_field(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-toolset-types-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "types_field(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-toolset-types-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-elementor-pro',
@@ -380,6 +522,19 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'elementor-pro',
     sourceSignals: ['\\Elementor\\Widget_Base'],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      { match: '\\Elementor\\Plugin', class: 'CERTAIN', entrySlug: 'elementor-register-controls-not-underscore-register-controls', stripStrings: true, language: 'php' },
+      {
+        match: '\\Elementor\\Widget_Base',
+        class: 'CERTAIN',
+        entrySlug: 'elementor-register-controls-not-underscore-register-controls',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wpbakery',
@@ -392,6 +547,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'js-composer',
     sourceSignals: ['vc_map(', 'vc_add_param('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "vc_map(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wpbakery-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "vc_add_param(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wpbakery-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-polylang',
@@ -406,6 +580,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'polylang',
     sourceSignals: ['pll_e(', 'pll_current_language('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "pll_e(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-polylang-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "pll_current_language(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-polylang-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-rank-math',
@@ -420,6 +613,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'seo-by-rank-math',
     sourceSignals: ['RankMath\\JSON_LD\\', 'rank_math_get_head('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: 'RankMath\\JSON_LD\\',
+        class: 'CERTAIN',
+        entrySlug: 'premium-rank-math-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "rank_math_get_head(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-rank-math-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wp-rocket',
@@ -432,6 +644,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'wp-rocket',
     sourceSignals: ['rocket_clean_domain(', 'rocket_clean_post('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "rocket_clean_domain(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wp-rocket-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: "rocket_clean_post(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wp-rocket-coverage-gap',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wordfence',
@@ -444,6 +675,23 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'wordfence',
     sourceSignals: ['wfBlock::', 'wordfence::liveTraf('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "wfBlock::",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wordfence-coverage-gap',
+        language: 'php',
+      },
+      {
+        match: "wordfence::liveTraf(",
+        class: 'CERTAIN',
+        entrySlug: 'premium-wordfence-coverage-gap',
+        language: 'php',
+      },
+    ],
   },
   {
     pattern: 'premium-wc-subscriptions',
@@ -457,6 +705,24 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
     wpCliSlug: 'woocommerce-subscriptions',
     sourceSignals: ['WC_Subscriptions::', 'wcs_get_subscription('],
+    // Presence signals for the blob catch, verbatim from the curated
+    // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
+    // a hit surfaces the named coverage gap — never a Free finding.
+    catchSignals: [
+      {
+        match: "WC_Subscriptions::",
+        class: 'CERTAIN',
+        entrySlug: 'woocommerce-subscriptions-hpos-order-access',
+        language: 'php',
+      },
+      {
+        match: "wcs_get_subscription(",
+        class: 'CERTAIN',
+        entrySlug: 'woocommerce-subscriptions-hpos-order-access',
+        stripStrings: true,
+        language: 'php',
+      },
+    ],
     // Detection + teaser only, like the other Pro-covered premium plugins
     // (acf-pro, elementor-pro): the WooCommerce Subscriptions knowledge lives in
     // Lumo Pro, so there is no Free-snapshot entry to render a catch against here.
@@ -501,6 +767,251 @@ export const PATTERNS: readonly PatternDefinition[] = [
         condition: 'this code is used alongside @wordpress/interactivity',
         suppressGuard: /from\s+['"]@wordpress\/interactivity['"]/,
         language: 'js',
+      },
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // Curated code rules connected from the knowledge base. No plugin detection:
+  // empty composer/directory/sourceSignals keeps them out of the project-scan
+  // ladder, so they only ever fire on a blob.
+  //
+  // Held back deliberately: 14 further curated rules match on the mere presence
+  // of a call (add_action('wp_ajax_…'), register_rest_route(…)) rather than on the
+  // absence of the guard, so they also fire on the fix the entry itself
+  // recommends. Connecting them needs a suppressGuard each — judgement work, not
+  // translation. See PROGRESS.md.
+  // ---------------------------------------------------------------------------
+  {
+    // Security fundamentals — wrong in every WordPress version, so no version fact
+    // anchors them and classify() caps them at SOFT. Raising that is the open
+    // severity decision; this translation does not pre-empt it.
+    //
+    // Signals translated 1:1 from the knowledge base. Only rules whose documented
+    // wrong form is caught AND whose documented fix stays quiet are connected here.
+    pattern: 'wordpress-security-fundamentals',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /\$\w+\s*=\s*\$_(?:POST|GET|REQUEST)\s*\[/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'superglobal-without-sanitize',
+        condition: 'the assigned variable is used without a sanitize_*() / absint() / intval() / (int) cast wrapping the superglobal read',
+        language: 'php',
+      },
+      {
+        match: /\$wpdb\s*->\s*(?:query|get_results|get_var|get_row|get_col)\s*\(\s*"[^"]*\$\w/,
+        class: 'CERTAIN',
+        entrySlug: 'wpdb-query-without-prepare-sql-injection',
+        language: 'php',
+      },
+      {
+        match: /\$wpdb\s*->\s*(?:query|get_results|get_var|get_row|get_col)\s*\(\s*\$[a-zA-Z_]\w*\s*\./,
+        class: 'CERTAIN',
+        entrySlug: 'wpdb-query-without-prepare-sql-injection',
+        language: 'php',
+      },
+      // The presence-matchers below were held back until each carried a
+      // suppressGuard on the correct form its own entry recommends — without
+      // the guard they fired on the documented fix (measured, 13 of 13).
+      // Guards were validated against both documented forms per rule before
+      // connecting: signal catches bad_pattern, guard recognises code_example,
+      // guard does not suppress the real hit.
+      {
+        match: /add_action\s*\(\s*['"]admin_post_/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'admin-action-without-capability-check',
+        condition: 'the handler does not call current_user_can() before performing the operation',
+        suppressGuard: /current_user_can\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /add_action\s*\(\s*['"]admin_action_/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'admin-action-without-capability-check',
+        condition: 'the handler does not call current_user_can() before performing the operation',
+        suppressGuard: /current_user_can\s*\(/,
+        language: 'php',
+      },
+      {
+        // CERTAIN on the literal: '__return_true' as permission_callback is
+        // self-evident. The guard encodes the one documented-correct case — a
+        // read-only public route, where __return_true is intentional.
+        match: /'permission_callback'\s*=>\s*'__return_true'/,
+        class: 'CERTAIN',
+        entrySlug: 'rest-route-missing-permission-callback',
+        condition: 'the route performs a mutating operation (POST/PUT/PATCH/DELETE)',
+        suppressGuard: /['"]methods['"]\s*=>\s*(?:WP_REST_Server::READABLE|['"]GET['"])/,
+        language: 'php',
+      },
+      {
+        match: /add_filter\s*\(\s*['"]the_content['"]/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'the-content-filter-without-loop-guard',
+        condition: 'the callback does not guard on is_main_query()/in_the_loop()',
+        suppressGuard: /is_main_query\s*\(|in_the_loop\s*\(|is_singular\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /add_action\s*\(\s*['"]wp_ajax_/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-ajax-handler-without-nonce',
+        condition: 'the handler does not verify a nonce before acting',
+        suppressGuard: /check_ajax_referer\s*\(|wp_verify_nonce\s*\(|check_admin_referer\s*\(/,
+        language: 'php',
+      },
+    ],
+  },
+  {
+    // Plugin-standard rules — structure and hygiene the WordPress handbook requires.
+    //
+    // Signals translated 1:1 from the knowledge base. Only rules whose documented
+    // wrong form is caught AND whose documented fix stays quiet are connected here.
+    pattern: 'wordpress-plugin-standards',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /\b__\s*\(\s*['"][^'"]+['"]\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'i18n-function-missing-text-domain',
+        condition: 'the call is missing the second argument (text-domain) — e.g. __( \'Hello\' ) instead of __( \'Hello\', \'myplugin\' )',
+        language: 'php',
+      },
+      {
+        match: /\b_e\s*\(\s*['"][^'"]+['"]\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'i18n-function-missing-text-domain',
+        condition: 'the call is missing the second argument (text-domain) — e.g. _e( \'Hello\' ) instead of _e( \'Hello\', \'myplugin\' )',
+        language: 'php',
+      },
+      {
+        match: /\besc_(?:html|attr)__\s*\(\s*['"][^'"]+['"]\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'i18n-function-missing-text-domain',
+        condition: 'the escaping i18n function is missing the text-domain second argument',
+        language: 'php',
+      },
+      // php-file-missing-abspath-guard is NOT connected, on purpose. Its signal
+      // asks a file-level question ("does this file open with an ABSPATH guard?")
+      // of a blob checker that is handed snippets. Measured against the 42
+      // documented correct examples in the snapshot it fired on 16 of them — by
+      // far the loudest rule in the set, and always wrong, because a snippet is
+      // never a whole file. It belongs to a file-aware scan, not to the catch.
+      {
+        // Two conditions in one expression: request data appears in the blob, and
+        // the redirect target is a bare variable rather than a built URL.
+        //
+        // A bare \bwp_redirect\s*\( fired on every use of an ordinary WordPress
+        // function, including `wp_redirect( home_url( '/thanks/' ) )`. Requiring the
+        // superglobal INSIDE the call was too narrow the other way: the entry's own
+        // wrong form assigns `$_GET['redirect_to']` to a variable first and redirects
+        // with that. Neither error was visible in the documented pair, because the
+        // correct example uses wp_safe_redirect() and so never met the signal.
+        //
+        // `wp_redirect( site_url( 'home' ) )` next to a whitelist check on $_GET is
+        // therefore quiet — the target is a call, not a variable.
+        // Two shapes, because request data reaches the call either way: assigned to
+        // a variable first, or passed inline.
+        match:
+          /\$_(?:GET|POST|REQUEST)\b[\s\S]{0,400}?\bwp_redirect\s*\(\s*\$\w+|\bwp_redirect\s*\(\s*[^;)]{0,80}\$_(?:GET|POST|REQUEST)\b/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-redirect-with-user-input-use-wp-safe-redirect',
+        condition: 'the URL argument may be derived from user-controlled input ($_GET, $_POST, $_REQUEST, or any unsanitized variable) — wp_safe_redirect() restricts the destination to the same host + allowed hosts list, eliminating open redirect risk',
+        stripStrings: true,
+        language: 'php',
+      },
+      // Presence-matcher, connected with its validated suppressGuard (see the
+      // note in wordpress-security-fundamentals).
+      {
+        match: /\bwp_enqueue_(?:script|style)\s*\(\s*['"][^'"]+['"]/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'enqueue-scripts-styles-global-scope',
+        condition: 'the enqueue is not gated to the pages that actually use the asset',
+        suppressGuard: /is_singular\s*\(|is_page\s*\(|is_front_page\s*\(|get_current_screen\s*\(|is_product\s*\(|is_admin\s*\(/,
+        language: 'php',
+      },
+    ],
+  },
+  {
+    // Core API breadth — the everyday Core surface: HTTP, roles and capabilities.
+    //
+    // Signals translated 1:1 from the knowledge base. Only rules whose documented
+    // wrong form is caught AND whose documented fix stays quiet are connected here.
+    pattern: 'wordpress-core-breadth',
+    composerKeys: [],
+    directoryPaths: [],
+    sourceSignals: [],
+    catchSignals: [
+      {
+        match: /current_user_can\s*\(\s*['"](?:administrator|editor|author|contributor|subscriber)['"]\s*\)/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-current-user-can-role-name-not-capability',
+        language: 'php',
+      },
+      {
+        match: /in_array\s*\(\s*['"][a-z_]+['"]\s*,\s*\$[a-zA-Z_]+->roles/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-direct-role-check-instead-of-capability',
+        language: 'php',
+      },
+      {
+        match: /\bcurl_init\s*\(/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-raw-curl-instead-of-http-api',
+        stripStrings: true,
+        language: 'php',
+      },
+      {
+        match: /\bcurl_exec\s*\(/,
+        class: 'CERTAIN',
+        entrySlug: 'wp-raw-curl-instead-of-http-api',
+        stripStrings: true,
+        language: 'php',
+      },
+      // Presence-matchers, connected with their validated suppressGuards (see
+      // the note in wordpress-security-fundamentals).
+      {
+        match: /\badd_option\s*\([^;]*(?:json_encode|get_posts|serialize)\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-add-option-large-data-missing-autoload-false',
+        condition: 'the option stores large data and autoload is not set to false',
+        suppressGuard: /,\s*(?:''|"")\s*,\s*false\b/,
+        language: 'php',
+      },
+      {
+        match: /\bregister_activation_hook\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-cron-missing-deactivation-unschedule',
+        condition: 'the plugin schedules cron events and does not unschedule them on deactivation',
+        suppressGuard: /wp_clear_scheduled_hook\s*\(|wp_unschedule_event\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /\bis_admin\s*\(\s*\)/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-is-admin-not-authorization-check',
+        condition: 'is_admin() is used as an authorization check — it only tests whether an admin PAGE is rendering, not whether the user may act',
+        suppressGuard: /current_user_can\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /\bwp_remote_(?:get|post|put|delete|patch|request)\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-remote-missing-is-wp-error-check',
+        condition: 'the response is used without an is_wp_error() check first',
+        suppressGuard: /is_wp_error\s*\(/,
+        language: 'php',
+      },
+      {
+        match: /\bget_transient\s*\(/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'wp-transient-missing-false-check-fallback',
+        condition: 'the transient value is used without a strict false check and regeneration fallback',
+        suppressGuard: /false\s*===|===\s*false/,
+        language: 'php',
       },
     ],
   },
