@@ -14,7 +14,7 @@
 
 import { loadSnapshot, findEntry } from '../lib/snapshot.js';
 import { PATTERNS } from './registry.js';
-import type { CatchSignal } from './registry.js';
+import type { CatchSignal, PatternDefinition } from './registry.js';
 import type { SnapshotEntry, Snapshot } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -271,12 +271,43 @@ export function applyCatchOverrides(
 
 const CATCH_CAP = 3;
 
+/**
+ * A signal fired, but the entry it points at is Pro-only — Free has nothing to
+ * render. Carries the data a caller needs to say so; the copy itself lives with
+ * the other user-facing text, not in the engine.
+ */
+export interface ProGap {
+  pluginName: string;
+  /** Pro has curated knowledge for this plugin, so an upgrade promise is honest. */
+  hasProCoverage: boolean;
+}
+
+export interface CheckCodeOutcome {
+  results: CatchResult[];
+  /**
+   * Set when a fired signal had no Free entry behind it. Callers MUST surface
+   * this instead of a neutral line when `results` is empty: staying silent on a
+   * signal that fired reads as a clean bill of health on code Lumo cannot see.
+   */
+  proGap?: ProGap;
+}
+
+/** Thin wrapper — the ranked results only. See checkCodeWithGaps for Pro gaps. */
 export function checkCode(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
   snapshot?: Snapshot,
   overrides?: CatchOverrides,
 ): CatchResult[] {
+  return checkCodeWithGaps(code, language, snapshot, overrides).results;
+}
+
+export function checkCodeWithGaps(
+  code: string,
+  language: 'php' | 'js' | 'auto' = 'auto',
+  snapshot?: Snapshot,
+  overrides?: CatchOverrides,
+): CheckCodeOutcome {
   try {
     const snap = snapshot ?? loadSnapshot();
 
@@ -293,20 +324,23 @@ export function checkCode(
     const strippedComments = stripComments(diffFiltered);
     const strippedAll = stripCommentsAndStrings(diffFiltered);
 
-    // Collect all catch signals from the registry for the detected language
-    const allSignals: CatchSignal[] = [];
+    // Collect all catch signals from the registry for the detected language.
+    // The owning pattern travels with the signal: when a signal fires into a
+    // Pro-only entry, the pattern is what names the plugin for the teaser.
+    const allSignals: { signal: CatchSignal; pattern: PatternDefinition }[] = [];
     for (const pattern of PATTERNS) {
       for (const sig of pattern.catchSignals ?? []) {
         if (sig.language === lang || lang === undefined) {
-          allSignals.push(sig);
+          allSignals.push({ signal: sig, pattern });
         }
       }
     }
 
     // 2. Run each signal against the blob
     const seen = new Map<string, CatchResult>(); // keyed by entrySlug
+    let proGap: ProGap | undefined;
 
-    for (const signal of allSignals) {
+    for (const { signal, pattern } of allSignals) {
       // Select test blob per signal:
       //   CERTAIN + stripStrings → strip both comments and string bodies
       //   CERTAIN (no stripStrings) → strip comments only (string literals are the signal)
@@ -325,7 +359,18 @@ export function checkCode(
       if (!hit) continue;
 
       const entry = findEntry(snap, signal.entrySlug);
-      if (!entry) continue;
+      if (!entry) {
+        // The signal fired but Free carries no entry for it — Pro-only knowledge.
+        // Record the gap so the caller can name it. Dropping it silently is the
+        // false all-clear this engine must never produce.
+        if (pattern.proTeaser && !proGap) {
+          proGap = {
+            pluginName: pattern.proTeaserName ?? pattern.pattern,
+            hasProCoverage: pattern.hasProCoverage === true,
+          };
+        }
+        continue;
+      }
 
       // Check suppress-guard: if the correct form is already present, fire nothing.
       // Used for absence-in-presence signals (the flag we expect to be missing is there).
@@ -359,9 +404,9 @@ export function checkCode(
       .sort((a, b) => tierRank(b.tier) - tierRank(a.tier))
       .slice(0, CATCH_CAP);
 
-    return applyCatchOverrides(raw, overrides);
+    return { results: applyCatchOverrides(raw, overrides), proGap };
   } catch {
-    return [];
+    return { results: [] };
   }
 }
 

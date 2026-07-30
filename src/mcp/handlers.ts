@@ -9,6 +9,8 @@ import {
   formatFreeMarkdown,
   formatCatch,
   CATCH_NEUTRAL_LINE,
+  buildCodeProTeaser,
+  buildCodeDetectionNote,
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
   PRO_MCP_ADD_LINE,
@@ -140,11 +142,22 @@ export async function handleCheckCode(
   snapshot?: Snapshot,
 ): Promise<string> {
   try {
-    const { checkCode } = await import('../detection/catch.js');
+    const { checkCodeWithGaps } = await import('../detection/catch.js');
     const snap = snapshot ?? loadSnapshot();
-    const results = checkCode(input.code ?? '', input.language ?? 'auto', snap);
+    const { results, proGap } = checkCodeWithGaps(
+      input.code ?? '',
+      input.language ?? 'auto',
+      snap,
+    );
 
     if (results.length === 0) {
+      // A signal fired into Pro-only knowledge: name the gap instead of the
+      // neutral line, or the user reads silence as "nothing wrong here".
+      if (proGap) {
+        return proGap.hasProCoverage
+          ? buildCodeProTeaser(proGap.pluginName)
+          : buildCodeDetectionNote(proGap.pluginName);
+      }
       return CATCH_NEUTRAL_LINE;
     }
 
