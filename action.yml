@@ -12,6 +12,18 @@ branding:
   color: 'blue'
 
 inputs:
+  anthropic_api_key:
+    description: >
+      Optional. When set, Lumo adds an autonomous WordPress-engineer review of
+      the diff as one advisory PR comment, grounded on the rule engine's
+      findings. Never affects the exit code. Pass it from a repository secret;
+      without it this stage is skipped entirely.
+    default: ''
+  claude_model:
+    description: >
+      Model for the autonomous review stage. Only read when anthropic_api_key
+      is set.
+    default: 'claude-sonnet-5'
   fail_on_loud:
     description: >
       Fail the check (exit 1) when at least one LOUD catch fires.

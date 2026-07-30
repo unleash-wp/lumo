@@ -71,16 +71,31 @@ async function fetchProResults(
   }
 
   const json = (await res.json()) as {
-    result?: { content?: Array<{ type: string; text?: string }> };
+    result?: {
+      content?: Array<{ type: string; text?: string }>;
+      structuredContent?: { found?: boolean };
+    };
   };
 
   const text = json?.result?.content?.[0]?.text ?? '';
-  // Mirrors the PRO server's neutral wording, not Lumo Free's CATCH_NEUTRAL_LINE —
-  // do not swap in that constant. See FINDINGS.md: the two strings currently differ,
-  // so a clean Pro response is still wrapped as a finding.
-  const neutralLine = 'No WordPress/WooCommerce issues detected in this code — looks clean.';
 
-  if (!text || text === neutralLine) return [];
+  // The Pro server states its verdict as data: structuredContent.found. Decide
+  // on the flag, never on the prose — the old string comparison matched a
+  // sentence the server never sent, so every clean Pro answer was wrapped as a
+  // finding. Fallback for servers predating the flag: the server's ACTUAL
+  // neutral wording. Fail direction on total uncertainty: treat as a finding
+  // (a false alarm), never as an all-clear.
+  const found = json?.result?.structuredContent?.found;
+  if (found === false) return [];
+  // trim: a single trailing newline from the transport must not turn the
+  // neutral sentence into a phantom finding.
+  if (
+    found === undefined &&
+    (!text.trim() || text.trim() === 'No known issues detected in the submitted code.')
+  ) {
+    return [];
+  }
+  if (!text.trim()) return [];
 
   // Pro result is already rendered Markdown from the Pro server.
   return [{ _proRendered: true as const, body: text }];
