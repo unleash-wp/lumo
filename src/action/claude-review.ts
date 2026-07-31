@@ -3,7 +3,7 @@
  *
  * The rule engine stays the authority: its findings are deterministic, sourced
  * and tiered, and they alone decide the exit code. This stage adds what a rule
- * cannot — reading the diff as a WordPress developer would — and it is fenced
+ * cannot (reading the diff as a WordPress developer would) and it is fenced
  * accordingly:
  *
  *   - OFF by default. It runs only when the workflow passes an
@@ -14,28 +14,28 @@
  *     facts and forbids fresh version claims: anything the model flags beyond
  *     them must be phrased as a review observation, not as a dated fact.
  *   - Fail-open. Any API error, timeout or unparseable response degrades to
- *     "no review comment", logged — a review outage must never break CI.
+ *     "no review comment", logged: a review outage must never break CI.
  */
 
 export interface ReviewInput {
   diff: string;
-  /** Rendered engine findings (already posted as comments) — the ground truth. */
+  /** Rendered engine findings (already posted as comments): the ground truth. */
   findings: Array<{ filename: string; tier: string; body: string }>;
   model: string;
 }
 
-const MAX_DIFF_CHARS = 60_000; // ~15k tokens — beyond this, review the head and say so.
+const MAX_DIFF_CHARS = 60_000; // ~15k tokens, beyond this, review the head and say so.
 
 export function buildReviewPrompt(input: ReviewInput): string {
   const truncated = input.diff.length > MAX_DIFF_CHARS;
-  // Cut on a line boundary — a diff sliced mid-line reads as corrupted code and
+  // Cut on a line boundary: a diff sliced mid-line reads as corrupted code and
   // invites the model to comment on an artifact of the cut.
   const head = input.diff.slice(0, MAX_DIFF_CHARS);
   const diff = truncated ? head.slice(0, head.lastIndexOf('\n') + 1 || undefined) : input.diff;
 
   const findingsBlock =
     input.findings.length === 0
-      ? '(none — the rule engine found nothing it covers)'
+      ? '(none: the rule engine found nothing it covers)'
       : input.findings
           .map((f) => `- [${f.tier}] ${f.filename}: ${f.body.split('\n')[0]}`)
           .join('\n');
@@ -44,7 +44,7 @@ export function buildReviewPrompt(input: ReviewInput): string {
     'You are a senior WordPress engineer reviewing a pull request diff.',
     '',
     'Established findings from the deterministic rule engine (already posted,',
-    'do NOT repeat them — build on them):',
+    'do NOT repeat them, build on them):',
     findingsBlock,
     '',
     'Review ONLY the added lines of the diff below. Focus, in order:',
@@ -84,7 +84,7 @@ export interface ClaudeReviewResult {
 }
 
 /**
- * One Messages-API call. Returns null on ANY failure — the caller logs and
+ * One Messages-API call. Returns null on ANY failure: the caller logs and
  * moves on; CI outcome is never coupled to this stage.
  */
 export async function runClaudeReview(

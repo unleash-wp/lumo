@@ -1,5 +1,5 @@
 /**
- * Tool handler logic — pure functions, no transport dependency.
+ * Tool handler logic, pure functions, no transport dependency.
  * Factored out so vitest can test them without a live MCP server.
  */
 
@@ -29,7 +29,7 @@ const NOT_FOUND_AUDIT =
   'No known WordPress risk patterns detected in this project. Nothing to check here.';
 
 const NOT_FOUND_LOOKUP = (query: string) => {
-  // A miss on a Pro-covered topic is not a miss — it is the paywall. Saying
+  // A miss on a Pro-covered topic is not a miss. It is the paywall. Saying
   // "nothing found" to someone who just typed "HPOS" both misleads (Lumo does
   // know this) and wastes the highest-intent moment the free tier ever gets.
   const proTopic = proTopicFor(query);
@@ -103,7 +103,7 @@ function scoreEntry(entry: SnapshotEntry, terms: string[]): number {
 
 /**
  * Ranked shortlist for a free-text query. Top 5, each as slug + title + first
- * summary sentence — enough to pick, small enough to stay cheap. The second
+ * summary sentence, enough to pick, small enough to stay cheap. The second
  * call then fetches the full entry by slug. Searches ONLY the Free snapshot;
  * a miss on a Pro topic goes through the same honest teaser as a slug miss.
  */
@@ -196,12 +196,12 @@ export interface CheckCodeHandlerInput {
  * Never throws.
  */
 /**
- * Machine-readable verdict alongside the prose — same law as the Pro server
+ * Machine-readable verdict alongside the prose, same law as the Pro server
  * (P2): a verdict is data, prose is presentation.
  *
  * `computed` is the layer's own honesty marker (product-gate condition): the
  * counts come from the SAME engine pass that produced the text, and when the
- * pipeline fell into its fail-open path, computed is false — a client must
+ * pipeline fell into its fail-open path, computed is false: a client must
  * treat that as "not computed", never as "checked, nothing found". Without the
  * marker, a degraded empty verdict is indistinguishable from a clean one,
  * which is the false all-clear moved into the data channel.
@@ -265,7 +265,7 @@ export async function handleCheckCodeFull(
 
     if (results.length === 0) {
       // Signals fired into Pro-only knowledge: name EVERY touched plugin
-      // instead of the neutral line — silence on the second plugin is the same
+      // instead of the neutral line, silence on the second plugin is the same
       // false all-clear as silence on the first.
       if (proGaps.length > 0) {
         const parts: string[] = [];
@@ -291,7 +291,7 @@ export async function handleCheckCodeFull(
           if (!isWoo && !resolvedWp) resolvedWp = detection.version;
         }
       } catch {
-        // fail-open — no version line for this result
+        // fail-open, no version line for this result
       }
     }
 
@@ -305,7 +305,7 @@ export async function handleCheckCodeFull(
       .join('\n\n---\n\n');
 
     // A Pro-only signal fired alongside the findings. Without this line the
-    // answer looks complete while a whole plugin went unchecked — the same false
+    // answer looks complete while a whole plugin went unchecked: the same false
     // all-clear as silence, only harder to notice.
     const withGap =
       proGaps.length > 0
@@ -322,7 +322,7 @@ export async function handleCheckCodeFull(
     return verdict(appendFreshnessReveal(withPrompt, results, snap?.generatedAt));
   } catch {
     // Fail-open path: the prose still answers, and the marker says the layer
-    // did NOT run — never dress this as a clean verdict.
+    // did NOT run, never dress this as a clean verdict.
     return {
       text: CATCH_NEUTRAL_LINE,
       computed: false,
@@ -336,12 +336,12 @@ export async function handleCheckCodeFull(
 }
 
 // ---------------------------------------------------------------------------
-// Upgrade prompt — appended to a catch response at the highest-intent moment:
+// Upgrade prompt, appended to a catch response at the highest-intent moment:
 // at least one LOUD result fired. Gated three ways so it never surfaces a dead
 // buy-link or an unwanted nag:
-//   1. at least one LOUD result (any domain — WooCommerce, Block Editor, Core),
+//   1. at least one LOUD result (any domain. WooCommerce, Block Editor, Core),
 //   2. the upgrade prompt is enabled (kill-switch, default on),
-//   3. a real checkout URL is configured — the built-in default does not
+//   3. a real checkout URL is configured: the built-in default does not
 //      resolve, so an unset LUMO_CHECKOUT_URL must never print a "Get it: <url>"
 //      line. Output is byte-identical to baseline when the URL is unset.
 // ---------------------------------------------------------------------------
@@ -393,22 +393,22 @@ function appendUpgradePrompt(body: string, results: CatchResult[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Freshness-gap reveal — C4
+// Freshness-gap reveal, C4
 //
 // Appended when a catch fires (any tier) BUT the upgrade prompt block did not
 // fire on the same response (no double-printing). Gated on the same kill-switch
 // so `LUMO_UPGRADE_PROMPT=off` suppresses both.
 //
 // The MCP add instruction is always inert-safe: it is a reference to the Pro
-// server, which validates the license key at query time. No URL gate required —
-// nothing breaks if the server is not yet live.
+// server, which validates the license key at query time. No URL gate required.
+// Nothing breaks if the server is not yet live.
 // ---------------------------------------------------------------------------
 
 /**
  * Append the freshness-gap reveal line when: catch results are present, the
  * kill-switch is on, and the upgrade prompt block did NOT already fire.
  *
- * `snapshotDate` — the ISO generatedAt from the loaded snapshot. Substituted
+ * `snapshotDate`: the ISO generatedAt from the loaded snapshot. Substituted
  * into the template; falls back to "June 2025" if unavailable (extremely rare).
  */
 function appendFreshnessReveal(

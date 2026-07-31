@@ -5,27 +5,27 @@ import type { PromptState, PromptVariant } from './prompt.js';
 import { DEFAULT_PROMPT_STATE } from './prompt.js';
 
 // ---------------------------------------------------------------------------
-// Event/activation contract — canonical seam. W3 extends W2; do not fork.
+// Event/activation contract, canonical seam. W3 extends W2; do not fork.
 //
 // Invariants every caller and future extension must honour:
 //   1. 'activation' requires target:'own' + gated:true. A sample save is
 //      'onboarded', never 'activation'. Enforced by isActivation().
-//   2. 'no_target' is its own distinct state — not a missing activation, not
+//   2. 'no_target' is its own distinct state, not a missing activation, not
 //      churn. Firing false 'activation' on a clean repo is forbidden.
 //   3. 'variant' rides every event from install onward so any event can be
 //      segmented by A/B arm without a separate lookup.
 //   4. Append-only JSON-lines. Readers must tolerate trailing/partial lines
-//      (fail-open). No network transport — local store only.
+//      (fail-open). No network transport, local store only.
 //   5. 'gated:true' marks a depth-gated HPOS catch (Free withholds the version
 //      matrix and verified fix). 'pql_gated_touch' counts these touches; the
-//      scoreboard is derived by counting those lines — no second counter file.
+//      scoreboard is derived by counting those lines, no second counter file.
 //   6. Telemetry consent is persisted in a 'telemetry' file (sibling to
 //      events.jsonl). Absent file = 'unset'. Never throws.
 // ---------------------------------------------------------------------------
 
 export type LumoEventType =
   | 'install'             // first-ever run on this machine
-  | 'onboarded'           // beat 1 shown (the teaching save) — NOT activation
+  | 'onboarded'           // beat 1 shown (the teaching save), NOT activation
   | 'activation'          // first depth-gated HPOS catch on the dev's OWN code
   | 'no_target'           // clean repo: sample shown, no own-code Woo order target
   | 'pql_gated_touch'     // a gated HPOS catch happened; carries running gated_count
@@ -50,7 +50,7 @@ export interface LumoEvent {
   target?: 'own' | 'sample';
   /** Whether the answer was depth-gated (Free withholds version matrix + verified fix). */
   gated?: boolean;
-  /** ms from install marker to this event — drives time-to-aha reporting. */
+  /** ms from install marker to this event, drives time-to-aha reporting. */
   ms_since_install?: number;
   /** Which surface produced a pql_gated_touch. */
   tool?: 'wp_check' | 'wp_knowledge';
@@ -66,7 +66,7 @@ export interface LumoEvent {
   plugin_version?: string;
 }
 
-/** Pure builder — no Date.now, no I/O. Deterministic and unit-testable. */
+/** Pure builder, no Date.now, no I/O. Deterministic and unit-testable. */
 export function buildEvent(input: {
   type: LumoEventType;
   at: string;
@@ -99,7 +99,7 @@ export function buildEvent(input: {
 }
 
 /**
- * Activation predicate — the single definition beat 2, no-target, and every
+ * Activation predicate: the single definition beat 2, no-target, and every
  * W3 dashboard key off. Activation = own-code, depth-gated HPOS catch.
  * Sample interactions NEVER satisfy it.
  */
@@ -122,7 +122,7 @@ const VARIANT_FILE = 'variant';
 
 /**
  * Append one JSON line to the local event log.
- * Never throws — mirrors auditProject's fail-open contract.
+ * Never throws, mirrors auditProject's fail-open contract.
  */
 export function recordEvent(e: LumoEvent, stateDir?: string): void {
   try {
@@ -155,7 +155,7 @@ export function hasOnboarded(stateDir?: string): boolean {
           return true;
         }
       } catch {
-        // tolerate partial or garbage trailing lines — fail-open
+        // tolerate partial or garbage trailing lines, fail-open
       }
     }
     return false;
@@ -178,7 +178,7 @@ export function getOrAssignVariant(stateDir?: string): OnboardVariant {
       const stored = readFileSync(variantPath, 'utf8').trim();
       if (stored === 'A' || stored === 'B') return stored;
     } catch {
-      // file absent — assign now
+      // file absent, assign now
     }
     const assigned: OnboardVariant = Math.random() < 0.5 ? 'A' : 'B';
     writeFileSync(variantPath, assigned, 'utf8');
@@ -189,7 +189,7 @@ export function getOrAssignVariant(stateDir?: string): OnboardVariant {
 }
 
 // ---------------------------------------------------------------------------
-// FA-30 — scoreboard: derived from the event log, no second counter file.
+// FA-30, scoreboard: derived from the event log, no second counter file.
 // ---------------------------------------------------------------------------
 
 /**
@@ -214,7 +214,7 @@ export function getGatedCount(stateDir?: string): number {
           count++;
         }
       } catch {
-        // tolerate partial or garbage trailing lines — fail-open
+        // tolerate partial or garbage trailing lines, fail-open
       }
     }
     return count;
@@ -252,7 +252,7 @@ export function recordGatedTouch(
 }
 
 // ---------------------------------------------------------------------------
-// FA-32 — telemetry consent: persisted tri-state, asked exactly once.
+// FA-32, telemetry consent: persisted tri-state, asked exactly once.
 // ---------------------------------------------------------------------------
 
 const TELEMETRY_FILE = 'telemetry';
@@ -274,7 +274,7 @@ export function getTelemetryConsent(stateDir?: string): TelemetryConsent {
 
 /**
  * Persist the telemetry consent decision.
- * Write-once-ish — the file can be overwritten but the onboarding prompt
+ * Write-once-ish: the file can be overwritten but the onboarding prompt
  * checks for 'unset' so it is effectively asked exactly once.
  * Never throws.
  */
@@ -292,21 +292,21 @@ export function setTelemetryConsent(
 }
 
 // ---------------------------------------------------------------------------
-// FA-34 — install-source attribution via injectable env.
+// FA-34, install-source attribution via injectable env.
 // ---------------------------------------------------------------------------
 
 /**
  * Resolve the install-source channel from the environment.
  * Distribution channels set LUMO_INSTALL_SOURCE in their install snippet.
  * Absent or empty → 'unknown' (never dropped from the install event).
- * Pure and injectable — pass a custom env object in tests.
+ * Pure and injectable, pass a custom env object in tests.
  */
 export function resolveInstallSource(env: Record<string, string | undefined> = process.env): string {
   return env['LUMO_INSTALL_SOURCE'] ?? 'unknown';
 }
 
 // ---------------------------------------------------------------------------
-// W4 — prompt state persistence (fs wrappers; keeps prompt.ts pure).
+// W4: prompt state persistence (fs wrappers; keeps prompt.ts pure).
 // Mirrors the pattern of getOrAssignVariant / telemetry helpers above.
 // ---------------------------------------------------------------------------
 
@@ -371,7 +371,7 @@ export function writePromptState(state: PromptState, stateDir?: string): void {
  * Read or assign the persisted prompt variant. Write-once: on first call the
  * variant is written; subsequent calls return the same value.
  * Defaults to 'calm' on any read or write failure. Never throws.
- * Mirrors getOrAssignVariant — randomness lives here, not in the pure module.
+ * Mirrors getOrAssignVariant, randomness lives here, not in the pure module.
  */
 export function getOrAssignPromptVariant(stateDir?: string): PromptVariant {
   try {
@@ -382,7 +382,7 @@ export function getOrAssignPromptVariant(stateDir?: string): PromptVariant {
       const stored = readFileSync(variantPath, 'utf8').trim();
       if (stored.length > 0) return stored;
     } catch {
-      // file absent — assign now
+      // file absent, assign now
     }
     // W4 ships one arm; field recorded for future A/B without code change.
     const assigned: PromptVariant = 'calm';
@@ -394,7 +394,7 @@ export function getOrAssignPromptVariant(stateDir?: string): PromptVariant {
 }
 
 // ---------------------------------------------------------------------------
-// Pro-teaser dedupe — the hook runs on every edit, so an unguarded teaser
+// Pro-teaser dedupe: the hook runs on every edit, so an unguarded teaser
 // repeats dozens of times in one sitting and turns an honest coverage note into
 // nagging. State is a plugin-keyed marker file: the full teaser once, a single
 // short line afterwards.

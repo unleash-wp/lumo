@@ -3,7 +3,7 @@
  * promises that must not rot:
  *
  *   1. It shows real findings from the real engine. A demo that hardcodes its
- *      output would keep bragging after a rule stopped firing — the exact
+ *      output would keep bragging after a rule stopped firing: the exact
  *      staleness this product exists to catch, turned on itself.
  *   2. It never reads as a scan of the user's project. A demonstration
  *      mistaken for a verdict on their code is the false all-clear in its

@@ -1,14 +1,14 @@
 /**
- * lumo-scan core — argument handling, diff acquisition, catch, output assembly.
+ * lumo-scan core, argument handling, diff acquisition, catch, output assembly.
  *
  * Pure result producer: returns the lines to print and the exit code, never
- * writes to stdout and never calls process.exit — src/scan/main.ts is the thin
+ * writes to stdout and never calls process.exit, src/scan/main.ts is the thin
  * entry that does both. Lives outside main.ts because importing main.ts runs
  * the scan (the `lumo` dispatcher relies on that import side effect), which
  * tests must not trigger.
  *
  * Modes:
- *   - Default: scans `git diff HEAD` (staged + unstaged), exit code always 0 —
+ *   - Default: scans `git diff HEAD` (staged + unstaged), exit code always 0,
  *     findings inform, they do not block.
  *   - CI (--ci): scans `git diff <base>...HEAD` where <base> comes from --base
  *     or $CI_MERGE_REQUEST_DIFF_BASE_SHA; without a base it falls back to the
@@ -18,7 +18,7 @@
  *
  * Fail-open honesty: when the scan cannot run (no git, unusable base ref,
  * unreadable snapshot, engine failure) the exit code is 0, and in CI mode an
- * explicit DID NOT RUN line is printed — a skipped scan must never read like
+ * explicit DID NOT RUN line is printed: a skipped scan must never read like
  * a clean one.
  */
 
@@ -41,7 +41,7 @@ export interface RunScanOptions {
   env?: Record<string, string | undefined>;
   /** Working directory for git (default: process.cwd()). */
   cwd?: string;
-  /** Diff source — injectable so tests feed unified-diff strings without git. */
+  /** Diff source, injectable so tests feed unified-diff strings without git. */
   getDiff?: (cwd: string, base: string | null) => string | null;
 }
 
@@ -78,8 +78,8 @@ const CI_NOT_CLEAN = 'This is not a clean result.';
  * coverage. Running the free local catch as a pipeline gate would promise a
  * verdict the free knowledge cannot back.
  *
- * Without a licence the job stays green — a missing subscription is not a
- * reason to block someone's merge — but it says plainly that nothing was
+ * Without a licence the job stays green: a missing subscription is not a
+ * reason to block someone's merge, but it says plainly that nothing was
  * checked, so the green tick can never be mistaken for a passed review.
  */
 const CI_REQUIRES_PRO =
@@ -90,8 +90,8 @@ const CI_REQUIRES_PRO =
   'and the MCP server and skills stay free.';
 
 /**
- * Licensed, but no Pro server configured. The gate still runs — the licence is
- * the entitlement — but on the free knowledge, which a paying customer would
+ * Licensed, but no Pro server configured. The gate still runs: the licence is
+ * the entitlement, but on the free knowledge, which a paying customer would
  * otherwise reasonably mistake for their Pro coverage.
  */
 const CI_NO_PRO_URL =
@@ -102,7 +102,7 @@ const CI_NO_PRO_URL =
 // Git diff.
 // Default mode: staged + unstaged working changes against HEAD, falling back
 // to `git diff` (unstaged only) when HEAD does not exist yet (new repo).
-// CI mode (base given): `git diff <base>...HEAD` — no working-tree fallback,
+// CI mode (base given): `git diff <base>..HEAD`, no working-tree fallback,
 // because silently comparing something other than the given base would scan
 // the wrong thing.
 // ---------------------------------------------------------------------------
@@ -120,11 +120,11 @@ function getGitDiff(cwd: string, base: string | null): string | null {
     return null;
   }
 
-  // Try `git diff HEAD` first — covers both staged and unstaged relative to HEAD.
+  // Try `git diff HEAD` first, covers both staged and unstaged relative to HEAD.
   let result = spawnSync('git', ['diff', 'HEAD'], {
     cwd,
     encoding: 'utf8',
-    maxBuffer: 4 * 1024 * 1024, // 4 MB cap — generous for local diffs
+    maxBuffer: 4 * 1024 * 1024, // 4 MB cap, generous for local diffs
   });
 
   if (result.status === 0 && typeof result.stdout === 'string') {
@@ -149,7 +149,7 @@ function getGitDiff(cwd: string, base: string | null): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Knowledge stamp — sourced from snapshot.generatedAt, never Date.now().
+// Knowledge stamp, sourced from snapshot.generatedAt, never Date.now().
 // Returns 'YYYY-MM-DD' slice. Fail-open: returns null when snapshot unavailable.
 // ---------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ function knowledgeDate(): string | null {
 
 // ---------------------------------------------------------------------------
 // Base ref resolution, CI mode only: --base wins, else the GitLab MR variable.
-// Empty values count as not given — the CI template passes --base "$VAR"
+// Empty values count as not given: the CI template passes --base "$VAR"
 // verbatim, which expands to "" outside a merge request pipeline.
 // ---------------------------------------------------------------------------
 
@@ -190,7 +190,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   const lines: string[] = [];
 
   // --help must answer, not scan. Found in QA: the documented bin ignored the
-  // flag and ran a scan instead — whoever tries the docs gets no help.
+  // flag and ran a scan instead, whoever tries the docs gets no help.
   if (argv.includes('--help') || argv.includes('-h')) {
     return { lines: [HELP_TEXT], exitCode: 0 };
   }
@@ -219,7 +219,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
 
   if (ci && base === null) {
     // Gemini pass B: in a pipeline this state is config drift (the MR base
-    // variable did not resolve), and a CI checkout has a clean tree — so the
+    // variable did not resolve), and a CI checkout has a clean tree, so the
     // line must say plainly that the merge request was NOT checked, not just
     // describe the fallback.
     lines.push(
@@ -229,12 +229,12 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   }
 
   // Licensed, but no server configured: the gate runs on the free knowledge.
-  // Say so — a Pro subscriber has every reason to assume Pro coverage.
+  // Say so: a Pro subscriber has every reason to assume Pro coverage.
   if (ci && !proUrl) {
     lines.push(CI_NO_PRO_URL);
   }
 
-  // 1. Obtain diff — fail-open: no git / not a repo → friendly message.
+  // 1. Obtain diff, fail-open: no git / not a repo → friendly message.
   let diff: string | null;
   try {
     diff = getDiff(cwd, base);
@@ -270,7 +270,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
       ci
         ? `lumo scan: no changes to scan${dateNote}.`
         : // A watchdog that is silent on first contact has not shown anything.
-          // This is the most likely first run — a clean checkout — so point at
+          // This is the most likely first run (a clean checkout) so point at
           // the one command that proves the catch works before there is any
           // change to catch.
           `lumo scan: no uncommitted changes to scan${dateNote}.\n` +
@@ -283,14 +283,14 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   const files = parseDiff(diff);
   const fileCount = files.length;
 
-  // 4. Run catch — fail-open: any internal error exits 0, in CI mode with an
+  // 4. Run catch, fail-open: any internal error exits 0, in CI mode with an
   // explicit DID NOT RUN line.
   let result;
   try {
     // In CI the licence is present by the time we get here (checked above), so
     // the gate runs against the licensed Pro server. Locally it stays free.
     result = ci && proUrl ? await runCatch({ diff, proUrl, licenseKey }) : await runCatch({ diff });
-    // File-level ABSPATH check — only the scan can carry it honestly, and only
+    // File-level ABSPATH check, only the scan can carry it honestly, and only
     // for NEW files, where the diff is the whole file. Advisory, never LOUD.
     try {
       const snap = loadSnapshot();
@@ -300,7 +300,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
         result.softCount += 1;
       }
     } catch {
-      // fail-open — the diff-based findings stand on their own
+      // fail-open: the diff-based findings stand on their own
     }
   } catch {
     if (ci) {
@@ -330,7 +330,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   // LUMO_FAIL_ON_LOUD is not the literal string 'false'. SOFT never blocks.
   const exitCode = ci && result.loudCount > 0 && env['LUMO_FAIL_ON_LOUD'] !== 'false' ? 1 : 0;
 
-  // 5a. Findings present — print them, LOUD first (runCatch returns file order, so sort below).
+  // 5a. Findings present, print them, LOUD first (runCatch returns file order, so sort below).
   if (result.findings.length > 0) {
     const loudCount = result.loudCount;
     const softCount = result.softCount;
@@ -361,7 +361,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
     return { lines, exitCode };
   }
 
-  // 5b. No findings — scope statement, never a verdict on the changes.
+  // 5b. No findings, scope statement, never a verdict on the changes.
   const fileLabel = fileCount === 1 ? '1 changed file' : `${fileCount} changed files`;
   lines.push(
     SCAN_NO_MATCH_TEMPLATE.replace(

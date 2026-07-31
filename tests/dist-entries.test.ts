@@ -1,7 +1,7 @@
 /**
  * The built entry points must actually start.
  *
- * `lumo action` died with 'Dynamic require of "net" is not supported' — the
+ * `lumo action` died with 'Dynamic require of "net" is not supported': the
  * ESM bundle stubs require(), and @actions/github reaches for node built-ins
  * through it. Nothing caught that: the unit tests import TypeScript sources,
  * where the problem does not exist. It would have shipped, and every customer

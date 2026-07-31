@@ -1,5 +1,5 @@
 /**
- * P5 — the ABSPATH rule on its honest surface. In the blob catch it fired on
+ * P5: the ABSPATH rule on its honest surface. In the blob catch it fired on
  * 16 of 42 documented correct examples (a snippet is never a whole file); the
  * scan judges only NEW files, where the diff IS the whole file, and stays
  * silent everywhere it cannot see the file's opening.
@@ -67,7 +67,7 @@ describe('abspath on the scan surface', () => {
     expect(abspathFindings(diff, snap)).toEqual([]);
   });
 
-  it('SILENCE: an edit hunk cannot show the file opening — no judgement', () => {
+  it('SILENCE: an edit hunk cannot show the file opening, no judgement', () => {
     const diff = editDiff('my-plugin/init.php', ["add_action( 'wp_footer', 'my_thing' );"]);
     expect(abspathFindings(diff, snap)).toEqual([]);
   });

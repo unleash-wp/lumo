@@ -47,7 +47,7 @@ If any match is found → WooCommerce detected. Version: unknown. **Go to Output
 If none of Steps 1–4 detected WooCommerce, print exactly:
 
 ```
-No WooCommerce detected in this project. Lumo's HPOS guardrail is WooCommerce-specific — nothing to check here.
+No WooCommerce detected in this project. Lumo's HPOS guardrail is WooCommerce-specific. Nothing to check here.
 ```
 
 Stop.

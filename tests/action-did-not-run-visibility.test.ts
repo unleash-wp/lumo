@@ -3,7 +3,7 @@
  * looks at it.
  *
  * Two paths in the Action end without checking anything and still leave the
- * check green on purpose — no licence, and no covered pattern in the diff.
+ * check green on purpose, no licence, and no covered pattern in the diff.
  * Both carried a sentence saying so, and both wrote it with `core.info`, which
  * puts it in a step log nobody opens when a check is green. The sentence was
  * true, correctly worded, product-gated, and invisible at the only moment it
@@ -62,7 +62,7 @@ describe('a check that did not run says so where it is seen', () => {
     expect(core.info).toHaveBeenCalled();
   });
 
-  it('writes the job summary either way — the log is not a channel', async () => {
+  it('writes the job summary either way: the log is not a channel', async () => {
     await announce('Lumo: nothing matched', 'no covered pattern matched', false);
 
     expect(addHeading).toHaveBeenCalledWith('Lumo: nothing matched', 3);

@@ -12,11 +12,11 @@ import type { FreeRenderedEntry, Snapshot } from '../types.js';
 export type { PluginDetection, DetectionSource } from './types.js';
 
 /**
- * Upgrade-promising teaser — only shown when Pro has real curated knowledge for
+ * Upgrade-promising teaser, only shown when Pro has real curated knowledge for
  * the plugin (hasProCoverage: true on the registry entry). No bluff, no invented checks.
  *
  * Named plugins in the closing line are those with hasProCoverage: true in registry.ts.
- * Keep the list honest — only add a plugin here once Pro has a published entry for it.
+ * Keep the list honest, only add a plugin here once Pro has a published entry for it.
  */
 export function buildProTeaser(pluginName: string): string {
   return (
@@ -45,7 +45,7 @@ export interface AuditResult {
   entry?: FreeRenderedEntry;
   /**
    * Set when a Pro-teaser pattern was detected AND Pro has curated knowledge
-   * (hasProCoverage: true). The upgrade promise is honest — callers surface
+   * (hasProCoverage: true). The upgrade promise is honest, callers surface
    * this as the result.
    */
   proTeaser?: string;
@@ -92,7 +92,7 @@ export function auditProject(projectRoot: string, snapshot?: Snapshot): AuditRes
 
     // Pro-teaser path: plugin detected but Free has no knowledge for it.
     // Only promise an upgrade when Pro actually has coverage (hasProCoverage: true).
-    // Plugins without coverage get an honest detection note — no upgrade CTA.
+    // Plugins without coverage get an honest detection note, no upgrade CTA.
     const def = PATTERNS.find((p) => p.pattern === detection.pattern);
     if (def?.proTeaser) {
       const name = def.proTeaserName ?? detection.pattern;

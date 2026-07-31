@@ -1,7 +1,7 @@
 # Lumo checks its own pull requests with its own engine.
 #
 # Deliberately NOT the licensed CI gate. That gate is a Lumo Pro feature and
-# needs a licence key, and this is the free repository — no key belongs here.
+# needs a licence key, and this is the free repository: no key belongs here.
 # What this job dogfoods is the engine: the same free catch a user gets from
 # `lumo scan`, run over the changes in the pull request.
 #
@@ -9,7 +9,7 @@
 # job log, the check stays green.
 #
 # It is not the customer-facing CI gate. That one is Lumo Pro, lives in
-# unleash-wp/lumo-action, and needs a licence — which this repository must not
+# unleash-wp/lumo-action, and needs a licence, which this repository must not
 # carry. What runs here is the branch's own engine, against the branch.
 
 name: Self review

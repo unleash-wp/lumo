@@ -4,7 +4,7 @@
  * Verifies the default-safe contract: absent config = warn-only (advisory).
  * Only enforce.mode:"block" enables non-zero exit on LOUD catches.
  *
- * Tests are pure function tests — no GitHub API calls, no real Action runner.
+ * Tests are pure function tests, no GitHub API calls, no real Action runner.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -36,7 +36,7 @@ function writeConfig(content: unknown): void {
 // Default-safe: no config → warn-only
 // ---------------------------------------------------------------------------
 
-describe('resolveActionEnforceMode — default-safe', () => {
+describe('resolveActionEnforceMode, default-safe', () => {
   it('returns warn-only when no .claude directory exists', () => {
     expect(resolveActionEnforceMode(tmpDir)).toBe('warn-only');
   });
@@ -52,8 +52,8 @@ describe('resolveActionEnforceMode — default-safe', () => {
   });
 
   // A file that is present and broken used to be indistinguishable from no file
-  // at all: both answered 'warn-only'. Falling open is right — a typo must not
-  // block a team's merges — but answering it silently let a repository ask for
+  // at all: both answered 'warn-only'. Falling open is right: a typo must not
+  // block a team's merges, but answering it silently let a repository ask for
   // a blocking gate, lose it, and go on reading its green checks as enforced.
   // 'unreadable' still falls open at the call site; it exists so the run can
   // say what happened.
@@ -86,7 +86,7 @@ describe('resolveActionEnforceMode — default-safe', () => {
 // Explicit block
 // ---------------------------------------------------------------------------
 
-describe('resolveActionEnforceMode — block', () => {
+describe('resolveActionEnforceMode, block', () => {
   it('returns block when enforce.mode is "block"', () => {
     writeConfig({ enforce: { mode: 'block' } });
     expect(resolveActionEnforceMode(tmpDir)).toBe('block');
@@ -105,7 +105,7 @@ describe('resolveActionEnforceMode — block', () => {
 // Off mode
 // ---------------------------------------------------------------------------
 
-describe('resolveActionEnforceMode — off', () => {
+describe('resolveActionEnforceMode, off', () => {
   it('returns off when enforce.mode is "off"', () => {
     writeConfig({ enforce: { mode: 'off' } });
     expect(resolveActionEnforceMode(tmpDir)).toBe('off');

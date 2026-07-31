@@ -1,5 +1,5 @@
 /**
- * Paket 0 — the two false-all-clear fixes.
+ * Paket 0: the two false-all-clear fixes.
  *
  * 0a: a signal that fires into Pro-only knowledge must name the gap, never be
  *     dropped in silence. Silence on a fired signal reads as a clean bill of
@@ -26,14 +26,14 @@ $order_id = 123;
 update_post_meta( $order_id, '_billing_email', 'a@b.de' );
 `;
 
-// Same shape, no WooCommerce relation — the near case that must stay quiet.
+// Same shape, no WooCommerce relation: the near case that must stay quiet.
 const PLAIN_BLOB = `<?php
 function my_plugin_render_notice() {
     echo esc_html__( 'Hello', 'my-plugin' );
 }
 `;
 
-describe('0a — a fired signal into Pro-only knowledge names the gap', () => {
+describe('0a: a fired signal into Pro-only knowledge names the gap', () => {
   it('BELL: engine reports a proGap for HPOS order meta', () => {
     const { results, proGap } = checkCodeWithGaps(HPOS_BLOB, 'php', snap);
     expect(results).toHaveLength(0); // Free has no entry to render
@@ -80,7 +80,7 @@ describe('0a — a fired signal into Pro-only knowledge names the gap', () => {
  * also matches recorder, border, orderby and reorder. Named upsells on unrelated
  * code are exactly the noise §3 forbids, so `order` must sit on a name boundary.
  */
-describe('0a — the order-shaped variable must be WooCommerce-shaped', () => {
+describe('0a: the order-shaped variable must be WooCommerce-shaped', () => {
   const gap = (code: string) => checkCodeWithGaps(code, 'php', snap).proGap;
 
   it.each([
@@ -102,7 +102,7 @@ describe('0a — the order-shaped variable must be WooCommerce-shaped', () => {
   });
 });
 
-describe('0b — the neutral line states scope, not cleanliness', () => {
+describe('0b: the neutral line states scope, not cleanliness', () => {
   it('never claims the code is clean', () => {
     expect(CATCH_NEUTRAL_LINE.toLowerCase()).not.toContain('clean.');
     expect(CATCH_NEUTRAL_LINE.toLowerCase()).not.toContain('looks clean');
@@ -114,7 +114,7 @@ describe('0b — the neutral line states scope, not cleanliness', () => {
   });
 });
 
-describe('regression — the normal Free path is untouched', () => {
+describe('regression: the normal Free path is untouched', () => {
   it('checkCode still returns a plain array and still catches a Free signal', () => {
     const out = checkCode(
       '<?php wp_register_ability( "my/thing", array( "label" => "x" ) );',

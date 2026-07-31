@@ -2,7 +2,7 @@
   Evaluation for the Lumo Free MCP server (lumo_audit / lumo_lookup / lumo_check_code).
 
   Every answer below was produced by running the question against the built
-  server (dist/mcp.mjs) and reading what it actually returned — none was written
+  server (dist/mcp.mjs) and reading what it actually returned. None was written
   from memory. Re-verify after any snapshot regeneration:
       npm run build && node dist/mcp.mjs   (drive it over stdio)
 
@@ -35,7 +35,7 @@
   </qa_pair>
 
   <qa_pair>
-    <question>Check this line with Lumo: `$html = wp_img_tag_add_loading_optimization_attrs( $img, 'the_content' );`. Does Lumo report any issue with it — answer "clean" if it reports none, "flagged" if it does.</question>
+    <question>Check this line with Lumo: `$html = wp_img_tag_add_loading_optimization_attrs( $img, 'the_content' );`. Does Lumo report any issue with it, answer "clean" if it reports none, "flagged" if it does.</question>
     <answer>clean</answer>
   </qa_pair>
 
@@ -45,7 +45,7 @@
   </qa_pair>
 
   <qa_pair>
-    <question>Ask Lumo Free to look up the "woocommerce" category. WooCommerce knowledge is not in the free tier — which tier does Lumo say it belongs to, in one word?</question>
+    <question>Ask Lumo Free to look up the "woocommerce" category. WooCommerce knowledge is not in the free tier, which tier does Lumo say it belongs to, in one word?</question>
     <answer>Pro</answer>
   </qa_pair>
 
@@ -66,22 +66,22 @@
   <!-- Added 2026-07-31 alongside the feature wave: LOUD always-wrong route,
        free-text search, premium coverage gaps, multi-gap naming. -->
   <qa_pair>
-    <question>Check this line with Lumo: $wpdb->get_results( "SELECT * FROM t WHERE id = $id" ); — does the answer arrive as a LOUD warning (starts with the warning symbol) or as a soft advisory?</question>
+    <question>Check this line with Lumo: $wpdb->get_results( "SELECT * FROM t WHERE id = $id" );, does the answer arrive as a LOUD warning (starts with the warning symbol) or as a soft advisory?</question>
     <answer>LOUD</answer>
   </qa_pair>
 
   <qa_pair>
-    <question>Search the Lumo knowledge with the free-text query "nonce ajax" — which slug is the top match in the shortlist?</question>
+    <question>Search the Lumo knowledge with the free-text query "nonce ajax", which slug is the top match in the shortlist?</question>
     <answer>wp-ajax-handler-without-nonce</answer>
   </qa_pair>
 
   <qa_pair>
-    <question>Check this line with Lumo: $v = rwmb_meta( 'field' ); — which plugin ecosystem does the answer name as touched but not covered by the free tier?</question>
+    <question>Check this line with Lumo: $v = rwmb_meta( 'field' );, which plugin ecosystem does the answer name as touched but not covered by the free tier?</question>
     <answer>Meta Box</answer>
   </qa_pair>
 
   <qa_pair>
-    <question>Check a blob containing BOTH update_post_meta( $order_id, ... ) AND add_action( 'gform_after_submission', ... ) with Lumo — how many distinct plugin ecosystems does the answer name as coverage gaps?</question>
+    <question>Check a blob containing BOTH update_post_meta( $order_id.. ) AND add_action( 'gform_after_submission'.. ) with Lumo, how many distinct plugin ecosystems does the answer name as coverage gaps?</question>
     <answer>2</answer>
   </qa_pair>
 </evaluation>

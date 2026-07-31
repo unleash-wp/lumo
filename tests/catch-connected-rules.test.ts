@@ -3,8 +3,8 @@
  * registry, each with the pair §3 demands.
  *
  * The pair is taken from the knowledge entry itself rather than invented here:
- *   bad_pattern   — the documented wrong form. MUST be caught.
- *   code_example  — the documented correct form. MUST stay quiet.
+ *   bad_pattern: the documented wrong form. MUST be caught.
+ *   code_example: the documented correct form. MUST stay quiet.
  *
  * That makes the test a statement about the product promise, not about a regex:
  * if a rule cannot catch its own documented counter-example, the rule is not
@@ -26,7 +26,7 @@ const CONNECTED_SLUGS = [
   'wp-current-user-can-role-name-not-capability',
   'wp-direct-role-check-instead-of-capability',
   'wp-raw-curl-instead-of-http-api',
-  // Connected with validated suppressGuards — the guard silences the entry's
+  // Connected with validated suppressGuards: the guard silences the entry's
   // own documented fix, which is what held these back before.
   'admin-action-without-capability-check',
   'rest-route-missing-permission-callback',
@@ -50,7 +50,7 @@ function slugsCaught(code: string): string[] {
   return checkCode(code, 'php', snap).map((r) => r.entry.slug);
 }
 
-describe('connected rules — every rule catches its own documented wrong form', () => {
+describe('connected rules. Every rule catches its own documented wrong form', () => {
   it.each(CONNECTED_SLUGS)('BELL: %s fires on its bad_pattern', (slug) => {
     const bad = entryFor(slug).bad_pattern;
     expect(bad, `${slug} has no bad_pattern to test against`).toBeTruthy();
@@ -58,7 +58,7 @@ describe('connected rules — every rule catches its own documented wrong form',
   });
 });
 
-describe('connected rules — no rule fires on its own documented fix', () => {
+describe('connected rules, no rule fires on its own documented fix', () => {
   it.each(CONNECTED_SLUGS)('SILENCE: %s stays quiet on its code_example', (slug) => {
     const good = entryFor(slug).code_example;
     expect(good, `${slug} has no code_example to test against`).toBeTruthy();
@@ -70,15 +70,15 @@ describe('connected rules — no rule fires on its own documented fix', () => {
  * From the false-positive review (Gemini, Stufe 3). Two rules fired on correct
  * code, and the documented pair could not see it:
  *
- *   wp_redirect — the signal was a bare `wp_redirect(`, so every use of an
+ *   wp_redirect: the signal was a bare `wp_redirect(`, so every use of an
  *   ordinary WordPress function was flagged. The pair passed only because the
  *   entry's correct example uses wp_safe_redirect(), so the signal never met
  *   correct wp_redirect() code at all.
  *
- *   the order-shaped variable — any `_suffix` counted, so $order_status and
+ *   the order-shaped variable, any `_suffix` counted, so $order_status and
  *   $order_number drew a WooCommerce upsell although neither is a post id.
  */
-describe('connected rules — precision against correct code', () => {
+describe('connected rules, precision against correct code', () => {
   const fires = (code: string, slug: string) => slugsCaught(code).includes(slug);
   const REDIRECT = 'wp-redirect-with-user-input-use-wp-safe-redirect';
 
@@ -99,13 +99,13 @@ describe('connected rules — precision against correct code', () => {
 
 /**
  * Known limit, pinned deliberately (Gemini pass B, measured): suppressGuards
- * work at blob level. Two AJAX handlers in one blob, one verified, one not —
+ * work at blob level. Two AJAX handlers in one blob, one verified, one not:
  * the guard sees the one check and silences both. Per law 1 the mechanism errs
  * quiet; scoping guards per handler needs real parsing, not regex, and is a
- * separate decision. If this test starts failing, the limit was lifted —
+ * separate decision. If this test starts failing, the limit was lifted,
  * delete the test alongside that change, not before.
  */
-describe('connected rules — blob-level guard limit (documented)', () => {
+describe('connected rules, blob-level guard limit (documented)', () => {
   it('a guarded handler silences an unguarded sibling in the same blob', () => {
     const two = `<?php
 add_action('wp_ajax_safe', function() { check_ajax_referer('n'); update_option('a', 1); });
@@ -120,9 +120,9 @@ add_action('wp_ajax_unsafe', function() { update_option('b', $_POST['v']); });
  * not see (issue #101, measured against ordinary insecure PHP). Neither was a
  * missing entry: the knowledge was there and the signal looked for the wrong
  * shape, which is the failure mode a bell/silence pair taken from the entry
- * cannot catch — the entry's own example happened to use the covered form.
+ * cannot catch: the entry's own example happened to use the covered form.
  */
-describe('connected rules — REST route with no permission_callback at all', () => {
+describe('connected rules, REST route with no permission_callback at all', () => {
   const REST = 'rest-route-missing-permission-callback';
   const fires = (code: string) => slugsCaught(code).includes(REST);
 
@@ -177,7 +177,7 @@ register_rest_route( 'x/v1', '/b', array( 'callback' => 'b', 'permission_callbac
    * span therefore refuses to cross them, so this registration stays silent
    * even though it really is missing its permission_callback. Silence with a
    * boundary the entry states beats an alarm on correct code. Lifting this
-   * needs parsing — delete this test alongside that change, not before.
+   * needs parsing, delete this test alongside that change, not before.
    */
   it('LIMIT: a closure among the arguments keeps the rule silent', () => {
     const code = `<?php
@@ -188,7 +188,7 @@ register_rest_route( 'x/v1', '/y', [
   });
 });
 
-describe('connected rules — superglobal used inline, not assigned', () => {
+describe('connected rules, superglobal used inline, not assigned', () => {
   const SG = 'superglobal-without-sanitize';
   const fires = (code: string) => slugsCaught(code).includes(SG);
 
@@ -210,7 +210,7 @@ describe('connected rules — superglobal used inline, not assigned', () => {
     ['passed to vprintf', `<?php vprintf( '<b>%s</b>', array( $_GET['q'] ) );`],
     ['emitted through the short echo tag', `<?= $_GET['name'] ?>`],
     [
-      // The span crosses newlines — only a semicolon stops it.
+      // The span crosses newlines, only a semicolon stops it.
       'concatenated across several lines',
       `<?php echo '<div>'\n  . '<span>'\n  . $_GET['name']\n  . '</span>';`,
     ],
@@ -242,7 +242,7 @@ describe('connected rules — superglobal used inline, not assigned', () => {
   });
 });
 
-describe('connected rules — the registry really carries them', () => {
+describe('connected rules: the registry really carries them', () => {
   it('all 17 slugs resolve to a snapshot entry', () => {
     for (const slug of CONNECTED_SLUGS) expect(entryFor(slug).slug).toBe(slug);
   });

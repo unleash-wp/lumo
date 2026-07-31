@@ -9,7 +9,7 @@ import { checkCode } from '../src/detection/catch.js';
  * highest-intent moment → the upgrade prompt appears with an ATTRIBUTED
  * checkout URL (source=catch + gated count + prompt variant) → the click is
  * what the Pro funnel counts. If any link in that chain silently breaks, the
- * product still "works" while earning nothing — so it is asserted here.
+ * product still "works" while earning nothing, so it is asserted here.
  *
  * The three gates are asserted explicitly, because each one silently swallows
  * the prompt by design: LOUD result present, kill-switch on, checkout URL set.
@@ -18,7 +18,7 @@ import { checkCode } from '../src/detection/catch.js';
 /**
  * The flagship Free demo snippet: a CERTAIN signal on a dated removal (WP 5.9),
  * which is what earns a LOUD catch. WooCommerce knowledge is Pro-only now, so
- * the funnel is asserted on the LOUD a real free user can hit — these handlers
+ * the funnel is asserted on the LOUD a real free user can hit. These handlers
  * read the shipped Free snapshot.
  *
  * It used to be wp_img_tag_add_decoding_attr(), which is deprecated and not
@@ -30,7 +30,7 @@ const LOUD_SNIPPET = `const { isValidBlockContent } = wp.blocks;
 const ok = isValidBlockContent( blockType, attrs, inner, html );`;
 
 /**
- * Same signal, but wrapped in a function_exists() shim — the developer is writing
+ * Same signal, but wrapped in a function_exists() shim: the developer is writing
  * a polyfill, not misusing the API, so the engine caps it at SOFT.
  */
 const SOFT_ONLY_SNIPPET = `<?php
@@ -39,7 +39,7 @@ if ( ! function_exists( 'wp_img_tag_add_decoding_attr' ) ) {
 }`;
 const CHECKOUT = 'https://buy.example.test/lumo';
 
-describe('checkout funnel — catch → attributed upgrade prompt', () => {
+describe('checkout funnel, catch → attributed upgrade prompt', () => {
   const original = { url: process.env['LUMO_CHECKOUT_URL'], sw: process.env['LUMO_UPGRADE_PROMPT'] };
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
   it('emits the checkout URL with full attribution when a LOUD catch fires', async () => {
     const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'js' });
     expect(out).toContain(CHECKOUT);
-    // Attribution params the funnel digest joins on — a bare URL is a lost sale.
+    // Attribution params the funnel digest joins on: a bare URL is a lost sale.
     expect(out).toMatch(/[?&]ref=catch\b/);
     expect(out).toMatch(/[?&]gated=\d+/);
     expect(out).toMatch(/[?&]v=block\b/);
@@ -81,7 +81,7 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
   });
 
   it('never shows the upgrade prompt on clean code (no nag without a finding)', async () => {
-    // The correct replacement call — near-miss of the LOUD signal, must stay silent.
+    // The correct replacement call, near-miss of the LOUD signal, must stay silent.
     const out = await handleCheckCode({
       code: "<?php $html = wp_img_tag_add_loading_optimization_attrs( $img, 'the_content' );",
       language: 'php',
@@ -92,7 +92,7 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
   it('a SOFT-only finding gets the freshness reveal, not the buy-link', async () => {
     // The commercial boundary: the checkout ask is reserved for a certain,
     // dated break (LOUD). An ambiguous hit still nudges toward Pro, but never
-    // asks for money — that is what keeps the prompt trusted rather than nagging.
+    // asks for money. That is what keeps the prompt trusted rather than nagging.
     const results = checkCode(SOFT_ONLY_SNIPPET, 'php');
     expect(results.length).toBeGreaterThan(0);
     expect(results.some((r) => r.tier === 'LOUD')).toBe(false);

@@ -1,9 +1,9 @@
 /**
- * detectLanguage — the pasted-fragment gap (FINDINGS 30.07.2026).
+ * detectLanguage: the pasted-fragment gap (FINDINGS 30.07.2026).
  *
  * A PHP fragment without <?php and without $ used to score PHP 0 / JS 1 on the
- * bare `=>` and lost every PHP signal. The fix scores PHP array syntax — a
- * quoted string directly before `=>`, and `array(` — which a JS arrow never
+ * bare `=>` and lost every PHP signal. The fix scores PHP array syntax: a
+ * quoted string directly before `=>`, and `array(`, which a JS arrow never
  * produces (its parameter list sits before the arrow, never a string literal).
  *
  * Pairs: fragments that MUST reach their PHP signals, and real JS that MUST
@@ -16,7 +16,7 @@ import { loadSnapshot } from '../src/lib/snapshot.js';
 
 const snap = loadSnapshot();
 
-describe('detectLanguage — PHP fragments reach their signals', () => {
+describe('detectLanguage, PHP fragments reach their signals', () => {
   it('BELL: shop_order array fragment without <?php draws the WooCommerce gap', () => {
     const { proGap } = checkCodeWithGaps(`array( 'post_type' => 'shop_order' )`, 'auto', snap);
     expect(proGap?.pluginName).toBe('WooCommerce');
@@ -29,7 +29,7 @@ describe('detectLanguage — PHP fragments reach their signals', () => {
   });
 });
 
-describe('detectLanguage — real JS does not tip over to PHP', () => {
+describe('detectLanguage, real JS does not tip over to PHP', () => {
   it.each([
     ['arrow chain', `const ids = items.map((x) => x.id).filter((id) => id > 0);`],
     ['object literal with strings', `const cfg = { type: 'shop_order', mode: 'list' };`],

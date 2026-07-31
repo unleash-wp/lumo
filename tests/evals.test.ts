@@ -10,7 +10,7 @@ import { CATCH_NEUTRAL_LINE } from '../src/lib/render.js';
  *
  * `evals/free-mcp.xml` is the agent-facing evaluation: ten realistic questions
  * whose answers were captured from the running server. A file like that rots
- * quietly — the snapshot regenerates, an answer silently stops being true, and
+ * quietly: the snapshot regenerates, an answer silently stops being true, and
  * nobody notices until an eval run blames the model. So the same expectations
  * run here against the handlers on every CI build.
  *
@@ -105,7 +105,7 @@ describe('evals/free-mcp.xml stays true', () => {
   });
 });
 
-// The four pairs added with the feature wave — executed, not admired, like the
+// The four pairs added with the feature wave, executed, not admired, like the
 // original ten. Each pins a capability the old set predated.
 describe('feature-wave evals stay true', () => {
   it('unprepared $wpdb interpolation answers LOUD', async () => {

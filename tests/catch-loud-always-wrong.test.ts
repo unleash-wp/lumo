@@ -1,5 +1,5 @@
 /**
- * The second LOUD route — "wrong in every version, carried by a source"
+ * The second LOUD route, "wrong in every version, carried by a source"
  * (owner decision, 30.07.2026). Successor of proposed-loud-always-wrong.test.ts:
  * the local proposedTier() moved into classify(), these tests pin the result.
  *
@@ -33,7 +33,7 @@ function signalFor(slug: string, cls: CatchSignal['class']): CatchSignal {
   return { match: /never used/, class: cls, entrySlug: slug, language: 'php' };
 }
 
-describe('always-wrong route — the five rules go loud', () => {
+describe('always-wrong route: the five rules go loud', () => {
   it.each([...ALWAYS_WRONG_SLUGS])('%s is evidenced by a source', (slug) => {
     expect(entryFor(slug).source_url, 'no source means no LOUD, without exception').toBeTruthy();
   });
@@ -46,7 +46,7 @@ describe('always-wrong route — the five rules go loud', () => {
   });
 });
 
-describe('always-wrong route — what must NOT move', () => {
+describe('always-wrong route, what must NOT move', () => {
   it('a CONTEXT_DEPENDENT signal stays SOFT even on an always-wrong slug', () => {
     const slug = 'wpdb-query-without-prepare-sql-injection';
     expect(classify(entryFor(slug), signalFor(slug, 'CONTEXT_DEPENDENT'), false).tier).toBe('SOFT');
@@ -85,7 +85,7 @@ describe('always-wrong route — what must NOT move', () => {
   });
 });
 
-describe('always-wrong route — the two demoted rules stay SOFT', () => {
+describe('always-wrong route: the two demoted rules stay SOFT', () => {
   // Review outcome (Gemini pass A + PM gate, measured at the engine): a role
   // badge check and an mTLS cURL call are legitimate code; LOUD would break PR
   // builds on them under the Action's default fail_on_loud=true. Law 1: in
@@ -100,7 +100,7 @@ describe('always-wrong route — the two demoted rules stay SOFT', () => {
   );
 });
 
-describe('always-wrong route — rendering', () => {
+describe('always-wrong route, rendering', () => {
   const slug = 'wpdb-query-without-prepare-sql-injection';
   const loud = () => {
     const entry = entryFor(slug);
@@ -127,7 +127,7 @@ describe('always-wrong route — rendering', () => {
   });
 });
 
-describe('always-wrong route — end to end, the watchdog barks', () => {
+describe('always-wrong route, end to end, the watchdog barks', () => {
   const SQLI = `<?php
 global $wpdb;
 $id = $_GET['user_id'];

@@ -2,21 +2,21 @@ import type { LumoEvent, OnboardVariant } from './events.js';
 import { getTelemetryConsent } from './events.js';
 
 // ---------------------------------------------------------------------------
-// Opt-in transmission layer — FA-31.
+// Opt-in transmission layer, FA-31.
 //
 // This module builds identity-bearing payloads and transmits them ONLY when:
 //   1. getTelemetryConsent() === 'granted', AND
 //   2. process.env.LUMO_TELEMETRY_ENDPOINT is set (deploy-time env).
 //
 // Default (no endpoint, no opt-in) = strictly local. Safe to ship and test
-// with no network effect — the endpoint is absent in dev/CI/repo.
+// with no network effect: the endpoint is absent in dev/CI/repo.
 //
 // Rules:
 //   - Types imported from events.ts; NONE defined here (single contract owner).
 //   - Pure payload builders: deterministic, no Date.now/Math.random.
 //   - transmit() is fire-and-forget, fail-open (never throws on sender error).
 //   - Local counters (getGatedCount, the raw log) are never transmitted.
-//   - No trial_started — Free IS the trial (locked team decision).
+//   - No trial_started. Free IS the trial (locked team decision).
 // ---------------------------------------------------------------------------
 
 /** Minimal payload shape shared by all event transmissions. */
@@ -65,7 +65,7 @@ export type TelemetryPayload =
   | CheckoutCompletedPayload;
 
 // ---------------------------------------------------------------------------
-// Pure payload builders — caller injects all time-variant fields (at, counts).
+// Pure payload builders, caller injects all time-variant fields (at, counts).
 // ---------------------------------------------------------------------------
 
 export function buildInstallPayload(input: {
@@ -147,10 +147,10 @@ export function buildCheckoutCompletedPayload(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Guarded transmit — the only path to the network.
+// Guarded transmit: the only path to the network.
 // ---------------------------------------------------------------------------
 
-/** Sender dependency interface — injectable so tests never touch the network. */
+/** Sender dependency interface, injectable so tests never touch the network. */
 export interface TransmitDeps {
   send?: (url: string, payload: TelemetryPayload) => Promise<void>;
   getConsent?: () => ReturnType<typeof getTelemetryConsent>;
@@ -160,7 +160,7 @@ export interface TransmitDeps {
 /**
  * Fire-and-forget opt-in transmission.
  * Silent no-op unless consent === 'granted' AND LUMO_TELEMETRY_ENDPOINT is set.
- * Never throws — a sender error is swallowed.
+ * Never throws: a sender error is swallowed.
  */
 export async function transmit(
   payload: TelemetryPayload,

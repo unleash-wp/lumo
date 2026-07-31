@@ -3,7 +3,7 @@
 # which would break split('\n') in events.ts and any byte-level assertions.
 * text=auto eol=lf
 
-# Binary files — no conversion.
+# Binary files: no conversion.
 *.png binary
 *.jpg binary
 *.ico binary

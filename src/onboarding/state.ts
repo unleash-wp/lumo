@@ -1,7 +1,7 @@
 import type { AuditResult } from '../detection/index.js';
 import type { OnboardVariant } from '../lib/events.js';
 
-// Pure orchestration helpers — no I/O. The markdown command prose describes
+// Pure orchestration helpers, no I/O. The markdown command prose describes
 // these decisions; tests assert them directly.
 
 /**
@@ -23,8 +23,8 @@ export function decideOnboardingStep(
  * Classify the outcome of running the own-code audit during beat 2.
  *
  * detected:true means WooCommerce order code was found and the HPOS guardrail
- * fires — this is the activation moment.
- * detected:false means no Woo order target exists in this repo — a distinct
+ * fires. This is the activation moment.
+ * detected:false means no Woo order target exists in this repo, a distinct
  * state that is not churn and must not be recorded as activation.
  */
 export function classifyOwnCodeOutcome(

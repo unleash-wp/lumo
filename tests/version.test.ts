@@ -2,8 +2,8 @@
  * Tests for the pure version-comparison utilities.
  *
  * Covers:
- *   compareVersions — part-wise numeric comparison, zero-pad, garbage tolerance
- *   resolveVersionState — already-broken / upcoming / unknown, boundary, nulls
+ *   compareVersions, part-wise numeric comparison, zero-pad, garbage tolerance
+ *   resolveVersionState, already-broken / upcoming / unknown, boundary, nulls
  */
 
 import { describe, it, expect } from 'vitest';

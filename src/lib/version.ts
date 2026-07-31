@@ -1,7 +1,7 @@
 /**
  * Pure version-comparison utilities for the catch layer.
  *
- * No deps, no throws — both functions are safe to call with any input.
+ * No deps, no throws. Both functions are safe to call with any input.
  */
 
 /**
