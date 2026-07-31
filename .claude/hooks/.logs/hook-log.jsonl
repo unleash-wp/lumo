@@ -1,0 +1,2 @@
+{"ts":"2026-07-31T21:49:41.324Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"missing-credentials","dur":1,"status":"warn","exit":0,"error":""}
+{"ts":"2026-07-31T21:49:41.669Z","hook":"usage-quota-cache-refresh","event":"SessionStart","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
