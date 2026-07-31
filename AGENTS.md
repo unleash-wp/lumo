@@ -17,8 +17,8 @@ wrong costs more than a missing paid feature.
 ## The contract that outranks everything else
 
 **Never a false all-clear.** The product exists because an agent reads silence
-as approval. Four channels can break this — the tool call, the editor hook, the
-GitHub Action, and the Action's log line — and all four have broken it before.
+as approval. Four channels can break this: the tool call, the editor hook, the
+GitHub Action, and the Action's log line. All four have broken it before.
 
 Concretely, each of these a real defect, not a hypothetical:
 
@@ -48,7 +48,7 @@ noise is how a checker gets switched off.
 **Run the guard you removed.** A test you have not seen fail is not a test.
 
 **A cap or a fallback that nobody can see is a defect.** If you add one, say so
-in the output, once per run rather than once per file — the same sentence
+in the output, once per run rather than once per file. The same sentence
 repeated twenty times under one pull request is how a reviewer learns to scroll
 past Lumo.
 
@@ -86,11 +86,11 @@ All clean before a pull request.
 
 ## Layout
 
-- `src/detection/catch.ts` — the scan, the three-guard precision model, the caps
-- `src/mcp/` — the MCP server and its handlers
-- `src/action/` — the GitHub Action runner; the action manifest itself lives in
+- `src/detection/catch.ts`: the scan, the three-guard precision model, the caps
+- `src/mcp/`: the MCP server and its handlers
+- `src/action/`: the GitHub Action runner; the action manifest itself lives in
   [unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action)
-- `src/lib/render.ts` — every sentence a customer reads; treat edits here as
+- `src/lib/render.ts`: every sentence a customer reads; treat edits here as
   product changes, not copy edits
-- `data/snapshot.json` — the shipped free knowledge, generated, never hand-edited
-- `skills/`, `agents/`, `commands/` — what ships to agent hosts
+- `data/snapshot.json`: the shipped free knowledge, generated, never hand-edited
+- `skills/`, `agents/`, `commands/`: what ships to agent hosts

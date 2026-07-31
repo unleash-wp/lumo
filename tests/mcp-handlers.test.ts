@@ -52,7 +52,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
   },
   {
     slug: 'gutenberg-usesetting-deprecated-wp6-5',
-    title: 'useSetting() hook deprecated in WP 6.5 — migrate to useSettings()',
+    title: 'useSetting() hook deprecated in WP 6.5: migrate to useSettings()',
     category_slug: 'gutenberg',
     summary: 'The useSetting() hook was deprecated in WordPress 6.5.0 in favor of useSettings().',
     code_example: "import { useSettings } from '@wordpress/block-editor';",
@@ -65,7 +65,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
   },
   {
     slug: 'gutenberg-isvalidblockcontent-removed',
-    title: 'wp.blocks.isValidBlockContent() removed — use validateBlock() instead',
+    title: 'wp.blocks.isValidBlockContent() removed: use validateBlock() instead',
     category_slug: 'gutenberg',
     summary: 'The wp.blocks.isValidBlockContent() function was removed.',
     code_example: 'const result = wp.blocks.validateBlock( block );',
@@ -78,7 +78,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
   },
   {
     slug: 'gutenberg-apiversion-2-deprecated-wp6-9',
-    title: 'Block API version 2 deprecated in WP 6.9 — migrate to apiVersion 3',
+    title: 'Block API version 2 deprecated in WP 6.9: migrate to apiVersion 3',
     category_slug: 'gutenberg',
     summary: 'Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings.',
     code_example: 'wp.blocks.registerBlockType( "my-ns/my-block", { apiVersion: 3 } );',
@@ -308,7 +308,7 @@ describe('handleCheckCode — version-scoping', () => {
     const result = await handleCheckCode({ code, language: 'js', wp_version: '5.9' }, catchSnap);
     expect(result).toContain('BREAKING:');
     // The relative line should appear (already-broken)
-    expect(result).toContain('fix now');
+    expect(result).toContain('Fix now.');
   });
 
   it('explicit wp_version below breaking version produces upcoming line', async () => {

@@ -20,7 +20,7 @@ export function installWordPressAgentSkills(): Promise<void> {
   console.log(
     [
       'Installing the WordPress agent skills (WordPress/agent-skills).',
-      'They are the manual; Lumo is the watcher — built to run side by side.',
+      'They are the manual; Lumo is the watcher, built to run side by side.',
       'Licence: GPL-2.0-or-later, published in the WordPress GitHub organisation.',
       '',
     ].join('\n'),

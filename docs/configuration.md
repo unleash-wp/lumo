@@ -1,6 +1,6 @@
 # Lumo Configuration
 
-Environment variables that control Lumo's behavior. All are optional — defaults are safe for most users.
+Environment variables that control Lumo's behavior. All are optional; defaults are safe for most users.
 
 ## Upgrade prompt
 
@@ -22,7 +22,7 @@ The kill-switch gates only the reveal line and prompt block. Detection, the Free
 
 The base checkout URL used when the upgrade CTA fires.
 
-- **Default:** `https://lumo.so/pro` (stable 301 — redirect target is founder-controlled)
+- **Default:** `https://lumo.so/pro` (stable 301; redirect target is founder-controlled)
 - **Override:** set to any URL; Lumo appends `?ref=…&gated=…&v=…` attribution params at click time
 
 ```sh

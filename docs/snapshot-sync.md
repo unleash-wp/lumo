@@ -1,7 +1,7 @@
-# Snapshot Sync — Consumer Side
+# Snapshot Sync: Consumer Side
 
 `data/snapshot.json` is the Free agent's knowledge base. It is **generated** in
-the private `lumo-pro` repository — do not edit it by hand.
+the private `lumo-pro` repository. Do not edit it by hand.
 
 ---
 
@@ -50,7 +50,7 @@ When bumping:
 3. Update `tests/snapshot.test.ts` if it pins the version value.
 4. Follow the update procedure above.
 
-Ship the loader change before shipping the new artifact — the loader rejects an
+Ship the loader change before shipping the new artifact. The loader rejects an
 unknown version and the agent will fail to start if the order is reversed.
 
 ---
@@ -67,7 +67,7 @@ Every update must satisfy these invariants (enforced by `tests/snapshot.test.ts`
 - Field order per entry: `slug, title, category_slug, summary, code_example,
   bad_pattern, source_url, test_step, tier, updatedAt, versions`.
 
-If any test fails after copying the new artifact, do not commit — the generator
+If any test fails after copying the new artifact, do not commit. The generator
 output violates the contract and the bug must be fixed in lumo-pro.
 
 ---
@@ -75,4 +75,4 @@ output violates the contract and the bug must be fixed in lumo-pro.
 ## What sync-snapshot.mjs does
 
 `scripts/sync-snapshot.mjs` prints the update procedure above and exits 0. It is
-a pointer, not an automation — the actual generation happens in lumo-pro.
+a pointer, not an automation. The actual generation happens in lumo-pro.

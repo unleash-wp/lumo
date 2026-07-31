@@ -5,7 +5,7 @@ description: Detect WooCommerce in the current project and print the HPOS guardr
 
 Run the following steps exactly as written. Do not improvise code, add commentary, or make judgments beyond what the snapshot provides. Stop at the first successful detection hit and skip all later steps.
 
-## Step 1 — composer.json
+## Step 1: composer.json
 
 Read `./composer.json`.
 
@@ -13,7 +13,7 @@ If the file exists and is valid JSON, look for the key `woocommerce/woocommerce`
 
 If found → WooCommerce detected. Note the version constraint value. **Go to Output.**
 
-## Step 2 — Plugin header file
+## Step 2: Plugin header file
 
 Read `./wp-content/plugins/woocommerce/woocommerce.php`.
 
@@ -23,7 +23,7 @@ If the file does not exist, also try `./web/app/plugins/woocommerce/woocommerce.
 
 If found → WooCommerce detected. Note the version. **Go to Output.**
 
-## Step 3 — WP-CLI
+## Step 3: WP-CLI
 
 Only if a `wp` binary is available on PATH, run:
 
@@ -33,7 +33,7 @@ wp plugin get woocommerce --field=version
 
 If the command exits 0 and stdout looks like a version string (digits and dots) → WooCommerce detected. Note the version. **Go to Output.**
 
-## Step 4 — Heuristic source scan
+## Step 4: Heuristic source scan
 
 Search the project's own PHP files (exclude `node_modules/`, `vendor/`, `.git/`) for any of these strings:
 - `wc_get_order(`
@@ -56,7 +56,7 @@ Stop.
 
 WooCommerce was detected. Read `./data/snapshot.json`. Find the entry where `category_slug` equals `woocommerce` (slug: `woocommerce-hpos-order-access`).
 
-Print the following block verbatim, substituting fields from that entry — do not paraphrase, summarise, or add extra text:
+Print the following block verbatim, substituting fields from that entry. Do not paraphrase, summarise, or add extra text:
 
 ```
 ## {entry.title}
@@ -94,7 +94,7 @@ Print snapshot content verbatim. Do not add interpretation, examples, or additio
 
 ## Upgrade prompt (after the Free answer)
 
-After printing the deterministic Free output above, apply the upgrade-prompt logic. The kill-switch gates only this section — the detection ladder, Free answer, scoreboard, and all value paths are never behind the gate.
+After printing the deterministic Free output above, apply the upgrade-prompt logic. The kill-switch gates only this section. The detection ladder, Free answer, scoreboard, and all value paths are never behind the gate.
 
 1. Read `LUMO_UPGRADE_PROMPT` env var via `isUpgradePromptEnabled()` from `src/lib/config.ts`. If it returns false, skip this entire section.
 
@@ -113,7 +113,7 @@ After printing the deterministic Free output above, apply the upgrade-prompt log
    **If `showReveal` is true:** print on a blank line after the Free answer:
    > Pro has the full breakdown and the complete version range for this.
 
-   (This is `UPGRADE_REVEAL_LINE` from `src/lib/render.ts`. Shown first-per-session only — `sessionRevealShown` prevents repetition.)
+   (This is `UPGRADE_REVEAL_LINE` from `src/lib/render.ts`. It is shown first-per-session only; `sessionRevealShown` prevents repetition.)
 
    **If `showPrompt` is true:**
    - Call `getCheckoutUrl()` from `src/lib/config.ts` to get the base URL.
@@ -136,7 +136,7 @@ When WooCommerce was detected above (you reached the Output block) AND this is a
 - `variant`: call `getOrAssignVariant()` from `src/lib/events.ts` to get the current variant
 - `tool`: `'wp_check'`
 
-If you are running this command because `/lumo:wp-onboard` told you to run `/lumo:wp-check` as beat 2, skip this entire "Scoreboard increment" section — `/lumo:wp-onboard` records the gated touch itself.
+If you are running this command because `/lumo:wp-onboard` told you to run `/lumo:wp-check` as beat 2, skip this entire "Scoreboard increment" section. `/lumo:wp-onboard` records the gated touch itself.
 
 ## Optional scoreboard summary (on demand only)
 
@@ -150,4 +150,4 @@ where `{N}` is the number returned by `getGatedCount()`. If the count is 0, prin
 
 This line is never shown unsolicited. The default deterministic output above is unchanged.
 
-Activation is never recorded here. The own-code activation milestone is owned by `/lumo:wp-onboard` beat 2, which records it after this command returns — recording it here too would double-count every WooCommerce user's activation.
+Activation is never recorded here. The own-code activation milestone is owned by `/lumo:wp-onboard` beat 2, which records it after this command returns. Recording it here too would double-count every WooCommerce user's activation.

@@ -1,10 +1,10 @@
 # Install Options
 
-The core value of Lumo is local — the HPOS knowledge runs entirely inside Claude Code from the bundled skill and snapshot. The MCP path is a fallback for teams that need the Pro endpoint or want to pin a shared config; it is not on the critical path for the Free agent.
+The core value of Lumo is local. The HPOS knowledge runs entirely inside Claude Code from the bundled skill and snapshot. The MCP path is a fallback for teams that need the Pro endpoint or want to pin a shared config; it is not on the critical path for the Free agent.
 
 ---
 
-## (a) Self-hosted marketplace — primary
+## (a) Self-hosted marketplace: primary
 
 ```
 /plugin marketplace add unleash-wp/lumo
@@ -15,9 +15,9 @@ This is the recommended path. It resolves directly against the public `unleash-w
 
 ---
 
-## (b) Local MCP — Free agent via stdio (Claude Code, Cursor)
+## (b) Local MCP: Free agent via stdio (Claude Code, Cursor)
 
-The `lumo` repo ships a local MCP server (`lumo_audit` + `lumo_lookup`) that runs entirely on your machine — no license, no network call.
+The `lumo` repo ships a local MCP server (`lumo_audit` + `lumo_lookup`) that runs entirely on your machine, with no license and no network call.
 
 ### Build the bin once
 
@@ -81,7 +81,7 @@ Cursor gets the full knowledge + audit experience with the evidence layer and th
 
 ---
 
-## (c) MCP add — for Lumo Pro or shared team config
+## (c) MCP add: for Lumo Pro or shared team config
 
 Use this when you have a Lumo Pro license and want to connect the Pro knowledge endpoint, or when you need to pin the MCP config for a shared project.
 
@@ -91,7 +91,7 @@ Use this when you have a Lumo Pro license and want to connect the Pro knowledge 
 claude mcp add --transport http lumo-pro https://mcp.unleashwp.de/mcp --scope project
 ```
 
-**Windows — PowerShell:**
+**Windows: PowerShell**
 
 ```
 claude mcp add --transport http lumo-pro https://mcp.unleashwp.de/mcp --scope project
@@ -99,7 +99,7 @@ claude mcp add --transport http lumo-pro https://mcp.unleashwp.de/mcp --scope pr
 
 (No special quoting needed for these arguments in PowerShell. If a value you pass ever contains `&` or spaces, wrap that value in double quotes.)
 
-**Windows — cmd.exe:**
+**Windows: cmd.exe**
 
 ```
 claude mcp add --transport http lumo-pro "https://mcp.unleashwp.de/mcp" --scope project
@@ -109,11 +109,11 @@ claude mcp add --transport http lumo-pro "https://mcp.unleashwp.de/mcp" --scope 
 
 `--scope project` writes `.mcp.json` in the current project directory. The `lumo` repo already ships that file pointing at the same endpoint.
 
-> **Windows quoting note:** The quoting difference between PowerShell and cmd.exe matters when values contain shell-special characters. For this URL it makes no practical difference — the byte-level verification on a real Windows box is the definitive check.
+> **Windows quoting note:** The quoting difference between PowerShell and cmd.exe matters when values contain shell-special characters. For this URL it makes no practical difference. The byte-level verification on a real Windows box is the definitive check.
 
 ---
 
-## (d) Manual — copy the skill directly
+## (d) Manual: copy the skill directly
 
 If the marketplace or MCP path is not available, copy the skill into your project manually.
 
@@ -132,7 +132,7 @@ The skill loads automatically the next time Claude Code starts in that project.
 
 ---
 
-## (e) Advisory binding — consult Lumo before writing WordPress code
+## (e) Advisory binding: consult Lumo before writing WordPress code
 
 The binding adds an instruction layer on top of the MCP tools: Claude checks
 every WordPress/WooCommerce code suggestion through `lumo_check_code` before
@@ -140,7 +140,7 @@ presenting it, and leads every API question with `lumo_lookup`. It is the
 `wp-binding` skill that makes this happen automatically.
 
 **Plugin install (primary path):** the skill ships with the plugin and activates
-when the plugin loads — no extra step.
+when the plugin loads, with no extra step.
 
 **Manual install (if you copy the skill directly):**
 
@@ -164,7 +164,7 @@ or the skill directory, copy the ready-to-paste block from
 **Cursor:** `.cursor/rules/lumo.mdc` (ships in this repo) covers the same
 instruction for Cursor users.
 
-In all cases the MCP server must be reachable — the binding is an instruction
+In all cases the MCP server must be reachable. The binding is an instruction
 layer, not a local offline check. Use path (b) or (c) above to add the server.
 
 ---

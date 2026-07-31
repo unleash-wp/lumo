@@ -26,7 +26,7 @@ import { INPUT_LINE_CAP } from '../detection/catch.js';
 import { proTopicFor, buildProTopicTeaser } from '../lib/pro-topics.js';
 
 const NOT_FOUND_AUDIT =
-  'No known WordPress risk patterns detected in this project — nothing to check here.';
+  'No known WordPress risk patterns detected in this project. Nothing to check here.';
 
 const NOT_FOUND_LOOKUP = (query: string) => {
   // A miss on a Pro-covered topic is not a miss — it is the paywall. Saying
@@ -121,7 +121,7 @@ function searchEntries(snap: Snapshot, query: string): string {
 
   const lines = ranked.map(({ e }) => {
     const firstSentence = (e.summary || '').split(/(?<=\.)\s/)[0] ?? '';
-    return `- \`${e.slug}\` — ${e.title}\n  ${firstSentence}`;
+    return `- \`${e.slug}\`: ${e.title}\n  ${firstSentence}`;
   });
   return [
     `Top matches for "${query}" (call lumo_lookup with the slug for the full entry):`,
@@ -165,7 +165,7 @@ export async function handleLookup(
 
     return 'Provide a "slug", a "category", or a free-text "query" to look up an entry.';
   } catch {
-    return 'Snapshot unavailable — cannot look up entries right now.';
+    return 'Snapshot unavailable. Cannot look up entries right now.';
   }
 }
 

@@ -77,11 +77,11 @@ child.stdout.on('data', (chunk) => {
 
       for (const required of REQUIRED_TOOLS) {
         if (!names.includes(required)) {
-          fail(`missing tool: ${required} — got [${names.join(', ')}]`);
+          fail(`missing tool: ${required}. Got [${names.join(', ')}]`);
         }
       }
 
-      console.log('[smoke] PASS — all required tools registered');
+      console.log('[smoke] PASS: all required tools registered');
       process.exit(0);
     }
   }

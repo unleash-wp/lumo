@@ -23,7 +23,7 @@ import { loadSnapshot } from '../lib/snapshot.js';
 import { DEMO_SAMPLES } from './samples.js';
 
 const HEADER = [
-  'lumo demo — this runs the catch over four code samples that ship with Lumo.',
+  'lumo demo: this runs the catch over four code samples that ship with Lumo.',
   'It is NOT a scan of your project: nothing here was read from your machine.',
   'Run `lumo scan` for that.',
 ].join('\n');
@@ -88,7 +88,7 @@ export function runDemo(): DemoResult {
     if (failed) {
       // Say which sample went unchecked rather than skipping it silently — a
       // demo that quietly drops a sample overstates the catch.
-      lines.push(`(sample ${index + 1} could not be checked — the engine failed on it)`);
+      lines.push(`(sample ${index + 1} could not be checked: the engine failed on it)`);
       continue;
     }
     if (results.length === 0) {
@@ -104,7 +104,7 @@ export function runDemo(): DemoResult {
     '',
     '─'.repeat(60),
     findingCount === 0
-      ? 'Nothing fired on the samples. That is a defect, not a clean bill — please report it.'
+      ? 'Nothing fired on the samples. That is a defect, not a clean bill. Please report it.'
       : `${findingCount} findings, each with the source it comes from.`,
     '',
     'On your own code:',
@@ -112,7 +112,7 @@ export function runDemo(): DemoResult {
     '  claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp',
     '                               let your assistant check code before you see it',
     '',
-    'These samples exercise four of the patterns Lumo Free carries — a',
+    'These samples exercise four of the patterns Lumo Free carries: a',
     'demonstration, not a coverage list. Lumo Free holds WordPress Core, block',
     'and theme APIs, and security fundamentals as knowledge. WooCommerce and the',
     'premium plugins are Lumo Pro, and where the free tier cannot check, it says',

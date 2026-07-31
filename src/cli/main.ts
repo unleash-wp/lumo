@@ -12,19 +12,19 @@
  * memory, and `mcp` must not pull the GitHub Action deps.
  */
 
-const HELP = `UnleashWP Lumo — catches stale AI-written WordPress code.
+const HELP = `UnleashWP Lumo: catches stale AI-written WordPress code.
 
 Usage: lumo <command>
 
 Commands:
-  demo     Show the catch working on four code samples that ship with Lumo —
+  demo     Show the catch working on four code samples that ship with Lumo.
            no project, no setup. Prints real findings from the real engine.
   scan     Scan your current git diff for WordPress/WooCommerce patterns that
            broke in a real release. Prints findings (LOUD first) or the scope
-           that was checked — never a verdict on your code.
+           that was checked, never a verdict on your code.
   mcp      Start the MCP server on stdio (for Claude Code, Cursor, VS Code).
-  skills   Install the WordPress agent skills (WordPress/agent-skills)
-           — the manual to Lumo's watcher. Delegates to their installer.
+  skills   Install the WordPress agent skills (WordPress/agent-skills):
+           the manual to Lumo's watcher. Delegates to their installer.
   action   GitHub Action runner, invoked by unleash-wp/lumo-action in CI.
            Requires a Lumo Pro licence; without one it reports that it did
            not run and checks nothing.

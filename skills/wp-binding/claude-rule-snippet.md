@@ -1,4 +1,4 @@
-# Lumo WordPress binding — CLAUDE.md rule snippet
+# Lumo WordPress binding: CLAUDE.md rule snippet
 
 Drop this block into any project's `CLAUDE.md` (or `.claude/rules/lumo-wp-binding.md`)
 to get the same advisory binding without installing the full skill.
@@ -8,7 +8,7 @@ to get the same advisory binding without installing the full skill.
 ## Snippet (copy-paste ready)
 
 ```markdown
-## WordPress / WooCommerce — consult Lumo before writing code
+## WordPress / WooCommerce: consult Lumo before writing code
 
 WordPress ships monthly. Training data does not. Before writing or editing any
 WordPress or WooCommerce PHP/JS, use the Lumo MCP tools to check the current
@@ -20,24 +20,24 @@ standard:
   version" + documentation source) verbatim.
 - SOFT catch (starts `> ADVISORY:`): surface the risk alongside the code, cite source.
 - Coverage-gap lines (`Detected <Plugin> …` / `_Also detected …_`): relay
-  verbatim and name every plugin listed — that is Lumo saying "not checked".
+  verbatim and name every plugin listed. That is Lumo saying "not checked".
 - Scope line ("Checked against Lumo Free … not an all-clear"): relay as
   written; never compress it to "the code is clean".
 
-**Before answering a WordPress API question:** call `lumo_lookup` — with
+**Before answering a WordPress API question:** call `lumo_lookup`, with
 `query: "<topic words>"` when you do not know the slug (ranked shortlist),
 then by `slug` for the full entry.
 - If it returns a result, lead with it and cite the `_Knowledge current as of_`
   date.
 - If it returns "No curated entry found", answer from training but flag it:
-  "Lumo has no curated entry for this — verify against current WordPress docs."
+  "Lumo has no curated entry for this. Verify against current WordPress docs."
 
 **First touch on an unfamiliar WooCommerce project:** call `lumo_audit` once per
 session before writing any code.
 
 **Always:** propose and cite, never auto-apply. Present Lumo's wrong/correct
 contrast and source verbatim. Let the developer decide and apply.
-If a Lumo call fails, say so — do not silently fall back to training data.
+If a Lumo call fails, say so. Do not silently fall back to training data.
 ```
 
 ---
@@ -69,5 +69,5 @@ Or use the Pro endpoint if you have a license:
 }
 ```
 
-Without a reachable MCP server the rule is a no-op — the model has nothing to
+Without a reachable MCP server the rule is a no-op. The model has nothing to
 call.
