@@ -67,8 +67,8 @@ lumo_check_code(
   code:         <your proposed code blob>,
   language:     "php"  | "js"  | "auto",
   project_root: <cwd, if known>,
-  wp_version:   <target WP version, if known>,    // optional — lets the catch say "already past the breaking version"
-  woo_version:  <target WooCommerce version, if known>   // optional — same, for WooCommerce
+  wp_version:   <target WP version, if known>,    // optional, lets the catch say "already past the breaking version"
+  woo_version:  <target WooCommerce version, if known>   // optional, same, for WooCommerce
 )
 ```
 

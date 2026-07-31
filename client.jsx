@@ -1,8 +1,8 @@
-// Lumo panel — the shop window inside AI Forge. Three jobs, nothing more:
+// Lumo panel: the shop window inside AI Forge. Three jobs, nothing more:
 // show what is installed (status), hand over the exact commands to reach the
 // work surface (setup), and let the visitor see the watchdog bark once on real
-// code (try box). The work itself stays in the assistant, the terminal and CI —
-// this page points there, it does not replace them.
+// code (try box). The work itself stays in the assistant, the terminal and CI.
+// This page points there, it does not replace them.
 import { useState, useEffect } from 'react';
 import { Box, Flex, Heading, HStack, Stack, Text, Textarea, chakra } from '@chakra-ui/react';
 import { useCore } from '../../src/client/core.jsx';
@@ -14,15 +14,15 @@ const SNIPPETS = [
     cmd: 'claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp',
   },
   {
-    label: 'Terminal — scan your current changes',
+    label: 'Terminal, scan your current changes',
     cmd: 'lumo scan',
   },
   {
-    label: 'GitHub Action — review every pull request',
+    label: 'GitHub Action, review every pull request',
     cmd: '- uses: unleash-wp/lumo@v0.4.0',
   },
   {
-    label: 'Official WordPress skills — the manual to Lumo’s watcher (GPL, by the WordPress project)',
+    label: 'Official WordPress skills, the manual to Lumo’s watcher (GPL, by the WordPress project)',
     cmd: 'lumo skills',
   },
 ];
@@ -71,7 +71,7 @@ export default function LumoPanel() {
 
   return (
     <Box maxW="52rem">
-      {/* Status — facts only, from the installed snapshot and the local engine. */}
+      {/* Status, facts only, from the installed snapshot and the local engine. */}
       <Flex align="center" gap="3" mb="6" wrap="wrap">
         {status === null ? (
           <Text fontSize="0.875rem" color="ui.muted">Loading status…</Text>
@@ -90,7 +90,7 @@ export default function LumoPanel() {
         <Text fontSize="0.8125rem" color="ui.muted" mb="6">{status.installHint}</Text>
       )}
 
-      {/* Setup — the shortest path to where Lumo actually works. */}
+      {/* Setup: the shortest path to where Lumo actually works. */}
       <Heading as="h3" fontSize="1rem" mb="3">Where Lumo works</Heading>
       <Stack gap="2" mb="8">
         {SNIPPETS.map((s) => (
@@ -105,10 +105,10 @@ export default function LumoPanel() {
         ))}
       </Stack>
 
-      {/* Try box — one live bark. Honest output, verbatim from the engine. */}
+      {/* Try box, one live bark. Honest output, verbatim from the engine. */}
       <Heading as="h3" fontSize="1rem" mb="1">Hear it bark</Heading>
       <Text fontSize="0.8125rem" color="ui.muted" mb="3">
-        Paste WordPress PHP or JS. The answer below is the engine&apos;s verbatim output —
+        Paste WordPress PHP or JS. The answer below is the engine&apos;s verbatim output,
         including its own limits.
       </Text>
       <Textarea

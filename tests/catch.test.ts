@@ -46,7 +46,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
     title: 'WooCommerce HPOS: reading and writing order data',
     category_slug: 'woocommerce',
     summary:
-      'Under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
+      'Under WooCommerce High-Performance Order Storage (HPOS: the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
     code_example: "$order = wc_get_order( $order_id );\n$email = $order->get_billing_email();",
     bad_pattern:
       "$email = get_post_meta( $order_id, '_billing_email', true );\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
@@ -61,7 +61,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
   },
   {
     slug: 'gutenberg-usesetting-deprecated-wp6-5',
-    title: 'useSetting() hook deprecated in WP 6.5 — migrate to useSettings()',
+    title: 'useSetting() hook deprecated in WP 6.5, migrate to useSettings()',
     category_slug: 'gutenberg',
     summary: 'The useSetting() hook was deprecated in WordPress 6.5.0 in favor of useSettings().',
     code_example: "import { useSettings } from '@wordpress/block-editor';",
@@ -74,7 +74,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
   },
   {
     slug: 'gutenberg-isvalidblockcontent-removed',
-    title: 'wp.blocks.isValidBlockContent() removed — use validateBlock() instead',
+    title: 'wp.blocks.isValidBlockContent() removed, use validateBlock() instead',
     category_slug: 'gutenberg',
     summary: 'The wp.blocks.isValidBlockContent() function was removed.',
     code_example: 'const result = wp.blocks.validateBlock( block );',
@@ -87,7 +87,7 @@ const proOnlyCatchEntries: SnapshotEntry[] = [
   },
   {
     slug: 'gutenberg-apiversion-2-deprecated-wp6-9',
-    title: 'Block API version 2 deprecated in WP 6.9 — migrate to apiVersion 3',
+    title: 'Block API version 2 deprecated in WP 6.9, migrate to apiVersion 3',
     category_slug: 'gutenberg',
     summary: 'Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings.',
     code_example: 'wp.blocks.registerBlockType( "my-ns/my-block", { apiVersion: 3, ... } );',
@@ -149,7 +149,7 @@ const catchSnap = { ...snap, entries: [...snap.entries, ...proOnlyCatchEntries] 
 
 function entry(slug: string): SnapshotEntry {
   const e = findEntry(catchSnap, slug);
-  if (!e) throw new Error(`Missing entry "${slug}" in catchSnap — test setup broken`);
+  if (!e) throw new Error(`Missing entry "${slug}" in catchSnap, test setup broken`);
   return e;
 }
 
@@ -159,10 +159,10 @@ function certainSignal(entrySlug: string, match: string | RegExp): CatchSignal {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 00: classify() — the precision model
+// Phase 00: classify(), the precision model
 // ---------------------------------------------------------------------------
 
-describe('classify — precision model', () => {
+describe('classify, precision model', () => {
   it('LOUD: CERTAIN + version stamp + breaking_change:true', () => {
     const e = entry('woocommerce-hpos-order-access');
     const sig: CatchSignal = {
@@ -191,7 +191,7 @@ describe('classify — precision model', () => {
     expect(result.tier).toBe('SOFT');
   });
 
-  it('SOFT: CONTEXT_DEPENDENT — never LOUD regardless of version stamp', () => {
+  it('SOFT: CONTEXT_DEPENDENT, never LOUD regardless of version stamp', () => {
     const e = entry('woocommerce-hpos-order-access');
     const sig: CatchSignal = {
       match: /get_post_meta/,
@@ -217,7 +217,7 @@ describe('classify — precision model', () => {
     expect(result.tier).toBe('SILENT');
   });
 
-  // (f) empty-version-stamp → SOFT fallback — structural, not a runtime check
+  // (f) empty-version-stamp → SOFT fallback, structural, not a runtime check
   it('(f) SOFT: CERTAIN but entry has no version stamp → cannot emit LOUD', () => {
     const e = entry('woocommerce-hpos-order-access');
     const stripped: SnapshotEntry = { ...e, versions: [] };
@@ -253,10 +253,10 @@ describe('classify — precision model', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 01: checkCode() — matcher + tier oracle
+// Phase 01: checkCode(), matcher + tier oracle
 // ---------------------------------------------------------------------------
 
-describe('checkCode — tier oracle over all 9 entries', () => {
+describe('checkCode, tier oracle over all 9 entries', () => {
   // HPOS 'shop_order' query → LOUD
   it('HPOS get_posts shop_order query fires LOUD', () => {
     const code = `
@@ -292,7 +292,7 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
   // This asserted LOUD while the entry carried breaking_change: true. The
   // function is deprecated, not removed: it still exists in core and emits a
   // notice, so nothing breaks. LOUD there meant a deprecation could fail a
-  // paying customer's build through fail_on_loud — the product law broken in
+  // paying customer's build through fail_on_loud: the product law broken in
   // our own data. Still caught, still cited, at the volume the fact supports.
   it('wp_img_tag_add_decoding_attr() fires SOFT, because a deprecation is not a break', () => {
     const code = `$img = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );`;
@@ -303,16 +303,16 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
     expect(results.some((r) => r.tier === 'LOUD')).toBe(false);
   });
 
-  // (a) function_exists shim-downgrade canary — the snapshot bad_pattern itself
+  // (a) function_exists shim-downgrade canary: the snapshot bad_pattern itself
   it('(a) shim guard: bad_pattern from snapshot (function_exists wrapper) does NOT fire LOUD', () => {
     const imgEntry = entry('wp-img-tag-add-decoding-attr-deprecation');
-    // Feed the snapshot's own bad_pattern — it contains function_exists guard
+    // Feed the snapshot's own bad_pattern. It contains function_exists guard
     const code = imgEntry.bad_pattern;
     expect(code).toContain('function_exists');
     expect(code).toContain('wp_img_tag_add_decoding_attr');
     const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
-    // Must not be LOUD — the shim guard must have fired
+    // Must not be LOUD: the shim guard must have fired
     expect(match?.tier).not.toBe('LOUD');
   });
 
@@ -329,7 +329,7 @@ if ( isValidBlockContent( blockType, attrs, blocks, html ) ) { }
     expect(loud?.versionFact?.field).toBe('wp');
   });
 
-  // apiVersion: 2 → SOFT (breaking_change: false — deprecated not hard-removed yet)
+  // apiVersion: 2 → SOFT (breaking_change: false, deprecated not hard-removed yet)
   it('apiVersion: 2 in registerBlockType fires SOFT (deprecation warning, not hard break)', () => {
     const code = `
 wp.blocks.registerBlockType( 'my-ns/my-block', {
@@ -343,7 +343,7 @@ wp.blocks.registerBlockType( 'my-ns/my-block', {
     expect(match?.tier).toBe('SOFT');
   });
 
-  // (b) apiVersion: 2 negative fixture — unrelated JSON must NOT fire
+  // (b) apiVersion: 2 negative fixture, unrelated JSON must NOT fire
   it('(b) apiVersion: 2 in unrelated JSON does not fire when no registerBlockType context', () => {
     const code = `
 {
@@ -353,18 +353,18 @@ wp.blocks.registerBlockType( 'my-ns/my-block', {
   "config": { "timeout": 30 }
 }
 `;
-    // This is JS-lang but has no registerBlockType — the signal matches apiVersion: 2
+    // This is JS-lang but has no registerBlockType, the signal matches apiVersion: 2
     // so it will fire. BUT the spec says "unrelated JSON must not fire on a negative fixture".
-    // The phase 01 spec says the match is /apiVersion:\s*[12]\b/ — it is intentionally
+    // The phase 01 spec says the match is /apiVersion:\s*[12]\b/, it is intentionally
     // broad (the signal is self-evident WITHIN a block registration). We verify the
     // *entry* fired but the tier is still correctly computed. The "negative" means it
     // should not fire on content that looks like a block registration but isn't.
     //
     // Per the plan: the fixture test means feeding a JSON blob with apiVersion:2 that
-    // has NO registerBlockType context — we test that a JSON config file with version:2
+    // has NO registerBlockType context. We test that a JSON config file with version:2
     // at the top-level does NOT fire because the language sniff returns 'php' or the
     // signal is scoped to 'js' only.
-    const results = checkCode(code, 'php', catchSnap); // force PHP — JS signals won't run
+    const results = checkCode(code, 'php', catchSnap); // force PHP, JS signals won't run
     const match = results.find((r) => r.entry.slug === 'gutenberg-apiversion-2-deprecated-wp6-9');
     expect(match).toBeUndefined();
   });
@@ -424,7 +424,7 @@ $order->save();
       '--- a/includes/orders.php',
       '+++ b/includes/orders.php',
       '@@ -1,5 +1,5 @@',
-      '-$orders = get_posts( [ "post_type" => "shop_order" ] );', // removed — must NOT fire
+      '-$orders = get_posts( [ "post_type" => "shop_order" ] );', // removed, must NOT fire
       '+$order = wc_get_order( $order_id );',                      // added correct pattern
     ].join('\n');
 
@@ -467,10 +467,10 @@ isValidBlockContent( blockType, attrs, [], html );
 });
 
 // ---------------------------------------------------------------------------
-// Phase 02: formatCatch — render layer
+// Phase 02: formatCatch, render layer
 // ---------------------------------------------------------------------------
 
-describe('formatCatch — render layer', () => {
+describe('formatCatch, render layer', () => {
   it('LOUD: renders the dated blockquote lead with version from entry', () => {
     const results = checkCode(
       `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`,
@@ -482,7 +482,7 @@ describe('formatCatch — render layer', () => {
     const rendered = formatCatch(loud!);
     // The blockquote alarm
     expect(rendered).toContain('BREAKING:');
-    // The version fact — "8.2" must appear in the dated lead
+    // The version fact, "8.2" must appear in the dated lead
     expect(rendered).toContain('8.2');
     // The entry title appears in the body
     expect(rendered).toContain('HPOS');
@@ -493,7 +493,7 @@ describe('formatCatch — render layer', () => {
   });
 
   it('LOUD: the dated line is screenshot-able (contains version and date)', () => {
-    // A real removal, not a deprecation — the fixture this used to run on was
+    // A real removal, not a deprecation: the fixture this used to run on was
     // the mis-stamped one, so the screenshot-able LOUD line was being proved on
     // a break that never happened.
     const results = checkCode(
@@ -566,10 +566,10 @@ describe('formatCatch — render layer', () => {
 });
 
 // ---------------------------------------------------------------------------
-// handleCheckCode — integration (handler layer)
+// handleCheckCode, integration (handler layer)
 // ---------------------------------------------------------------------------
 
-describe('handleCheckCode — handler integration', () => {
+describe('handleCheckCode, handler integration', () => {
   it('HPOS bad pattern → LOUD output containing the dated version', async () => {
     const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     const result = await handleCheckCode({ code, language: 'php' }, catchSnap);
@@ -602,10 +602,10 @@ describe('handleCheckCode — handler integration', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Catch overrides — applyCatchOverrides + checkCode(overrides) integration
+// Catch overrides, applyCatchOverrides + checkCode(overrides) integration
 // ---------------------------------------------------------------------------
 
-describe('applyCatchOverrides — pure function', () => {
+describe('applyCatchOverrides, pure function', () => {
   const hposSlug = 'woocommerce-hpos-order-access';
   const imgSlug = 'wp-img-tag-add-decoding-attr-deprecation';
 
@@ -654,7 +654,7 @@ describe('applyCatchOverrides — pure function', () => {
   it('downgrade: unknown cap value is a no-op', () => {
     const results = [makeResult(hposSlug, 'LOUD')];
     const out = applyCatchOverrides(results, { downgrade: { [hposSlug]: 'future-unknown-value' } });
-    // Should remain LOUD — unknown cap is safe no-op
+    // Should remain LOUD, unknown cap is safe no-op
     expect(out[0]!.tier).toBe('LOUD');
   });
 
@@ -668,7 +668,7 @@ describe('applyCatchOverrides — pure function', () => {
   });
 });
 
-describe('checkCode — overrides parameter integration', () => {
+describe('checkCode, overrides parameter integration', () => {
   const hposCode = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
   const hposSlug = 'woocommerce-hpos-order-access';
 
@@ -679,7 +679,7 @@ describe('checkCode — overrides parameter integration', () => {
     expect(hpos!.tier).toBe('LOUD');
   });
 
-  it('disable suppresses the rule — slug absent from results', () => {
+  it('disable suppresses the rule, slug absent from results', () => {
     const results = checkCode(hposCode, 'php', catchSnap, { disable: [hposSlug] });
     const hpos = results.find((r) => r.entry.slug === hposSlug);
     expect(hpos).toBeUndefined();
@@ -705,10 +705,10 @@ describe('checkCode — overrides parameter integration', () => {
 // ---------------------------------------------------------------------------
 // Regression: false-LOUD fixes
 //
-// C1 — call-pattern signals must not fire when the function name appears only
+// C1: call-pattern signals must not fire when the function name appears only
 //      inside a quoted string literal or double-quoted string.
-// C2 — removed lines in a raw @@-only diff hunk must not fire.
-// H1 — apiVersion: 1 must not fire the v2-specific entry.
+// C2: removed lines in a raw @@-only diff hunk must not fire.
+// H1, apiVersion: 1 must not fire the v2-specific entry.
 // ---------------------------------------------------------------------------
 
 describe('false-LOUD regressions', () => {
@@ -737,7 +737,7 @@ describe('false-LOUD regressions', () => {
   });
 
   // C1: real call still fires correctly after the fix. What C1 guards is that
-  // string-stripping did not silence the actual call — the tier it fires at is
+  // string-stripping did not silence the actual call: the tier it fires at is
   // a separate question, settled by the entry's stamp and covered above.
   it('C1: actual wp_img_tag_add_decoding_attr() call is still caught', () => {
     const code = `<?php\n$img = wp_img_tag_add_decoding_attr( $img_html, 'ctx' );`;
@@ -747,7 +747,7 @@ describe('false-LOUD regressions', () => {
     expect(match?.tier).toBe('SOFT');
   });
 
-  // C1: HPOS 'shop_order' literal must still fire — string stripping must NOT erase it
+  // C1: HPOS 'shop_order' literal must still fire, string stripping must NOT erase it
   it("C1: 'shop_order' in array value still fires LOUD (literal-content signal unaffected)", () => {
     const code = `$q = new WP_Query( [ 'post_type' => 'shop_order' ] );`;
     const results = checkCode(code, 'php', catchSnap);
@@ -755,7 +755,7 @@ describe('false-LOUD regressions', () => {
     expect(match?.tier).toBe('LOUD');
   });
 
-  // C2: raw @@ hunk with bad pattern on the removed line — must NOT fire
+  // C2: raw @@ hunk with bad pattern on the removed line, must NOT fire
   it('C2: bad pattern on removed (-) line in raw @@ hunk does NOT fire', () => {
     const hunk = [
       '@@ -1,3 +1,3 @@',
@@ -787,7 +787,7 @@ describe('false-LOUD regressions', () => {
     expect(match).toBeUndefined();
   });
 
-  // H1: apiVersion: 2 still fires (as SOFT — breaking_change:false, deprecated not hard-removed)
+  // H1: apiVersion: 2 still fires (as SOFT, breaking_change:false, deprecated not hard-removed)
   it('H1: apiVersion: 2 still fires gutenberg-apiversion-2-deprecated-wp6-9 as SOFT', () => {
     const code = `wp.blocks.registerBlockType( 'my-ns/block', { apiVersion: 2, edit: () => null } );`;
     const results = checkCode(code, 'js', catchSnap);
@@ -801,7 +801,7 @@ describe('false-LOUD regressions', () => {
 // wp-ability-missing-mcp-public: absence-in-presence SOFT catch
 // ---------------------------------------------------------------------------
 
-describe('wp-ability-missing-mcp-public — absence-in-presence SOFT signal', () => {
+describe('wp-ability-missing-mcp-public, absence-in-presence SOFT signal', () => {
   // SOFT: call present, flag absent → fire
   it('fires SOFT when wp_register_ability() is present but mcp.public flag is absent', () => {
     const code = `<?php
@@ -881,7 +881,7 @@ wp_register_ability( 'my-plugin/get-data', [
 // wordpress-7-0: Interactivity API catch signals (released May 20, 2026)
 // ---------------------------------------------------------------------------
 
-describe('wordpress-7-0 — Interactivity API catch signals', () => {
+describe('wordpress-7-0, Interactivity API catch signals', () => {
   // state.navigation.hasStarted → SOFT (breaking_change: false in entry, deprecated
   // in 7.0, will break in 7.1; CERTAIN class caps at SOFT without breaking_change)
   it('state.navigation.hasStarted fires SOFT (WP 7.0 deprecation)', () => {
@@ -973,10 +973,10 @@ watch( () => { console.log( state.count ); } );
 });
 
 // ---------------------------------------------------------------------------
-// formatCatch — version-scoped relative line
+// formatCatch, version-scoped relative line
 // ---------------------------------------------------------------------------
 
-describe('formatCatch — version-relative lines', () => {
+describe('formatCatch, version-relative lines', () => {
   it('already-broken: LOUD + project on/past breaking version → fix-now line', () => {
     // isValidBlockContent removed in WP 7.0; project on 7.0 → already-broken
     const code = `const { isValidBlockContent } = wp.blocks;\nisValidBlockContent( b, a, [], h );`;
@@ -1030,7 +1030,7 @@ describe('formatCatch — version-relative lines', () => {
     const results = checkCode(code, 'php', noStampSnap);
     if (results.length > 0 && results[0] != null) {
       const rendered = formatCatch(results[0], '8.5');
-      // Must remain SOFT — no alarm emoji
+      // Must remain SOFT, no alarm emoji
       expect(rendered).not.toContain('BREAKING:');
     }
   });

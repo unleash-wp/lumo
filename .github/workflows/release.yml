@@ -1,12 +1,12 @@
 name: Release
 
-# Publishing by hand cannot produce provenance — npm only attests a package
+# Publishing by hand cannot produce provenance: npm only attests a package
 # built by a trusted CI runner. For something that ships knowledge onto other
 # people's dev machines that attestation is worth having, so a release is a tag
 # push and nothing else.
 #
 # Founder setup, once: add an npm automation token as the NPM_TOKEN secret
-# (npm token create --type=automation — automation tokens bypass 2FA, which is
+# (npm token create --type=automation: automation tokens bypass 2FA, which is
 # what lets CI publish at all).
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
         run: npm ci
 
       # A tag that disagrees with the manifest would publish the wrong version
-      # under the right name — fail before anything is pushed anywhere.
+      # under the right name: fail before anything is pushed anywhere.
       - name: Verify the tag matches package.json
         run: |
           TAG="${GITHUB_REF_NAME#v}"

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * `lumo` — the default binary.
+ * `lumo`: the default binary.
  *
  * npm resolves `npx @unleashwp/lumo <cmd>` to the bin whose name matches the
  * package's last path segment. Without a bin literally named `lumo`, the
  * documented flagship command (`npx @unleashwp/lumo scan`) fails with
- * "could not determine executable to run" — so this dispatcher exists to make
+ * "could not determine executable to run", so this dispatcher exists to make
  * the advertised entry point real.
  *
  * Subcommands are lazily imported: `scan` must not pull the MCP SDK into

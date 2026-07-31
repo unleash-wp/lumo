@@ -13,7 +13,7 @@ const hasBinary = (name: string): boolean =>
   spawnSync(name, ['-v'], { stdio: 'ignore' }).status === 0;
 
 // The script shells out to zip, the assertions to unzip. Without either the
-// test cannot run — skip visibly rather than fake a pass.
+// test cannot run, skip visibly rather than fake a pass.
 const toolingPresent = hasBinary('zip') && hasBinary('unzip');
 
 describe('package-skills script', () => {
@@ -33,7 +33,7 @@ describe('package-skills script', () => {
         expect(stdout).toContain(zipPath);
       }
 
-      // claude.ai rejects zips whose root is loose files — the folder itself
+      // claude.ai rejects zips whose root is loose files: the folder itself
       // must be the root entry.
       const listing = spawnSync('unzip', ['-l', join(distDir, 'wp-pro.zip')], {
         encoding: 'utf8',

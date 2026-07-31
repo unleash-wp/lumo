@@ -6,7 +6,7 @@ import {
 } from '../src/lib/config.js';
 
 // ---------------------------------------------------------------------------
-// isUpgradePromptEnabled — kill-switch, default ON
+// isUpgradePromptEnabled, kill-switch, default ON
 // ---------------------------------------------------------------------------
 
 describe('isUpgradePromptEnabled', () => {
@@ -30,27 +30,27 @@ describe('isUpgradePromptEnabled', () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: 'no' })).toBe(false);
   });
 
-  it('opt-out is case-insensitive — OFF', () => {
+  it('opt-out is case-insensitive, OFF', () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: 'OFF' })).toBe(false);
   });
 
-  it('opt-out is case-insensitive — False', () => {
+  it('opt-out is case-insensitive, False', () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: 'False' })).toBe(false);
   });
 
-  it('opt-out is case-insensitive — NO', () => {
+  it('opt-out is case-insensitive, NO', () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: 'NO' })).toBe(false);
   });
 
-  it("returns true for any non-opt-out value — '1'", () => {
+  it("returns true for any non-opt-out value, '1'", () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: '1' })).toBe(true);
   });
 
-  it("returns true for any non-opt-out value — 'yes'", () => {
+  it("returns true for any non-opt-out value, 'yes'", () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: 'yes' })).toBe(true);
   });
 
-  it("returns true for any non-opt-out value — 'on'", () => {
+  it("returns true for any non-opt-out value, 'on'", () => {
     expect(isUpgradePromptEnabled({ LUMO_UPGRADE_PROMPT: 'on' })).toBe(true);
   });
 
@@ -60,7 +60,7 @@ describe('isUpgradePromptEnabled', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getCheckoutUrl — env-injectable, default https://lumo.so/pro
+// getCheckoutUrl, env-injectable, default https://lumo.so/pro
 // ---------------------------------------------------------------------------
 
 describe('getCheckoutUrl', () => {
@@ -80,7 +80,7 @@ describe('getCheckoutUrl', () => {
 });
 
 // ---------------------------------------------------------------------------
-// buildCheckoutUrl — attribution params, stable order, encoded
+// buildCheckoutUrl, attribution params, stable order, encoded
 // ---------------------------------------------------------------------------
 
 describe('buildCheckoutUrl', () => {

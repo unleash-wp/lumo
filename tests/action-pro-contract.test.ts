@@ -1,8 +1,8 @@
 /**
- * P2 — the Pro/Action contract. The server states its verdict as data
+ * P2: the Pro/Action contract. The server states its verdict as data
  * (structuredContent.found); the Action decides on the flag, never on prose.
  * The old string comparison matched a sentence the server never sent, so every
- * clean Pro answer was wrapped as a SOFT finding — a standing false alarm in
+ * clean Pro answer was wrapped as a SOFT finding: a standing false alarm in
  * the one channel nobody watches live.
  */
 
@@ -85,7 +85,7 @@ describe('action ↔ pro contract', () => {
 });
 
 // Product-gate condition on the toolkit wave: a Pro run that silently fell
-// back to the free catch reads as "Pro checked and found nothing" — the
+// back to the free catch reads as "Pro checked and found nothing": the
 // degradation must be a first-class, visible fact of the run.
 describe('pro degradation announces itself', () => {
   it('BELL: unreachable Pro server sets proDegraded on the run', async () => {
@@ -156,7 +156,7 @@ describe('pro degradation announces itself', () => {
 
 // The degraded path is where a paying customer's pull request actually gets
 // reviewed by the free catch. If that catch quietly stops reading at its line
-// cap, the review reads as complete while the tail of the file went unseen —
+// cap, the review reads as complete while the tail of the file went unseen:
 // the same false all-clear, one layer down and harder to notice.
 describe('a degraded run still names the free catch limits', () => {
   it('BELL: a file longer than the scanner reads says so in the review', async () => {

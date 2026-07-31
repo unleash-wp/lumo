@@ -1,10 +1,10 @@
 /**
- * P13 — premium-plugin presence detection + the multi-gap contract.
+ * P13: premium-plugin presence detection + the multi-gap contract.
  *
  * The signals are the curated sourceSignals verbatim, so this file tests the
  * product promise, not invented regexes: touching a premium plugin's API in a
  * blob surfaces a NAMED gap (teaser when Pro covers it, honest note when not),
- * and touching several names ALL of them — reporting only the first is the
+ * and touching several names ALL of them, reporting only the first is the
  * same silence, one plugin later.
  */
 
@@ -16,7 +16,7 @@ import { loadSnapshot } from '../src/lib/snapshot.js';
 const snap = loadSnapshot();
 const gapsOf = (code: string) => checkCodeWithGaps(code, 'php', snap).proGaps;
 
-describe('premium presence — covered plugins draw the named teaser', () => {
+describe('premium presence, covered plugins draw the named teaser', () => {
   it.each([
     ['Advanced Custom Fields Pro', `<?php acf_add_local_field_group( array( 'key' => 'g1' ) );`],
     ['Gravity Forms', `<?php add_action( 'gform_after_submission', 'my_handler', 10, 2 );`],
@@ -31,7 +31,7 @@ describe('premium presence — covered plugins draw the named teaser', () => {
   });
 });
 
-describe('premium presence — uncovered plugins get the honest note, no promise', () => {
+describe('premium presence, uncovered plugins get the honest note, no promise', () => {
   it.each([
     ['Pods', `<?php $v = pods_field( 'my_pod', $id, 'field' );`],
     ['WP Rocket', `<?php rocket_clean_domain();`],
@@ -50,7 +50,7 @@ describe('premium presence — uncovered plugins get the honest note, no promise
   });
 });
 
-describe('multi-gap — every touched plugin is named', () => {
+describe('multi-gap. Every touched plugin is named', () => {
   const MIXED = `<?php
 $order_id = 123;
 update_post_meta( $order_id, '_billing_email', 'a@b.de' );

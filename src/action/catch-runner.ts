@@ -1,7 +1,7 @@
 /**
  * Core catch orchestration for the Lumo GitHub Action.
  *
- * Pure logic layer — no GitHub API calls, no process.exit.
+ * Pure logic layer, no GitHub API calls, no process.exit.
  * Consumes checkCode() + formatCatch() from the free catch engine and
  * returns structured findings the action entry-point posts as review comments.
  *
@@ -26,7 +26,7 @@ import {
 export interface Finding {
   filename: string;
   tier: CatchTier;
-  /** Rendered Markdown — verbatim from formatCatch(). */
+  /** Rendered Markdown, verbatim from formatCatch(). */
   body: string;
 }
 
@@ -37,7 +37,7 @@ export interface RunResult {
   /**
    * True when Pro credentials were configured but at least one file fell back
    * to the free catch (Pro server unreachable). The caller MUST surface this
-   * in the run's visible output — a silently degraded Pro run reads as "Pro
+   * in the run's visible output: a silently degraded Pro run reads as "Pro
    * checked and found nothing", which is a false all-clear on the paid layer.
    */
   proDegraded: boolean;
@@ -52,7 +52,7 @@ export interface RunResult {
 }
 
 // ---------------------------------------------------------------------------
-// Pro path — MCP JSON-RPC call against the licensed Pro server.
+// Pro path, MCP JSON-RPC call against the licensed Pro server.
 // Returns raw results; each pre-rendered finding comes back as a single SOFT
 // sentinel (the Pro server enforces its own tier; we never re-classify here).
 // ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ async function fetchProResults(
   const text = json?.result?.content?.[0]?.text ?? '';
 
   // computed:false means the Pro scan fell into its fail-open path. It still
-  // answers, and the answer still reads "no known issues" — that prose is not a
+  // answers, and the answer still reads "no known issues": that prose is not a
   // verdict. Treat it exactly like an unreachable server: the caller below falls
   // back to the free catch and marks the run degraded. "Pro answered" and "Pro
   // checked" are not the same thing, and only the second one may end a run
@@ -112,7 +112,7 @@ async function fetchProResults(
   }
 
   // The Pro server states its verdict as data: structuredContent.found. Decide
-  // on the flag, never on the prose — the old string comparison matched a
+  // on the flag, never on the prose: the old string comparison matched a
   // sentence the server never sent, so every clean Pro answer was wrapped as a
   // finding. The literal below is the HISTORICAL neutral wording, kept only for
   // a server predating the flag; the current server no longer sends it and
@@ -216,7 +216,7 @@ async function catchFile(
   });
 
   // A Pro-only signal fired on this file. Without this the Action reports "no
-  // findings" on a WooCommerce pull request — the same false all-clear the tool
+  // findings" on a WooCommerce pull request: the same false all-clear the tool
   // and hook paths already fixed, in the channel where nobody is watching live.
   //
   // Always SOFT: a coverage gap is not a defect in the contributor's code, so it
@@ -234,7 +234,7 @@ async function catchFile(
 }
 
 // ---------------------------------------------------------------------------
-// Main exported runner — injectable for tests
+// Main exported runner, injectable for tests
 // ---------------------------------------------------------------------------
 
 export interface RunCatchOptions {

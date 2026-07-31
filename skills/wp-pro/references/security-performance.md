@@ -67,7 +67,7 @@ wp_nonce_field( 'save_my_settings', 'my_settings_nonce' );
 
 // Verify (in the handler):
 check_admin_referer( 'save_my_settings', 'my_settings_nonce' );
-// check_admin_referer() calls wp_die() on failure — safe default.
+// check_admin_referer() calls wp_die() on failure, safe default.
 ```
 
 **AJAX nonces:**

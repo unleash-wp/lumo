@@ -1,5 +1,5 @@
 /**
- * CI mode of the scan CLI (runScan) — the gate surface behind the GitLab
+ * CI mode of the scan CLI (runScan): the gate surface behind the GitLab
  * template gitlab/lumo.gitlab-ci.yml.
  *
  * Contract under test, mirroring the GitHub Action:
@@ -10,7 +10,7 @@
  *     else the working tree with a printed note. Empty values count as unset
  *     (the template passes --base "$VAR" verbatim on every pipeline).
  *   - Every fail-open path says the scan DID NOT RUN and that this is not a
- *     clean result — a skipped scan must never read like a clean one.
+ *     clean result: a skipped scan must never read like a clean one.
  *   - Without --ci nothing blocks, ever.
  *
  * Diffs are injected through the getDiff seam; no test shells out to git.
@@ -35,7 +35,7 @@ index abc1234..def5678 100644
 +$rows = $wpdb->get_results( "SELECT * FROM wp_things WHERE user_id = $id" );
 `;
 
-/** Adds only safe wc_get_order() code — no catch expected. */
+/** Adds only safe wc_get_order() code, no catch expected. */
 const CLEAN_DIFF = `diff --git a/includes/safe-handler.php b/includes/safe-handler.php
 index aaa..bbb 100644
 --- a/includes/safe-handler.php
@@ -46,7 +46,7 @@ index aaa..bbb 100644
 +$total = $order->get_total();
 `;
 
-/** Unsanitized superglobal read — CONTEXT_DEPENDENT signal, SOFT only. */
+/** Unsanitized superglobal read, CONTEXT_DEPENDENT signal, SOFT only. */
 const SOFT_DIFF = `diff --git a/includes/form-handler.php b/includes/form-handler.php
 index aaa..bbb 100644
 --- a/includes/form-handler.php
@@ -59,7 +59,7 @@ index aaa..bbb 100644
 const CI_ARGS = ['--ci', '--base', 'main'];
 
 // ---------------------------------------------------------------------------
-// Suite 1 — the exit-code gate
+// Suite 1: the exit-code gate
 // ---------------------------------------------------------------------------
 
 describe('scan --ci: exit-code gate', () => {
@@ -77,7 +77,7 @@ describe('scan --ci: exit-code gate', () => {
     expect(r.lines.join('\n')).toContain('not an all-clear');
   });
 
-  it('SILENCE: a SOFT-only diff exits 0 — advisory never blocks', async () => {
+  it('SILENCE: a SOFT-only diff exits 0, advisory never blocks', async () => {
     const r = await runScan({ argv: CI_ARGS, env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => SOFT_DIFF });
     expect(r.exitCode).toBe(0);
     expect(r.lines.join('\n')).toContain('advisory');
@@ -104,7 +104,7 @@ describe('scan --ci: exit-code gate', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Suite 2 — diff source resolution
+// Suite 2, diff source resolution
 // ---------------------------------------------------------------------------
 
 describe('scan --ci: diff source', () => {
@@ -167,7 +167,7 @@ describe('scan --ci: diff source', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Suite 3 — fail-open honesty: DID NOT RUN, never a clean-looking skip
+// Suite 3, fail-open honesty: DID NOT RUN, never a clean-looking skip
 // ---------------------------------------------------------------------------
 
 describe('scan --ci: fail-open honesty', () => {
@@ -219,11 +219,11 @@ describe('scan --ci: fail-open honesty', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Suite 4 — without --ci nothing blocks and nothing new appears
+// Suite 4, without --ci nothing blocks and nothing new appears
 // ---------------------------------------------------------------------------
 
 describe('scan without --ci stays advisory', () => {
-  it('a LOUD diff still exits 0 — findings inform, they do not block', async () => {
+  it('a LOUD diff still exits 0, findings inform, they do not block', async () => {
     const r = await runScan({ argv: [], env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => LOUD_DIFF });
     expect(r.exitCode).toBe(0);
     expect(r.lines.join('\n')).toContain('BREAKING:');
@@ -250,7 +250,7 @@ describe('scan without --ci stays advisory', () => {
 
 /**
  * CI enforcement is a Lumo Pro feature (founder decision, 31.07.2026). The
- * gate must refuse to run without a licence — and refusing must never look
+ * gate must refuse to run without a licence, and refusing must never look
  * like a passed review, and never block someone's merge either.
  */
 describe('scan --ci: the gate is licensed', () => {

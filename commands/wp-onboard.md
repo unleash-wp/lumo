@@ -26,7 +26,7 @@ Tell the developer:
 Print the wrong pattern from `data/sample-order.php` labelled clearly:
 
 ```
-### Wrong (HPOS-unsafe) — teaching sample
+### Wrong (HPOS-unsafe): teaching sample
 
 ```php
 <contents of data/sample-order.php>
@@ -36,7 +36,7 @@ Print the wrong pattern from `data/sample-order.php` labelled clearly:
 Then print the correct pattern from the snapshot entry (`category_slug: woocommerce`, field `code_example`) labelled:
 
 ```
-### Correct — HPOS-compatible
+### Correct: HPOS-compatible
 
 ```php
 <snapshot code_example>

@@ -11,7 +11,7 @@ import type { TelemetryPayload, TransmitDeps } from '../src/lib/track.js';
 import type { TelemetryConsent } from '../src/lib/events.js';
 
 // ---------------------------------------------------------------------------
-// Payload builders — deterministic, no network, no I/O
+// Payload builders, deterministic, no network, no I/O
 // ---------------------------------------------------------------------------
 
 describe('buildInstallPayload', () => {
@@ -151,7 +151,7 @@ describe('no trial_started builder', () => {
 });
 
 // ---------------------------------------------------------------------------
-// transmit — the core safety contract
+// transmit: the core safety contract
 // ---------------------------------------------------------------------------
 
 function makePayload(): TelemetryPayload {
@@ -164,7 +164,7 @@ function makePayload(): TelemetryPayload {
   });
 }
 
-describe('transmit — no-transmit invariant (ship-safe-in-CI)', () => {
+describe('transmit, no-transmit invariant (ship-safe-in-CI)', () => {
   it('is a no-op when LUMO_TELEMETRY_ENDPOINT is unset, regardless of consent', async () => {
     const sendSpy = vi.fn();
 
@@ -213,7 +213,7 @@ describe('transmit — no-transmit invariant (ship-safe-in-CI)', () => {
   });
 });
 
-describe('transmit — consent gating', () => {
+describe('transmit, consent gating', () => {
   it('calls sender exactly once with the built payload when consent is granted and endpoint is set', async () => {
     const sendSpy = vi.fn().mockResolvedValue(undefined);
     const payload = makePayload();
@@ -252,7 +252,7 @@ describe('transmit — consent gating', () => {
   });
 });
 
-describe('transmit — fail-open on sender error', () => {
+describe('transmit, fail-open on sender error', () => {
   it('does not throw when the sender rejects', async () => {
     const sendSpy = vi.fn().mockRejectedValue(new Error('network error'));
     const deps: TransmitDeps = {

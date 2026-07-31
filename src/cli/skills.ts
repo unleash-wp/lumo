@@ -1,15 +1,15 @@
 /**
- * `lumo skills` — one grip to both layers of the stack.
+ * `lumo skills`: one grip to both layers of the stack.
  *
  * The WordPress agent skills (github.com/WordPress/agent-skills,
  * GPL-2.0-or-later) are the MANUAL: how to build blocks, themes, REST routes,
  * plugins the current way. Lumo is the WATCHER: what just broke, what is
- * deprecated, what your AI got wrong. The two are designed as companions —
+ * deprecated, what your AI got wrong. The two are designed as companions.
  * Lumo's own marketplace copy says exactly that.
  *
  * Deliberately NOT vendored into this package: the skills are actively
  * maintained upstream with their own installer and their own licence. A frozen
- * copy inside Lumo would rot from day one — the freshness product must not
+ * copy inside Lumo would rot from day one: the freshness product must not
  * ship staling copies. This command delegates to the official installer and
  * inherits the terminal so their prompts reach the user directly.
  */

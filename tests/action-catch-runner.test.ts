@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { runCatch } from '../src/action/catch-runner.js';
 
 // ---------------------------------------------------------------------------
-// Unified diff fixtures — real patterns that fire on the live catch engine.
+// Unified diff fixtures, real patterns that fire on the live catch engine.
 //
 // runCatch always reads the shipped Free snapshot (no injection seam), so the
 // fixtures use Free-tier signals: WooCommerce knowledge is Pro-only and no
@@ -14,7 +14,7 @@ import { runCatch } from '../src/action/catch-runner.js';
 // ---------------------------------------------------------------------------
 
 /**
- * A diff that adds an isValidBlockContent() call — a CERTAIN core signal on an
+ * A diff that adds an isValidBlockContent() call: a CERTAIN core signal on an
  * API removed in WP 5.9. classify() checks CERTAIN + version stamp +
  * breaking_change=true → LOUD.
  *
@@ -33,7 +33,7 @@ index abc1234..def5678 100644
 `;
 
 /**
- * A diff registering an ability without the mcp.public flag — CONTEXT_DEPENDENT,
+ * A diff registering an ability without the mcp.public flag, CONTEXT_DEPENDENT,
  * always SOFT. Used to verify the advisory (non-blocking) path.
  */
 const abilitySoftDiff = `diff --git a/includes/class-ability-registrar.php b/includes/class-ability-registrar.php
@@ -46,7 +46,7 @@ index abc1234..def5678 100644
  }
 `;
 
-/** A diff where all changes are deletions — nothing added, catch must stay silent. */
+/** A diff where all changes are deletions. Nothing added, catch must stay silent. */
 const deleteOnlyDiff = `diff --git a/functions.php b/functions.php
 index 111..222 100644
 --- a/functions.php
@@ -57,7 +57,7 @@ index 111..222 100644
  }
 `;
 
-/** A diff with only safe code (wc_get_order) — no catch expected. */
+/** A diff with only safe code (wc_get_order), no catch expected. */
 const safePhpDiff = `diff --git a/includes/safe-handler.php b/includes/safe-handler.php
 index aaa..bbb 100644
 --- a/includes/safe-handler.php
@@ -68,7 +68,7 @@ index aaa..bbb 100644
 +$total = $order->get_total();
 `;
 
-/** A diff with only non-PHP/non-JS files (YAML, CSS) — catch must return nothing. */
+/** A diff with only non-PHP/non-JS files (YAML, CSS), catch must return nothing. */
 const nonCodeDiff = `diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
 index ccc..ddd 100644
 --- a/.github/workflows/deploy.yml
@@ -83,7 +83,7 @@ index ccc..ddd 100644
 // ---------------------------------------------------------------------------
 
 describe('runCatch', () => {
-  it('returns LOUD finding for isValidBlockContent — CERTAIN signal', async () => {
+  it('returns LOUD finding for isValidBlockContent, CERTAIN signal', async () => {
     const result = await runCatch({ diff: coreLoudDiff });
 
     expect(result.findings.length).toBeGreaterThan(0);
@@ -100,7 +100,7 @@ describe('runCatch', () => {
     expect(loudFinding?.body).toMatch(/wp_img_tag_add_loading_optimization_attrs|deprecated/i);
   });
 
-  it('returns SOFT finding for wp_register_ability() — CONTEXT_DEPENDENT signal', async () => {
+  it('returns SOFT finding for wp_register_ability(): CONTEXT_DEPENDENT signal', async () => {
     const result = await runCatch({ diff: abilitySoftDiff });
 
     expect(result.findings.length).toBeGreaterThan(0);
@@ -145,7 +145,7 @@ describe('runCatch', () => {
   });
 });
 
-describe('runCatch — Pro fallback on unreachable server', () => {
+describe('runCatch. Pro fallback on unreachable server', () => {
   it('falls back to free catch when Pro URL is set but server is unreachable', async () => {
     // Port 1 refuses connections immediately.
     const result = await runCatch({
@@ -154,7 +154,7 @@ describe('runCatch — Pro fallback on unreachable server', () => {
       licenseKey: 'test-key',
     });
 
-    // Free catch fires the wp_img_tag LOUD signal — fallback must not swallow it.
+    // Free catch fires the wp_img_tag LOUD signal, fallback must not swallow it.
     expect(result.findings.length).toBeGreaterThan(0);
     expect(result.loudCount).toBeGreaterThan(0);
   });

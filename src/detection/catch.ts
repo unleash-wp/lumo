@@ -1,13 +1,13 @@
 /**
- * Blob-in catch engine — the precision model (phase 00) + matcher (phase 01).
+ * Blob-in catch engine: the precision model (phase 00) + matcher (phase 01).
  *
  * Entry points
- *   classify()    — pure decision function; maps (entry, signal) → tier
- *   checkCode()   — scan a raw blob or unified diff, return ranked CatchResult[]
+ *   classify(): pure decision function; maps (entry, signal) → tier
+ *   checkCode(): scan a raw blob or unified diff, return ranked CatchResult[]
  *
  * Contracts
  *   - Never throws (fail-open: any exception yields an empty catch list)
- *   - No Date.now() / Math.random() — all dates come from entry data
+ *   - No Date.now() / Math.random(): all dates come from entry data
  *   - snapshot-injectable for deterministic unit tests
  *   - Does NOT touch lumo_audit / sourceSignals / project-scan paths
  */
@@ -39,9 +39,9 @@ export interface VersionFact {
  * version, and the claim is carried by the entry's source, not by a release.
  */
 export interface AlwaysWrongFact {
-  /** The entry's source_url — the citation that licenses the loud claim. */
+  /** The entry's source_url: the citation that licenses the loud claim. */
   sourceUrl: string;
-  /** ISO date string from entry.updatedAt — when the knowledge was verified. */
+  /** ISO date string from entry.updatedAt, when the knowledge was verified. */
   date: string;
 }
 
@@ -49,41 +49,41 @@ export interface CatchResult {
   tier: CatchTier;
   entry: SnapshotEntry;
   signal: CatchSignal;
-  /** Present when tier is LOUD via the version route — the dated version anchor. */
+  /** Present when tier is LOUD via the version route: the dated version anchor. */
   versionFact?: VersionFact;
-  /** Present when tier is LOUD via the always-wrong route — the source anchor. */
+  /** Present when tier is LOUD via the always-wrong route: the source anchor. */
   alwaysWrongFact?: AlwaysWrongFact;
   /** Present when tier is SOFT for a CONTEXT_DEPENDENT signal. */
   condition?: string;
 }
 
 // ---------------------------------------------------------------------------
-// Phase 00: classify() — the pure decision function
+// Phase 00: classify(), the pure decision function
 //
 // Two routes to LOUD; everything else caps at SOFT or SILENT.
 //
-// Route 1 — version fact (three guards, all must hold):
+// Route 1, version fact (three guards, all must hold):
 //   1. Signal class is CERTAIN
 //   2. Entry carries a non-null version min (wp or woo)
 //   3. That version row has breaking_change === true
 //
-// Route 2 — always wrong (owner decision, 30.07.2026):
+// Route 2, always wrong (owner decision, 30.07.2026):
 //   1. Signal class is CERTAIN
 //   2. Entry slug is on the explicit ALWAYS_WRONG_SLUGS list
 //   3. Entry carries a non-empty source_url
 // Security fundamentals like an unprepared $wpdb query do not break at a
-// version — they are wrong in every supported release, which is why they have
+// version. They are wrong in every supported release, which is why they have
 // no version stamp and were structurally barred from LOUD before this route.
 //
 // Both routes share the same guarantee: no LOUD without a citable anchor. If
 // neither a version fact nor a source anchor exists, the LOUD template has
-// nothing to interpolate and we degrade to SOFT — a data-level guarantee, not a
+// nothing to interpolate and we degrade to SOFT: a data-level guarantee, not a
 // runtime check that can be forgotten.
 // ---------------------------------------------------------------------------
 
 /**
- * Explicit on purpose: nothing in the data says "wrong regardless of version" —
- * no column carries it — so deriving this from the category would silently
+ * Explicit on purpose: nothing in the data says "wrong regardless of version",
+ * no column carries it, so deriving this from the category would silently
  * promote every future entry added there. An explicit list makes each
  * promotion a decision.
  *
@@ -92,11 +92,11 @@ export interface CatchResult {
  * that held it back is settled (the wp-abilities category ships free).
  *
  * Held back from the list after review (Gemini pass A + PM gate, measured):
- *   wp-raw-curl-instead-of-http-api — legitimate uses exist (mTLS client certs,
+ *   wp-raw-curl-instead-of-http-api: legitimate uses exist (mTLS client certs,
  *     streaming, parallel handles) where the WP HTTP API demonstrably cannot
  *     serve; "a defect in every version" over-claims there, and LOUD breaks PR
  *     builds under the Action's default fail_on_loud=true.
- *   wp-direct-role-check-instead-of-capability — a deliberate role check for
+ *   wp-direct-role-check-instead-of-capability: a deliberate role check for
  *     display logic (role badge, UI branching) is not an authorization defect.
  * Both stay SOFT. Promoting them back is one escalation line to the owner.
  */
@@ -126,12 +126,12 @@ export function classify(
     return { tier: 'SOFT', condition: signal.condition };
   }
 
-  // CERTAIN from here — but first check for shim/polyfill guard
+  // CERTAIN from here, but first check for shim/polyfill guard
   if (shimPresent) {
     return { tier: 'SOFT', condition: 'this call is inside a shim or compatibility wrapper' };
   }
 
-  // Route 2 — always wrong. Checked before the version route: these entries may
+  // Route 2, always wrong. Checked before the version route: these entries may
   // also carry a non-breaking version stamp, which would otherwise cap them at
   // SOFT. The source is the anchor; an empty source_url means no anchor, so the
   // route cannot fire (same data-level guarantee as the version route).
@@ -148,7 +148,7 @@ export function classify(
   );
 
   if (!vRow) {
-    // No version stamp — structurally barred from LOUD
+    // No version stamp, structurally barred from LOUD
     return { tier: 'SOFT' };
   }
 
@@ -176,12 +176,12 @@ export function classify(
 //
 // Two variants are pre-computed once and selected per signal:
 //
-//   strippedComments  — comments blanked, quoted strings kept intact.
+//   strippedComments, comments blanked, quoted strings kept intact.
 //                       Used by signals whose match target IS a string literal
 //                       (e.g. 'shop_order', 'sk_live_'). Stripping the string
 //                       body would erase the very signal being detected.
 //
-//   strippedAll       — comments AND quoted string bodies blanked.
+//   strippedAll, comments AND quoted string bodies blanked.
 //                       Used by call-pattern signals whose match target is a
 //                       function name with an open paren. A function name
 //                       inside a string literal is not a call; keeping the
@@ -206,7 +206,7 @@ function stripCommentsAndStrings(code: string): string {
   // Replace single-quoted, double-quoted, and backtick string bodies with
   // spaces. The opener and closer delimiters are kept so surrounding syntax
   // remains parseable. Handles escaped delimiters (\' \") inside strings.
-  // Does NOT handle heredoc/nowdoc — those are rare and the string body is
+  // Does NOT handle heredoc/nowdoc. Those are rare and the string body is
   // already unlikely to produce a false-LOUD (no open paren follows the name).
   return noComments.replace(
     /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g,
@@ -223,7 +223,7 @@ function stripCommentsAndStrings(code: string): string {
 // Raw hunks without file headers are valid unified diff output (e.g. from
 // 'git diff --no-index', clipboard pastes, AI before/after blocks). Without
 // this check, removed '-' lines in a raw hunk would be scanned as plain code
-// and fire LOUD on code the developer is deleting — a false accusation.
+// and fire LOUD on code the developer is deleting: a false accusation.
 // ---------------------------------------------------------------------------
 
 function filterDiffAddedLines(code: string): string {
@@ -258,8 +258,8 @@ function detectLanguage(code: string): Language {
     (/\$\w/.test(code) ? 2 : 0) +
     // A quoted string directly before => is PHP array syntax ('key' => value).
     // A JS arrow has a parameter there, never a string literal. Without this, a
-    // pasted PHP fragment like array( 'post_type' => 'shop_order' ) — no <?php,
-    // no $ — scored PHP 0 / JS 1 and silently lost all its PHP signals.
+    // pasted PHP fragment like array( 'post_type' => 'shop_order' ), no <?php,
+    // no $, scored PHP 0 / JS 1 and silently lost all its PHP signals.
     (/['"]\s*=>/.test(code) ? 2 : 0) +
     (/\barray\s*\(/.test(code) ? 2 : 0) +
     (code.includes('function_exists') ? 1 : 0);
@@ -275,7 +275,7 @@ function detectLanguage(code: string): Language {
 }
 
 // ---------------------------------------------------------------------------
-// Token cap — first 2 000 lines of the input
+// Token cap, first 2 000 lines of the input
 // ---------------------------------------------------------------------------
 
 export const INPUT_LINE_CAP = 2_000;
@@ -287,20 +287,20 @@ function capInput(code: string): { code: string; truncated: boolean } {
 }
 
 // ---------------------------------------------------------------------------
-// Per-project catch overrides — loaded from .claude/.lumo.json catch section.
+// Per-project catch overrides, loaded from .claude/.lumo.json catch section.
 //
 // Schema:
 //   { "catch": { "disable": ["<slug>", ...], "downgrade": { "<slug>": "soft" } } }
 //
-//   disable  — slugs that must not appear in results at all.
-//   downgrade — slug → "soft": caps a LOUD result to SOFT. Unknown values are
+//   disable, slugs that must not appear in results at all.
+//   downgrade, slug → "soft": caps a LOUD result to SOFT. Unknown values are
 //               treated as no-op so future additions are safe with old code.
 //
 // No config / missing catch key = behaviour is byte-identical to baseline.
 // ---------------------------------------------------------------------------
 
 export interface CatchOverrides {
-  /** Entry slugs that are completely suppressed — removed from results. */
+  /** Entry slugs that are completely suppressed, removed from results. */
   disable?: string[];
   /**
    * Per-slug tier cap. Currently only "soft" is meaningful: a LOUD finding for
@@ -337,13 +337,13 @@ export function applyCatchOverrides(
 }
 
 // ---------------------------------------------------------------------------
-// Phase 01: checkCode() — pure, snapshot-injectable
+// Phase 01: checkCode(), pure, snapshot-injectable
 // ---------------------------------------------------------------------------
 
 const CATCH_CAP = 3;
 
 /**
- * A signal fired, but the entry it points at is Pro-only — Free has nothing to
+ * A signal fired, but the entry it points at is Pro-only. Free has nothing to
  * render. Carries the data a caller needs to say so; the copy itself lives with
  * the other user-facing text, not in the engine.
  */
@@ -362,7 +362,7 @@ export interface CheckCodeOutcome {
   /**
    * EVERY plugin whose signal fired without a Free entry behind it, deduped by
    * name, registry order. A blob touching WooCommerce AND ACF Pro must name
-   * both — reporting only the first is the same silence, one plugin later.
+   * both, reporting only the first is the same silence, one plugin later.
    * Callers MUST surface these instead of a neutral line when `results` is
    * empty.
    */
@@ -380,7 +380,7 @@ export interface CheckCodeOutcome {
   hitsOmitted: number;
 }
 
-/** Thin wrapper — the ranked results only. See checkCodeWithGaps for Pro gaps. */
+/** Thin wrapper: the ranked results only. See checkCodeWithGaps for Pro gaps. */
 export function checkCode(
   code: string,
   language: 'php' | 'js' | 'auto' = 'auto',
@@ -406,8 +406,8 @@ export function checkCodeWithGaps(
     const lang: Language = language === 'auto' ? detectLanguage(diffFiltered) : language;
 
     // Two stripped variants, computed once and selected per signal:
-    //   strippedComments  — strings intact (for literal-content signals like 'shop_order')
-    //   strippedAll       — strings also blanked (for call-pattern signals like func_name()
+    //   strippedComments, strings intact (for literal-content signals like 'shop_order')
+    //   strippedAll, strings also blanked (for call-pattern signals like func_name()
     //                       where a mention inside a string is not an actual call)
     const strippedComments = stripComments(diffFiltered);
     const strippedAll = stripCommentsAndStrings(diffFiltered);
@@ -448,9 +448,9 @@ export function checkCodeWithGaps(
 
       const entry = findEntry(snap, signal.entrySlug);
       if (!entry) {
-        // The signal fired but Free carries no entry for it — Pro-only knowledge.
+        // The signal fired but Free carries no entry for it. Pro-only knowledge.
         // Record the gap so the caller can name it. Dropping it silently is the
-        // false all-clear this engine must never produce — and dropping every
+        // false all-clear this engine must never produce, and dropping every
         // gap after the first is the same silence, one plugin later.
         if (pattern.proTeaser) {
           const name = pattern.proTeaserName ?? pattern.pattern;
@@ -485,7 +485,7 @@ export function checkCodeWithGaps(
         condition: result.condition,
       };
 
-      // Dedupe by entrySlug — keep the highest tier (LOUD > SOFT)
+      // Dedupe by entrySlug, keep the highest tier (LOUD > SOFT)
       const existing = seen.get(signal.entrySlug);
       if (!existing || tierRank(tier) > tierRank(existing.tier)) {
         seen.set(signal.entrySlug, catchResult);

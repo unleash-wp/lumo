@@ -31,7 +31,7 @@ jobs:
           MIRROR_TOKEN: ${{ secrets.SKILLS_MIRROR_TOKEN }}
         run: |
           # A set variable with a missing secret would surface as a cryptic
-          # clone/auth failure — name the actual problem instead.
+          # clone/auth failure: name the actual problem instead.
           if [ -z "$MIRROR_TOKEN" ]; then
             echo "SKILLS_MIRROR_REPO is set but the SKILLS_MIRROR_TOKEN secret is missing."
             exit 1

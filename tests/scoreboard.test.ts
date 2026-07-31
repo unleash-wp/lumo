@@ -9,7 +9,7 @@ function makeTmpDir(): string {
 }
 
 // ---------------------------------------------------------------------------
-// getGatedCount — derived from log, single source of truth
+// getGatedCount, derived from log, single source of truth
 // ---------------------------------------------------------------------------
 
 describe('getGatedCount', () => {
@@ -51,7 +51,7 @@ describe('getGatedCount', () => {
 });
 
 // ---------------------------------------------------------------------------
-// recordGatedTouch — appends the increment + stamps correct gated_count
+// recordGatedTouch, appends the increment + stamps correct gated_count
 // ---------------------------------------------------------------------------
 
 describe('recordGatedTouch', () => {

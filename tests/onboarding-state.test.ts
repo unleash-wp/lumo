@@ -3,7 +3,7 @@ import { decideOnboardingStep, classifyOwnCodeOutcome } from '../src/onboarding/
 import type { AuditResult } from '../src/detection/index.js';
 
 // ---------------------------------------------------------------------------
-// decideOnboardingStep — pure flow-policy, no I/O
+// decideOnboardingStep, pure flow-policy, no I/O
 // ---------------------------------------------------------------------------
 
 describe('decideOnboardingStep', () => {
@@ -25,7 +25,7 @@ describe('decideOnboardingStep', () => {
 });
 
 // ---------------------------------------------------------------------------
-// classifyOwnCodeOutcome — pure, stubbed AuditResult, no disk
+// classifyOwnCodeOutcome, pure, stubbed AuditResult, no disk
 // ---------------------------------------------------------------------------
 
 describe('classifyOwnCodeOutcome', () => {

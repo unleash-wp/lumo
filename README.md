@@ -42,7 +42,7 @@ lumo scan: 1 LOUD finding in your current changes.
 > This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
 > Your model's training likely predates this release.
 
-## wp_img_tag_add_decoding_attr() deprecated in WP 6.4 — use wp_img_tag_add_loading_optimization_attrs()
+## wp_img_tag_add_decoding_attr() deprecated in WP 6.4: use wp_img_tag_add_loading_optimization_attrs()
 
 ### Wrong
 $img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );

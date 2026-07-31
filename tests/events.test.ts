@@ -23,7 +23,7 @@ function makeTmpDir(): string {
 }
 
 // ---------------------------------------------------------------------------
-// buildEvent — pure, deterministic
+// buildEvent, pure, deterministic
 // ---------------------------------------------------------------------------
 
 describe('buildEvent', () => {
@@ -61,7 +61,7 @@ describe('buildEvent', () => {
 });
 
 // ---------------------------------------------------------------------------
-// isActivation — activation predicate
+// isActivation, activation predicate
 // ---------------------------------------------------------------------------
 
 describe('isActivation', () => {
@@ -69,11 +69,11 @@ describe('isActivation', () => {
     expect(isActivation({ type: 'activation', target: 'own', gated: true })).toBe(true);
   });
 
-  it('returns false for sample target — sample saves are never activation', () => {
+  it('returns false for sample target, sample saves are never activation', () => {
     expect(isActivation({ type: 'activation', target: 'sample', gated: true })).toBe(false);
   });
 
-  it('returns false when gated is false — ungated catch is not activation', () => {
+  it('returns false when gated is false, ungated catch is not activation', () => {
     expect(isActivation({ type: 'activation', target: 'own', gated: false })).toBe(false);
   });
 
@@ -99,7 +99,7 @@ describe('isActivation', () => {
 });
 
 // ---------------------------------------------------------------------------
-// recordEvent + hasOnboarded — against a tmp stateDir
+// recordEvent + hasOnboarded, against a tmp stateDir
 // ---------------------------------------------------------------------------
 
 describe('recordEvent + hasOnboarded', () => {
@@ -158,7 +158,7 @@ function appendGarbageLine(dir: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// getOrAssignVariant — write-once, both arms reachable, default on failure
+// getOrAssignVariant, write-once, both arms reachable, default on failure
 // ---------------------------------------------------------------------------
 
 describe('getOrAssignVariant', () => {
@@ -186,7 +186,7 @@ describe('getOrAssignVariant', () => {
     const dir = makeTmpDir();
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'variant'), 'X', 'utf8');
-    // Falls through to assign — random draw, but does not crash
+    // Falls through to assign, random draw, but does not crash
     const v = getOrAssignVariant(dir);
     expect(['A', 'B']).toContain(v);
   });
@@ -210,7 +210,7 @@ describe('getOrAssignVariant', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getTelemetryConsent + setTelemetryConsent — FA-32 opt-in persistence
+// getTelemetryConsent + setTelemetryConsent, FA-32 opt-in persistence
 // ---------------------------------------------------------------------------
 
 describe('getTelemetryConsent', () => {
@@ -263,7 +263,7 @@ describe('setTelemetryConsent', () => {
 });
 
 // ---------------------------------------------------------------------------
-// resolveInstallSource — FA-34 injectable env
+// resolveInstallSource, FA-34 injectable env
 // ---------------------------------------------------------------------------
 
 describe('resolveInstallSource', () => {
@@ -293,7 +293,7 @@ describe('resolveInstallSource', () => {
 });
 
 // ---------------------------------------------------------------------------
-// buildEvent — prompt_suppressed type
+// buildEvent, prompt_suppressed type
 // ---------------------------------------------------------------------------
 
 describe('buildEvent prompt_suppressed', () => {
@@ -325,7 +325,7 @@ describe('buildEvent prompt_suppressed', () => {
 });
 
 // ---------------------------------------------------------------------------
-// readPromptState / writePromptState — round-trip + fail-open
+// readPromptState / writePromptState, round-trip + fail-open
 // ---------------------------------------------------------------------------
 
 describe('readPromptState', () => {
@@ -357,7 +357,7 @@ describe('readPromptState', () => {
   });
 });
 
-describe('writePromptState + readPromptState — round-trip', () => {
+describe('writePromptState + readPromptState, round-trip', () => {
   it('round-trips threshold, ignoreCount, promptVariant', () => {
     const dir = makeTmpDir();
     const written = {
@@ -412,7 +412,7 @@ describe('writePromptState + readPromptState — round-trip', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getOrAssignPromptVariant — write-once, defaults to 'calm'
+// getOrAssignPromptVariant, write-once, defaults to 'calm'
 // ---------------------------------------------------------------------------
 
 describe('getOrAssignPromptVariant', () => {

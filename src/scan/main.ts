@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * lumo-scan — one-shot proactive catch for the developer's current changes.
+ * lumo-scan: one-shot proactive catch for the developer's current changes.
  *
  * Thin process shell around runScan() (./run-scan.js): prints the returned
- * lines and sets the exit code. All scan logic — argument handling, git diff,
- * catch, the CI gate — lives in run-scan.ts so tests can drive it without a
+ * lines and sets the exit code. All scan logic, argument handling, git diff,
+ * catch, the CI gate, lives in run-scan.ts so tests can drive it without a
  * child process or a real git repository.
  *
  * Entry point: bin/lumo-scan (via package.json#bin.lumo-scan → dist/scan.mjs)
@@ -24,6 +24,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(() => {
-  // Top-level safety net — never let an unhandled rejection surface.
+  // Top-level safety net, never let an unhandled rejection surface.
   process.exit(0);
 });

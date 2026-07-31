@@ -1,5 +1,5 @@
 <?php
-// Signal only inside vendor/ — must be excluded from heuristic scan.
+// Signal only inside vendor/, must be excluded from heuristic scan.
 use WC_Order;
 
 class VendorAdapter {

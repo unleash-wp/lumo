@@ -19,7 +19,7 @@ function freshState(overrides: Partial<PromptState> = {}): PromptState {
 }
 
 // ---------------------------------------------------------------------------
-// DEFAULT_PROMPT_STATE — shape assertion
+// DEFAULT_PROMPT_STATE: shape assertion
 // ---------------------------------------------------------------------------
 
 describe('DEFAULT_PROMPT_STATE', () => {
@@ -34,22 +34,22 @@ describe('DEFAULT_PROMPT_STATE', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — below threshold
+// decidePrompt, below threshold
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — below threshold', () => {
+describe('decidePrompt, below threshold', () => {
   it('gatedCount 0 → showPrompt false, reason below_threshold', () => {
     const d = decidePrompt({ now: NOW, gatedCount: 0, state: freshState(), killSwitchOn: true, sessionId: SESSION });
     expect(d.showPrompt).toBe(false);
     expect(d.reason).toBe('below_threshold');
-    expect(d.showReveal).toBe(false); // 0 touches — no reveal either
+    expect(d.showReveal).toBe(false); // 0 touches, no reveal either
   });
 
   it('gatedCount 1 → below_threshold', () => {
     const d = decidePrompt({ now: NOW, gatedCount: 1, state: freshState(), killSwitchOn: true, sessionId: SESSION });
     expect(d.showPrompt).toBe(false);
     expect(d.reason).toBe('below_threshold');
-    expect(d.showReveal).toBe(true); // >0 touches — reveal shown
+    expect(d.showReveal).toBe(true); // >0 touches, reveal shown
   });
 
   it('gatedCount 2 → below_threshold', () => {
@@ -66,10 +66,10 @@ describe('decidePrompt — below threshold', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — eligible (first prompt)
+// decidePrompt, eligible (first prompt)
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — eligible', () => {
+describe('decidePrompt, eligible', () => {
   it('gatedCount 3, threshold 3 → showReveal true + showPrompt true, reason eligible', () => {
     const d = decidePrompt({ now: NOW, gatedCount: 3, state: freshState(), killSwitchOn: true, sessionId: SESSION });
     expect(d.showReveal).toBe(true);
@@ -88,10 +88,10 @@ describe('decidePrompt — eligible', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — kill switch off
+// decidePrompt, kill switch off
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — kill switch off', () => {
+describe('decidePrompt, kill switch off', () => {
   it('killSwitchOn false → showReveal false, showPrompt false, reason kill_switch_off', () => {
     const d = decidePrompt({ now: NOW, gatedCount: 10, state: freshState(), killSwitchOn: false, sessionId: SESSION });
     expect(d.showReveal).toBe(false);
@@ -107,10 +107,10 @@ describe('decidePrompt — kill switch off', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — cooldown
+// decidePrompt, cooldown
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — cooldown', () => {
+describe('decidePrompt, cooldown', () => {
   it('cooldownUntil in the future → reason cooldown, showPrompt false', () => {
     const future = '2026-06-22T20:00:00Z';
     const state = freshState({ cooldownUntil: future, threshold: 6 });
@@ -136,10 +136,10 @@ describe('decidePrompt — cooldown', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — session silenced
+// decidePrompt, session silenced
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — session silenced', () => {
+describe('decidePrompt, session silenced', () => {
   it('sessionSilenced true → showPrompt false, reason session_silenced', () => {
     const state = freshState({ sessionSilenced: true });
     const d = decidePrompt({ now: NOW, gatedCount: 10, state, killSwitchOn: true, sessionId: SESSION });
@@ -155,10 +155,10 @@ describe('decidePrompt — session silenced', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — already shown this session
+// decidePrompt, already shown this session
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — already shown', () => {
+describe('decidePrompt, already shown', () => {
   it('sessionPromptShown true → reason already_shown, showPrompt false', () => {
     const state = freshState({ sessionPromptShown: true, sessionId: SESSION });
     const d = decidePrompt({ now: NOW, gatedCount: 10, state, killSwitchOn: true, sessionId: SESSION });
@@ -174,10 +174,10 @@ describe('decidePrompt — already shown', () => {
 });
 
 // ---------------------------------------------------------------------------
-// decidePrompt — session roll (new sessionId resets per-session flags)
+// decidePrompt, session roll (new sessionId resets per-session flags)
 // ---------------------------------------------------------------------------
 
-describe('decidePrompt — session roll', () => {
+describe('decidePrompt, session roll', () => {
   it('new sessionId resets sessionPromptShown → eligible again', () => {
     const state = freshState({ sessionPromptShown: true, sessionRevealShown: true, sessionId: 'old-session' });
     const d = decidePrompt({ now: NOW, gatedCount: 3, state, killSwitchOn: true, sessionId: 'new-session' });
@@ -190,7 +190,7 @@ describe('decidePrompt — session roll', () => {
   it('session roll preserves cross-session back-off (threshold + ignoreCount)', () => {
     const state = freshState({ threshold: 6, ignoreCount: 1, sessionId: 'old-session' });
     const d = decidePrompt({ now: NOW, gatedCount: 5, state, killSwitchOn: true, sessionId: 'new-session' });
-    // Still below raised threshold 6 — not eligible
+    // Still below raised threshold 6, not eligible
     expect(d.showPrompt).toBe(false);
     expect(d.reason).toBe('below_threshold');
   });
@@ -224,7 +224,7 @@ describe('onPromptShown', () => {
 });
 
 // ---------------------------------------------------------------------------
-// onIgnore — threshold ladder and cooldown
+// onIgnore, threshold ladder and cooldown
 // ---------------------------------------------------------------------------
 
 describe('onIgnore', () => {
@@ -422,7 +422,7 @@ describe('reconcileSession', () => {
     });
     const result = reconcileSession(state, NEXT, NOW);
     // onIgnore: ignoreCount 1 → 2 → silenced; rollSession clears session flags but sessionSilenced
-    // is set by onIgnore then cleared by rollSession — rollSession always resets sessionSilenced.
+    // is set by onIgnore then cleared by rollSession, rollSession always resets sessionSilenced.
     // The cross-session silence is enforced by threshold + cooldown, not by sessionSilenced
     // (which is a per-session flag). After rollSession, sessionSilenced is false.
     // The protection is that threshold is now 12 and cooldown is active.
@@ -441,10 +441,10 @@ describe('reconcileSession', () => {
 });
 
 // ---------------------------------------------------------------------------
-// onCheckoutClick — sessionClickedThrough
+// onCheckoutClick, sessionClickedThrough
 // ---------------------------------------------------------------------------
 
-describe('onCheckoutClick — sessionClickedThrough', () => {
+describe('onCheckoutClick, sessionClickedThrough', () => {
   it('sets sessionClickedThrough true', () => {
     const next = onCheckoutClick(freshState());
     expect(next.sessionClickedThrough).toBe(true);
@@ -452,10 +452,10 @@ describe('onCheckoutClick — sessionClickedThrough', () => {
 });
 
 // ---------------------------------------------------------------------------
-// rollSession — clears sessionClickedThrough
+// rollSession, clears sessionClickedThrough
 // ---------------------------------------------------------------------------
 
-describe('rollSession — sessionClickedThrough cleared', () => {
+describe('rollSession, sessionClickedThrough cleared', () => {
   it('clears sessionClickedThrough on roll', () => {
     const next = rollSession(freshState({ sessionClickedThrough: true }), 'new');
     expect(next.sessionClickedThrough).toBe(false);
@@ -463,7 +463,7 @@ describe('rollSession — sessionClickedThrough cleared', () => {
 });
 
 // ---------------------------------------------------------------------------
-// countTouchesInWindow — 30-day helper
+// countTouchesInWindow, 30-day helper
 // ---------------------------------------------------------------------------
 
 describe('countTouchesInWindow', () => {

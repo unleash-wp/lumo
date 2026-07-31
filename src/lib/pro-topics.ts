@@ -1,13 +1,13 @@
 /**
  * Topics whose knowledge lives behind the licence.
  *
- * Pure strings and patterns — no filesystem, no git — so the MCP handlers can
+ * Pure strings and patterns (no filesystem, no git) so the MCP handlers can
  * import this statically. (`src/detection/index.ts` is loaded dynamically to
  * keep server startup fast; this must not ride along with it.)
  *
  * The rule this encodes: a lookup miss on a Pro-covered topic is not a miss,
  * it is the paywall. Answering "nothing found" to someone who just typed
- * "HPOS" is both untrue — Lumo does know this — and a waste of the
+ * "HPOS" is both untrue (Lumo does know this) and a waste of the
  * highest-intent moment the free tier ever sees.
  */
 

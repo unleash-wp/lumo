@@ -1,5 +1,5 @@
 /**
- * Hook catch runner — thin ESM bridge called by the PreToolUse hook.
+ * Hook catch runner, thin ESM bridge called by the PreToolUse hook.
  *
  * Exposes runHookCatch() through a stable import surface so the CJS hook can
  * call it via dynamic import() without pulling in MCP/transport deps.
@@ -40,7 +40,7 @@ export interface HookCatchResult {
 }
 
 // ---------------------------------------------------------------------------
-// Snapshot loading — relative to THIS module's location at bundle time.
+// Snapshot loading, relative to THIS module's location at bundle time.
 //
 // When bundled: import.meta.url = dist/hook-catch.mjs → ../data/snapshot.json
 // When in src:  import.meta.url = src/hook/catch-runner.ts → ../../data/snapshot.json
@@ -94,7 +94,7 @@ export function runHookCatch(
   overrides?: CatchOverrides,
   /**
    * Where the teaser-seen marker lives. Omitted in production (resolves to the
-   * user's state dir); tests MUST pass a temp dir — without it a test run writes
+   * user's state dir); tests MUST pass a temp dir, without it a test run writes
    * into the developer's real state and silently mutes their next teaser.
    */
   stateDir?: string,
@@ -111,14 +111,14 @@ export function runHookCatch(
 
     if (results.length === 0) {
       // Pro-only knowledge was hit: name EVERY touched plugin. The hook stays
-      // non-blocking (tier null), but silence here — on any of them — would be
+      // non-blocking (tier null), but silence here (on any of them) would be
       // a false all-clear at the keyboard.
       if (proGaps.length > 0) {
         const covered = proGaps.filter((g) => g.hasProCoverage).map((g) => g.pluginName);
         const uncovered = proGaps.filter((g) => !g.hasProCoverage).map((g) => g.pluginName);
         const parts: string[] = [];
         if (covered.length > 0) {
-          // Full teaser once per plugin and install, short line after that —
+          // Full teaser once per plugin and install, short line after that:
           // the gap stays named, the sales copy does not repeat. One unseen
           // plugin in the set is reason enough for the full form.
           const anyUnseen = covered.some((n) => !hasSeenProTeaser(n, stateDir));
@@ -141,7 +141,7 @@ export function runHookCatch(
     const top = results[0]!;
     // Findings present AND a Pro-only signal fired: name the gap here too, or the
     // hook shows a finding that reads as the whole answer. Deliberately NOT
-    // throttled like the teaser — the teaser is the pitch, this is the honesty,
+    // throttled like the teaser: the teaser is the pitch, this is the honesty,
     // and silencing honesty on repeat edits would restore the false all-clear.
     const message =
       proGaps.length > 0
