@@ -9,3 +9,4 @@
 {"ts":"2026-07-31T21:55:21.528Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
 {"ts":"2026-07-31T21:55:39.498Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
 {"ts":"2026-07-31T21:56:10.967Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:56:56.781Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"missing-credentials","dur":1,"status":"warn","exit":0,"error":""}
