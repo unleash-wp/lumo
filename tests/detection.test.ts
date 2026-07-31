@@ -590,9 +590,17 @@ describe('buildProTeaser', () => {
     expect(msg).toContain('Carbon Fields');
   });
 
-  it('names the "no free or official skill" fact — the structural wedge', () => {
-    const msg = buildProTeaser('Carbon Fields');
-    expect(msg.toLowerCase()).toContain('official');
+  // The wedge is the coverage fact, not the word. This used to assert
+  // "official", which pinned a claim WordPress/agent-skills does not make about
+  // itself: its own line is "Expert-level WordPress knowledge for AI coding
+  // assistants", and its README says the skills were generated from the docs
+  // and then reviewed by contributors. Naming the project is accurate; awarding
+  // it a status in order to position a paid tier is not.
+  it('names the coverage gap on both sides, which is the structural wedge', () => {
+    const msg = buildProTeaser('Carbon Fields').toLowerCase();
+    expect(msg).toContain('lumo free');
+    expect(msg).toContain('wordpress agent skills');
+    expect(msg).not.toContain('official');
   });
 });
 

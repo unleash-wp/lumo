@@ -136,7 +136,7 @@ Record one terminal, default dark theme, ~90 columns. Total loop ≤ 30 s.
 >
 > I built a watcher that catches it the moment it's written, with the fix and a dated source. Free, local, open repo. Demo in 30 seconds:
 
-*(frame 2: the GIF; frame 3: the repo link + "the official WordPress skills are the manual — Lumo is the watcher")*
+*(frame 2: the GIF; frame 3: the repo link + "the WordPress agent skills are the manual, Lumo is the watcher")*
 
 **WP-dev Slack message**
 
