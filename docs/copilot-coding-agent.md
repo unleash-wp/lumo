@@ -76,6 +76,32 @@ is why the reference above carries that prefix while the secret itself does not.
 allowlist that names its tools breaks loudly when a name changes, where `"*"`
 would quietly hand the agent whatever the server happens to expose next.
 
+## Check that it took
+
+Configuration that is accepted is not configuration that works. The `tools`
+allowlist names tools by string, and a name that does not exist on the server is
+not an error anywhere — the agent simply never calls it, and the first sign is
+WordPress code arriving unchecked.
+
+Before you rely on it, confirm the names you pasted are the names the server
+answers to:
+
+```bash
+npx -y @unleashwp/lumo mcp <<< '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+For Pro, ask the server directly with your key:
+
+```bash
+curl -s https://mcp.unleash-wp.com/mcp \
+  -H "Authorization: Bearer $LUMO_LICENSE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+Every name in your `tools` list has to appear in that answer. This is also the
+check to repeat after an upgrade.
+
 ## Tell the agent to use it
 
 Availability is not usage. Add this to `AGENTS.md` in your repository, or to
