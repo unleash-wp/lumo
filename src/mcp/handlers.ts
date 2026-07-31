@@ -16,10 +16,13 @@ import {
   UPGRADE_PROMPT_BLOCK,
   FRESHNESS_REVEAL_LINE,
   PRO_MCP_ADD_LINE,
+  catchInputTruncatedLine,
+  catchHitsOmittedLine,
 } from '../lib/render.js';
 import { isUpgradePromptEnabled, getCheckoutUrl, buildCheckoutUrl } from '../lib/config.js';
 import type { Snapshot, SnapshotEntry } from '../types.js';
 import type { CatchResult } from '../detection/catch.js';
+import { INPUT_LINE_CAP } from '../detection/catch.js';
 import { proTopicFor, buildProTopicTeaser } from '../lib/pro-topics.js';
 
 const NOT_FOUND_AUDIT =
@@ -207,6 +210,14 @@ export interface CheckCodeVerdict {
   text: string;
   /** False = the structured layer did not run; decide nothing from the fields below. */
   computed: boolean;
+  /**
+   * False = the scan hit one of its own limits: the input was read only to the
+   * line cap, or more matches were found than the report holds. Separate from
+   * `computed` on purpose. The findings that did come back are real, so folding
+   * this into `computed` would tell a caller to discard a genuine LOUD finding
+   * because the tail of the file went unread. The text names which limit bit.
+   */
+  complete: boolean;
   found: boolean;
   loudCount: number;
   softCount: number;
@@ -227,17 +238,25 @@ export async function handleCheckCodeFull(
   try {
     const { checkCodeWithGaps } = await import('../detection/catch.js');
     const snap = snapshot ?? loadSnapshot();
-    const { results, proGaps } = checkCodeWithGaps(
+    const { results, proGaps, inputTruncated, hitsOmitted } = checkCodeWithGaps(
       input.code ?? '',
       input.language ?? 'auto',
       snap,
     );
+    // Appended to every answer that reports a result. A truncated blob that
+    // matched nothing is not a clean blob, and a capped report is not the whole
+    // report; without these lines both read as complete.
+    const limits: string[] = [];
+    if (inputTruncated) limits.push(catchInputTruncatedLine(INPUT_LINE_CAP));
+    if (hitsOmitted > 0) limits.push(catchHitsOmittedLine(hitsOmitted));
+    const withLimits = (text: string): string => [text, ...limits].join('\n\n');
     const covered = proGaps.filter((g) => g.hasProCoverage).map((g) => g.pluginName);
     const uncovered = proGaps.filter((g) => !g.hasProCoverage).map((g) => g.pluginName);
     // Same pass, same truth: text and data can never diverge.
     const verdict = (text: string): CheckCodeVerdict => ({
-      text,
+      text: withLimits(text),
       computed: true,
+      complete: limits.length === 0,
       found: results.length > 0 || proGaps.length > 0,
       loudCount: results.filter((r) => r.tier === 'LOUD').length,
       softCount: results.filter((r) => r.tier === 'SOFT').length,
@@ -304,7 +323,15 @@ export async function handleCheckCodeFull(
   } catch {
     // Fail-open path: the prose still answers, and the marker says the layer
     // did NOT run — never dress this as a clean verdict.
-    return { text: CATCH_NEUTRAL_LINE, computed: false, found: false, loudCount: 0, softCount: 0, gaps: [] };
+    return {
+      text: CATCH_NEUTRAL_LINE,
+      computed: false,
+      complete: false,
+      found: false,
+      loudCount: 0,
+      softCount: 0,
+      gaps: [],
+    };
   }
 }
 

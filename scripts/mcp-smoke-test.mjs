@@ -13,7 +13,10 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const serverPath = join(__dirname, '..', 'dist', 'mcp.mjs');
 
-const REQUIRED_TOOLS = ['lumo_audit', 'lumo_lookup'];
+// lumo_check_code is the product. It was missing from this list, so the one
+// check that runs the built server against a real client would have passed with
+// the catch tool gone.
+const REQUIRED_TOOLS = ['lumo_audit', 'lumo_lookup', 'lumo_check_code'];
 const TIMEOUT_MS = 10_000;
 
 function fail(msg) {
@@ -78,7 +81,7 @@ child.stdout.on('data', (chunk) => {
         }
       }
 
-      console.log('[smoke] PASS — lumo_audit and lumo_lookup both registered');
+      console.log('[smoke] PASS — all required tools registered');
       process.exit(0);
     }
   }

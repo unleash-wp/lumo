@@ -1,7 +1,7 @@
 {
   "name": "@unleashwp/lumo",
   "version": "0.4.0",
-  "description": "UnleashWP Lumo — catches stale or wrong AI-written WordPress code the moment it is generated, with the wrong-vs-correct fix and a dated source (MCP server, CLI and GitHub Action).",
+  "description": "UnleashWP Lumo \u2014 catches stale or wrong AI-written WordPress code the moment it is generated, with the wrong-vs-correct fix and a dated source (MCP server, CLI and GitHub Action).",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -13,7 +13,6 @@
     "commands/",
     "skills/",
     "server.json",
-    "action.yml",
     ".cursor/"
   ],
   "main": "dist/mcp.mjs",
@@ -33,7 +32,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "package:skills": "node scripts/package-skills.mjs"
+    "package:skills": "node scripts/package-skills.mjs",
+    "check:vocabulary": "node scripts/check-vocabulary.mjs"
   },
   "dependencies": {
     "@actions/core": "^3.0.1",

@@ -1,6 +1,6 @@
 # UnleashWP Lumo
 
-**The official WordPress skills are the manual. Lumo is the watcher.**
+**The WordPress agent skills are the manual. Lumo is the watcher.**
 
 Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release — Core APIs, block and theme APIs, security fundamentals — the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
 
@@ -95,15 +95,17 @@ cd lumo && npm install && npm run build
 # MCP config: "command": "node", "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
 ```
 
-### GitHub Action (PR review)
+Cursor setup, the `wp-binding` skill, and the edit-time enforcement hook: [docs/install.md](docs/install.md)
 
-```yaml
-- uses: unleash-wp/lumo@v1
-  with:
-    fail_on_loud: 'true'   # LOUD findings fail the check; SOFT stays advisory
-```
+### CI (pull request review) — Lumo Pro
 
-Full options, Cursor setup, the `wp-binding` skill, and the edit-time enforcement hook: [docs/install.md](docs/install.md)
+The GitHub Action is part of Lumo Pro and lives in its own repository:
+[unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action). It needs a
+licence key; without one it checks nothing and says so rather than reporting a
+pass. The runner ships in this package as `lumo action`, so the free install
+carries it, but running the gate is the paid part.
+
+Locally, `lumo scan` checks your working tree with no licence at all.
 
 ---
 
@@ -156,7 +158,7 @@ Free catches what already broke. Pro keeps your team ahead of what breaks next. 
 
 **3. Commercial-plugin coverage.** Curated, source-verified entries for ACF Pro, Elementor Pro, Gravity Forms, and Meta Box — the plugins agency code actually touches, which the official GPL skills cannot cover by design.
 
-**4. Upgrade compat reports.** `wp_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client — what breaks, where, and the fix for each item. The report you bill for.
+**4. Upgrade compat reports.** `lumo_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client — what breaks, where, and the fix for each item. The report you bill for.
 
 **Terms:** annual license, per seat. 30-day money-back guarantee, no questions asked. Founding members get the founding rate and keep it for as long as their license renews.
 

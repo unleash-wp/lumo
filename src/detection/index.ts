@@ -22,7 +22,7 @@ export function buildProTeaser(pluginName: string): string {
   return (
     `Detected ${pluginName} in this project. ` +
     `Your AI's training data is stale on ${pluginName}'s current hooks and APIs — ` +
-    `Lumo Free can't check it because ${pluginName} isn't covered by any free or official WordPress skill set. ` +
+    `Lumo Free can't check it: ${pluginName} is covered by neither the free tier nor the WordPress agent skills. ` +
     `Lumo Pro extends the catch to your premium plugins: ACF Pro, Gravity Forms, Elementor Pro, ` +
     `Meta Box, Carbon Fields, and WooCommerce Subscriptions.`
   );

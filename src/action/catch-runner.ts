@@ -6,19 +6,21 @@
  * returns structured findings the action entry-point posts as review comments.
  *
  * Pro seam: when proUrl + licenseKey are present, calls the Pro MCP server's
- * wp_check_code tool via the MCP JSON-RPC HTTP protocol. Falls back to the
+ * lumo_check_code tool via the MCP JSON-RPC HTTP protocol. Falls back to the
  * free catch if the Pro server is unreachable.
  */
 
 import { parseDiff } from './diff-parser.js';
 import type { FileDiff } from './diff-parser.js';
 import type { CatchResult, CatchTier, ProGap } from '../detection/catch.js';
-import { checkCodeWithGaps } from '../detection/catch.js';
+import { checkCodeWithGaps, INPUT_LINE_CAP } from '../detection/catch.js';
 import {
   formatCatch,
   buildCodeProTeaser,
   buildCodeProGapLine,
   joinPluginNames,
+  catchInputTruncatedLine,
+  catchHitsOmittedLine,
 } from '../lib/render.js';
 
 export interface Finding {
@@ -39,6 +41,14 @@ export interface RunResult {
    * checked and found nothing", which is a false all-clear on the paid layer.
    */
   proDegraded: boolean;
+  /**
+   * Files whose scan hit one of its own limits, and which limit. Reported ONCE
+   * per run by the caller, not once per file: a limit of the scanner describes
+   * the run, not the contributor's code, and repeating it twenty times in one
+   * pull request is the noise that gets a reviewer switched off. The filenames
+   * travel with it so the summary stays checkable.
+   */
+  scanLimits: Array<{ filename: string; note: string }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +67,7 @@ async function fetchProResults(
   licenseKey: string,
   code: string,
   language: 'php' | 'js',
-): Promise<Array<CatchResult | ProRenderedFinding>> {
+): Promise<{ results: Array<CatchResult | ProRenderedFinding>; complete: boolean; text: string }> {
   const url = `${proUrl.replace(/\/$/, '')}/mcp`;
 
   const res = await fetch(url, {
@@ -71,7 +81,7 @@ async function fetchProResults(
       id: 1,
       method: 'tools/call',
       params: {
-        name: 'wp_check_code',
+        name: 'lumo_check_code',
         arguments: { code, language },
       },
     }),
@@ -85,32 +95,49 @@ async function fetchProResults(
   const json = (await res.json()) as {
     result?: {
       content?: Array<{ type: string; text?: string }>;
-      structuredContent?: { found?: boolean };
+      structuredContent?: { computed?: boolean; complete?: boolean; found?: boolean };
     };
   };
 
   const text = json?.result?.content?.[0]?.text ?? '';
 
+  // computed:false means the Pro scan fell into its fail-open path. It still
+  // answers, and the answer still reads "no known issues" — that prose is not a
+  // verdict. Treat it exactly like an unreachable server: the caller below falls
+  // back to the free catch and marks the run degraded. "Pro answered" and "Pro
+  // checked" are not the same thing, and only the second one may end a run
+  // quietly. Servers predating the flag send undefined, which is not false.
+  if (json?.result?.structuredContent?.computed === false) {
+    throw new Error('Pro MCP could not run the scan (computed:false)');
+  }
+
   // The Pro server states its verdict as data: structuredContent.found. Decide
   // on the flag, never on the prose — the old string comparison matched a
   // sentence the server never sent, so every clean Pro answer was wrapped as a
-  // finding. Fallback for servers predating the flag: the server's ACTUAL
-  // neutral wording. Fail direction on total uncertainty: treat as a finding
-  // (a false alarm), never as an all-clear.
+  // finding. The literal below is the HISTORICAL neutral wording, kept only for
+  // a server predating the flag; the current server no longer sends it and
+  // always sends the flags. Fail direction on total uncertainty: treat as a
+  // finding (a false alarm), never as an all-clear.
+
+  // A server that says nothing about completeness is not claiming to be
+  // incomplete. Only an explicit false counts, so a server predating the field
+  // keeps behaving exactly as before.
+  const complete = json?.result?.structuredContent?.complete !== false;
+
   const found = json?.result?.structuredContent?.found;
-  if (found === false) return [];
+  if (found === false) return { results: [], complete, text };
   // trim: a single trailing newline from the transport must not turn the
   // neutral sentence into a phantom finding.
   if (
     found === undefined &&
     (!text.trim() || text.trim() === 'No known issues detected in the submitted code.')
   ) {
-    return [];
+    return { results: [], complete, text };
   }
-  if (!text.trim()) return [];
+  if (!text.trim()) return { results: [], complete, text };
 
   // Pro result is already rendered Markdown from the Pro server.
-  return [{ _proRendered: true as const, body: text }];
+  return { results: [{ _proRendered: true as const, body: text }], complete, text };
 }
 
 function isProRendered(r: CatchResult | ProRenderedFinding): r is ProRenderedFinding {
@@ -125,23 +152,54 @@ async function catchFile(
   file: FileDiff,
   proUrl?: string,
   licenseKey?: string,
-): Promise<{ findings: Finding[]; proDegraded: boolean }> {
+): Promise<{ findings: Finding[]; proDegraded: boolean; scanLimits: string[] }> {
   let results: Array<CatchResult | ProRenderedFinding>;
   // Set only on the free path: Pro has the knowledge, so it reports no gap.
   let proGaps: ProGap[] = [];
   let proDegraded = false;
+  const scanLimits: string[] = [];
+
+  const runFreeCatch = (): Array<CatchResult | ProRenderedFinding> => {
+    const outcome = checkCodeWithGaps(file.blob, file.language);
+    proGaps = outcome.proGaps;
+    if (outcome.inputTruncated) scanLimits.push(catchInputTruncatedLine(INPUT_LINE_CAP));
+    if (outcome.hitsOmitted > 0) scanLimits.push(catchHitsOmittedLine(outcome.hitsOmitted));
+    return outcome.results;
+  };
 
   if (proUrl && licenseKey) {
     try {
-      results = await fetchProResults(proUrl, licenseKey, file.blob, file.language);
+      const pro = await fetchProResults(proUrl, licenseKey, file.blob, file.language);
+      results = pro.results;
+      // The Pro server names the limit in its own prose, but that prose only
+      // reaches the pull request when it also reported a finding. When it did
+      // not, this summary is the only place the limit can be stated, so it
+      // carries the server's own words rather than a vaguer paraphrase. When it
+      // did, the sentence is already in the finding above and repeating it here
+      // would be the duplication this summary exists to avoid.
+      if (!pro.complete) {
+        // The empty-text fallback is not defensive padding: a server can set the
+        // flag and send nothing readable, and an empty bullet in the summary
+        // would report the limit as if it had been explained. Saying less, but
+        // saying it, beats a blank line that looks like an answer.
+        const fromServer = pro.text.trim();
+        scanLimits.push(
+          pro.results.length > 0
+            ? 'the paid scan hit one of its own limits, see its answer on this file above'
+            : fromServer || 'the paid scan hit one of its own limits and did not say which',
+        );
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[lumo] Pro MCP unreachable (${msg}), falling back to free catch`);
+      // "did not deliver a check", not "unreachable": a server that answers but
+      // could not scan lands here too, and telling the operator it was
+      // unreachable sends them to look at the network instead of the server.
+      console.error(`[lumo] Pro MCP did not deliver a check (${msg}), falling back to free catch`);
       proDegraded = true;
-      ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
+      results = runFreeCatch();
     }
   } else {
-    ({ results, proGaps } = checkCodeWithGaps(file.blob, file.language));
+    results = runFreeCatch();
   }
 
   const findings: Finding[] = results.map((r) => {
@@ -172,7 +230,7 @@ async function catchFile(
     });
   }
 
-  return { findings, proDegraded };
+  return { findings, proDegraded, scanLimits };
 }
 
 // ---------------------------------------------------------------------------
@@ -188,16 +246,20 @@ export interface RunCatchOptions {
 export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const files = parseDiff(opts.diff);
   const findings: Finding[] = [];
+  const scanLimits: RunResult['scanLimits'] = [];
   let proDegraded = false;
 
   for (const file of files) {
     const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey);
     findings.push(...fileResult.findings);
     proDegraded = proDegraded || fileResult.proDegraded;
+    for (const note of fileResult.scanLimits) {
+      scanLimits.push({ filename: file.filename, note });
+    }
   }
 
   const loudCount = findings.filter((f) => f.tier === 'LOUD').length;
   const softCount = findings.filter((f) => f.tier === 'SOFT').length;
 
-  return { loudCount, softCount, findings, proDegraded };
+  return { loudCount, softCount, findings, proDegraded, scanLimits };
 }

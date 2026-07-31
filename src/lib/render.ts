@@ -299,11 +299,23 @@ export const SCAN_NO_MATCH_TEMPLATE =
  * covers them, the automatic catch reaches only part of them, and this line is
  * read at exactly the moment someone decides whether silence means safety.
  */
+// Names what ran, not a tier. Both Action lines used to describe Lumo Free's
+// coverage, which was true while the Action was free. It is not any more: CI
+// enforcement is Pro, so the only readers of these lines hold a licence, and a
+// paid run described as a free one is an unfounded claim about what the machine
+// did — in the one place a customer looks to see what they got. It also
+// undersells the catch, which is the wrong error to leave in on purpose.
+//
+// "the catch that ran in this check" is deliberately vague about which catch:
+// when the Pro server is unreachable the run falls back to the free one, and
+// that case has its own notice (ACTION_PRO_DEGRADED_LINE) rather than being
+// papered over here.
 export const ACTION_NO_MATCH_LINE =
-  'No covered pattern matched in the added lines. ' +
-  'Lumo Free carries WordPress Core, block and theme APIs, and security ' +
-  'fundamentals as knowledge, and the catch fires on a subset of that; ' +
-  'this is not an all-clear.';
+  'No covered pattern matched in the added lines. Lumo read the lines this ' +
+  'pull request added and nothing else — not the surrounding file, not the ' +
+  'rest of the branch — and matched them against the catch that ran in this ' +
+  'check. That catch fires on a subset of what Lumo knows. ' +
+  'This is not an all-clear.';
 
 /**
  * Appended to the Action's review summary. Belongs there even when findings exist:
@@ -332,8 +344,8 @@ export const KNOWLEDGE_WIDER_THAN_CATCH =
   'the knowledge the catch does not reach.';
 
 export const ACTION_SCOPE_LINE =
-  '_Scope: the added lines of this diff, checked against what Lumo Free covers. ' +
-  'Unchanged lines and anything outside that coverage were not checked. ' +
+  '_Scope: the added lines of this diff, checked against the catch that ran in ' +
+  'this check. Unchanged lines and anything outside that catch were not checked. ' +
   'The catch also reaches only part of what Lumo documents, so a fixed run is ' +
   'not a cleared one — the rest of the knowledge is in the snapshot, reachable ' +
   'from an editor with the Lumo MCP server connected._';
@@ -362,11 +374,65 @@ export const ACTION_REQUIRES_PRO_LINE =
   'Without a subscription, `lumo scan` still checks your working tree locally, ' +
   'and the MCP server and skills stay free.';
 
+/**
+ * Posted when .claude/.lumo.json exists but cannot be honoured — unparseable,
+ * or naming an enforce.mode this version does not know.
+ *
+ * The run still falls open to advisory, because a broken config file is not a
+ * reason to block a team's merges. What changed is that it says so: a repo that
+ * asked for a blocking gate and lost it to a typo would otherwise keep reading
+ * green checks as enforced ones, which is the same silence-as-verdict the rest
+ * of this file exists to prevent.
+ */
+export const ENFORCE_CONFIG_UNREADABLE_LINE =
+  'Your .claude/.lumo.json could not be read, or it names an enforce.mode this ' +
+  'version does not recognise, so Lumo fell back to advisory for this run. ' +
+  'If that file asked for "block", the gate you configured is not running — ' +
+  'fix the file rather than reading this run as enforced.';
+
+// "did not deliver a check", not "was unreachable": a server that answers and
+// then reports it could not scan lands here too, and naming the wrong cause
+// sends the reader to look at the network instead of the server.
 export const ACTION_PRO_DEGRADED_LINE =
-  '**The Lumo Pro check did not run** — the Pro server was unreachable, so the ' +
-  'results in this run come from the free catch only. This is not a Pro ' +
-  'verdict. Check the server URL, the license key, and the server status, ' +
-  'then re-run the check.';
+  '**The Lumo Pro check did not run** — the Pro server did not deliver a ' +
+  'check, so the results in this run come from the free catch only. This is ' +
+  'not a Pro verdict. Check the server URL, the license key, and the server ' +
+  'status, then re-run the check.';
+
+/**
+ * One notice per run for the scanner's own limits, never one per file.
+ *
+ * These sentences describe how far the scanner read, not what the contributor
+ * wrote. Repeating that under twenty files in one pull request is the noise
+ * that gets a reviewer muted, and it wears out the same notice that has to be
+ * believed when a real outage happens. The filenames stay in it so the summary
+ * is still checkable: a reader who cannot tell which file was cut short has
+ * been told something they cannot act on.
+ */
+export function buildScanLimitsNotice(
+  limits: ReadonlyArray<{ filename: string; note: string }>,
+): string {
+  const byNote = new Map<string, string[]>();
+  for (const { filename, note } of limits) {
+    const files = byNote.get(note);
+    if (files) {
+      if (!files.includes(filename)) files.push(filename);
+    } else {
+      byNote.set(note, [filename]);
+    }
+  }
+
+  const lines = [
+    '**Lumo did not read everything in this run.** The findings above are real, ' +
+      'but they are not the whole picture:',
+    '',
+  ];
+  for (const [note, files] of byNote) {
+    lines.push(`- ${note}`);
+    for (const file of files) lines.push(`  - \`${file}\``);
+  }
+  return lines.join('\n');
+}
 
 // Neutral line when checkCode finds nothing to flag.
 //
@@ -379,6 +445,20 @@ export const CATCH_NEUTRAL_LINE =
   'Free carries WordPress Core, block and theme APIs, and security fundamentals ' +
   'as knowledge, and the catch reaches only part of that; anything outside what ' +
   'it reaches was not checked, so this is not an all-clear.';
+
+// The two scan limits, said out loud. Both are deliberate and both used to be
+// invisible, which turned them into coverage limits presented as results: a
+// blob longer than the scanner reads produced the same neutral line as a clean
+// one, and a blob with more matches than the report holds showed a subset with
+// nothing to say a subset is what it was. CATCH_NEUTRAL_LINE discloses what
+// Lumo knows, not how much of the input it actually read.
+export const catchInputTruncatedLine = (lineCap: number): string =>
+  `Only the first ${lineCap} lines of the submitted code were scanned. ` +
+  'Everything after that was not checked, so this answer says nothing about it.';
+
+export const catchHitsOmittedLine = (omitted: number): string =>
+  `${omitted} further ${omitted === 1 ? 'match is' : 'matches are'} not listed: ` +
+  'the report is capped, and the lowest-severity matches were dropped first.';
 
 /** "A", "A and B", "A, B and C" — one grammar for every gap surface. */
 export function joinPluginNames(names: string[]): string {
