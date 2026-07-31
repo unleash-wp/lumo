@@ -1,6 +1,6 @@
 # UnleashWP Lumo
 
-**The official WordPress skills are the manual. Lumo is the watcher.**
+**The WordPress agent skills are the manual. Lumo is the watcher.**
 
 Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release — Core APIs, block and theme APIs, security fundamentals — the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
 

@@ -23,7 +23,7 @@ Commands:
            broke in a real release. Prints findings (LOUD first) or the scope
            that was checked — never a verdict on your code.
   mcp      Start the MCP server on stdio (for Claude Code, Cursor, VS Code).
-  skills   Install the official WordPress agent skills (WordPress/agent-skills)
+  skills   Install the WordPress agent skills (WordPress/agent-skills)
            — the manual to Lumo's watcher. Delegates to their installer.
   action   GitHub Action runner, invoked by unleash-wp/lumo-action in CI.
            Requires a Lumo Pro licence; without one it reports that it did
