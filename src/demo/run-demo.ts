@@ -18,7 +18,7 @@
  */
 
 import { checkCode } from '../detection/catch.js';
-import { formatCatch } from '../lib/render.js';
+import { formatCatch, KNOWLEDGE_WIDER_THAN_CATCH } from '../lib/render.js';
 import { loadSnapshot } from '../lib/snapshot.js';
 import { DEMO_SAMPLES } from './samples.js';
 
@@ -113,10 +113,12 @@ export function runDemo(): DemoResult {
     '                               let your assistant check code before you see it',
     '',
     'These samples exercise four of the patterns Lumo Free carries — a',
-    'demonstration, not a coverage list. Lumo Free covers WordPress Core, block',
-    'and theme APIs, and security fundamentals. WooCommerce and the premium',
-    'plugins are Lumo Pro, and where the free tier cannot check, it says so',
-    'instead of going quiet.',
+    'demonstration, not a coverage list. Lumo Free holds WordPress Core, block',
+    'and theme APIs, and security fundamentals as knowledge. WooCommerce and the',
+    'premium plugins are Lumo Pro, and where the free tier cannot check, it says',
+    'so instead of going quiet.',
+    '',
+    KNOWLEDGE_WIDER_THAN_CATCH,
   );
 
   return { lines, findingCount };
