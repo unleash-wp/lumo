@@ -1,3 +1,4 @@
+import { existsSync, statSync } from 'node:fs';
 import { loadSnapshot, findByCategory } from '../lib/snapshot.js';
 import { renderFree } from '../lib/render.js';
 import { detectFromComposer } from './composer.js';
@@ -57,8 +58,21 @@ export interface AuditResult {
   message?: string;
 }
 
+// Two sentences, because two different things happen and only one of them is
+// an answer. The old single line said "No known WordPress risk patterns
+// detected in this project. Nothing to check here." for both, which asserted a
+// project-wide result and told the caller to stop. It was also the only
+// no-match surface in the product without the caveat ACTION_NO_MATCH_LINE and
+// CATCH_NEUTRAL_LINE carry.
 const NEUTRAL_NO_MATCH =
-  'No known WordPress risk patterns detected in this project. Nothing to check here.';
+  'Lumo matched this project against the patterns it detects and none of them ' +
+  'applied. That covers the stacks Lumo knows how to spot, not the code inside ' +
+  'them, so this is not an all-clear.';
+
+/** The project could not be read at all. Naming the path is what makes it fixable. */
+export const unreadableProjectLine = (root: string): string =>
+  `Lumo could not read a project at ${root}. Nothing was checked, so this says ` +
+  'nothing about the code there. Check the path and call again.';
 
 /**
  * Run the fail-open detection ladder: composer → directory → wp-cli → heuristic → git-tracked.
@@ -85,6 +99,13 @@ export function detectStack(projectRoot: string): PluginDetection | null {
  */
 export function auditProject(projectRoot: string, snapshot?: Snapshot): AuditResult {
   try {
+    // A path we cannot read is not a project with nothing in it. Deciding this
+    // before the ladder runs keeps the two states apart at the source, rather
+    // than letting both fall through to the same neutral sentence.
+    if (!existsSync(projectRoot) || !statSync(projectRoot).isDirectory()) {
+      return { detected: false, message: unreadableProjectLine(projectRoot) };
+    }
+
     const detection = detectStack(projectRoot);
     if (!detection) {
       return { detected: false, message: NEUTRAL_NO_MATCH };
