@@ -399,6 +399,16 @@ export const ACTION_PRO_DEGRADED_LINE =
   'not a Pro verdict. Check the server URL, the license key, and the server ' +
   'status, then re-run the check.';
 
+// Only reached when a repository opted in with fail_on_degraded. It names our
+// server as the cause, because the contributor's code is not what failed here
+// and a red check that reads like a code review would send them to fix the
+// wrong thing.
+export const ACTION_PRO_DEGRADED_FAIL_LINE =
+  'The Lumo Pro check did not deliver a result and fail_on_degraded is set, ' +
+  'so this run is marked failed. The cause is the Pro server, not the code in ' +
+  'this pull request. Re-run once the server answers, or set ' +
+  'fail_on_degraded to false to let a degraded run stay green.';
+
 /**
  * One notice per run for the scanner's own limits, never one per file.
  *
