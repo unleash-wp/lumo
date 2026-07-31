@@ -268,7 +268,7 @@ describe('auditProject — tracked .env end-to-end', () => {
 
     const { formatFreeMarkdown } = await import('../src/lib/render.js');
     const md = formatFreeMarkdown(result.entry!);
-    expect(md).toContain('Committed .env file exposes secrets');
+    expect(md).toContain('A committed .env exposes secrets');
     expect(md).toContain('**Affected:** all supported versions');
   });
 });

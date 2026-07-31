@@ -11,26 +11,30 @@ import type { SnapshotEntry } from '../src/types.js';
  * is silently dead. Observed once during a fresh-install acceptance run: a diff
  * containing a CERTAIN literal reported only an advisory.
  *
- * The example is a Free-tier signal (wp_img_tag_add_decoding_attr, WP 6.4,
- * breaking) because that is the LOUD a free user can actually hit — WooCommerce
- * knowledge is Pro-only.
+ * The example is a Free-tier signal because that is the LOUD a free user can
+ * actually hit — WooCommerce knowledge is Pro-only.
+ *
+ * It used to be wp_img_tag_add_decoding_attr(), which is deprecated and not
+ * removed: nothing breaks, and it only reached LOUD because the entry carried a
+ * wrong breaking_change stamp. Once that was corrected the whole suite went red
+ * here, which is the right outcome — the fixture had been standing in for a
+ * break that never happened. isValidBlockContent() is a real removal in WP 5.9,
+ * so the version route to LOUD is exercised on a claim that holds.
  */
 
 const ADDED_LINES = [
-  '<?php',
-  "$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );",
-  'echo $html;',
+  'const { isValidBlockContent } = wp.blocks;',
+  'const ok = isValidBlockContent( blockType, attrs, inner, html );',
 ].join('\n');
 
 const UNIFIED_DIFF = [
-  'diff --git a/images.php b/images.php',
+  'diff --git a/block.js b/block.js',
   'index 1111111..2222222 100644',
-  '--- a/images.php',
-  '+++ b/images.php',
-  '@@ -1,2 +1,3 @@',
-  ' <?php',
-  "+$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );",
-  '+echo $html;',
+  '--- a/block.js',
+  '+++ b/block.js',
+  '@@ -1,1 +1,2 @@',
+  ' const { isValidBlockContent } = wp.blocks;',
+  '+const ok = isValidBlockContent( blockType, attrs, inner, html );',
 ].join('\n');
 
 /**
@@ -67,12 +71,12 @@ const HPOS_ADDED_LINES = [
 
 describe('LOUD is reachable from scan-shaped input', () => {
   it('fires LOUD on a plain blob carrying the deprecated call', () => {
-    const results = checkCode(ADDED_LINES, 'php');
+    const results = checkCode(ADDED_LINES, 'js');
     expect(results.some((r) => r.tier === 'LOUD')).toBe(true);
   });
 
   it('fires LOUD on the same content arriving as a unified diff', () => {
-    const results = checkCode(UNIFIED_DIFF, 'php');
+    const results = checkCode(UNIFIED_DIFF, 'js');
     expect(results.some((r) => r.tier === 'LOUD')).toBe(true);
   });
 

@@ -9,22 +9,26 @@ import { runCatch } from '../src/action/catch-runner.js';
 // longer produces findings for a free user.
 //
 // Precision model (from src/detection/registry.ts):
-//   CERTAIN  → wp_img_tag_add_decoding_attr( (self-evident, LOUD when breaking_change=true)
+//   CERTAIN  → isValidBlockContent( (self-evident, LOUD when breaking_change=true)
 //   CONTEXT_DEPENDENT → wp_register_ability( without the mcp.public flag (→ SOFT)
 // ---------------------------------------------------------------------------
 
 /**
- * A diff that adds a wp_img_tag_add_decoding_attr() call — a CERTAIN core signal.
- * classify() checks CERTAIN + version stamp + breaking_change=true → LOUD.
+ * A diff that adds an isValidBlockContent() call — a CERTAIN core signal on an
+ * API removed in WP 5.9. classify() checks CERTAIN + version stamp +
+ * breaking_change=true → LOUD.
+ *
+ * It used to be wp_img_tag_add_decoding_attr(), which is deprecated rather than
+ * removed and only reached LOUD through a wrong stamp on its entry.
  */
-const coreLoudDiff = `diff --git a/includes/class-image-renderer.php b/includes/class-image-renderer.php
+const coreLoudDiff = `diff --git a/src/blocks/validate.js b/src/blocks/validate.js
 index abc1234..def5678 100644
---- a/includes/class-image-renderer.php
-+++ b/includes/class-image-renderer.php
+--- a/src/blocks/validate.js
++++ b/src/blocks/validate.js
 @@ -10,3 +10,7 @@
- function render_thumbnail( $img ) {
-+    $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
-     return $html;
+ function check( blockType, attrs, inner, html ) {
++    const ok = isValidBlockContent( blockType, attrs, inner, html );
+     return ok;
  }
 `;
 
@@ -79,7 +83,7 @@ index ccc..ddd 100644
 // ---------------------------------------------------------------------------
 
 describe('runCatch', () => {
-  it('returns LOUD finding for wp_img_tag_add_decoding_attr — CERTAIN signal', async () => {
+  it('returns LOUD finding for isValidBlockContent — CERTAIN signal', async () => {
     const result = await runCatch({ diff: coreLoudDiff });
 
     expect(result.findings.length).toBeGreaterThan(0);
@@ -87,7 +91,7 @@ describe('runCatch', () => {
 
     const loudFinding = result.findings.find((f) => f.tier === 'LOUD');
     expect(loudFinding).toBeDefined();
-    expect(loudFinding?.filename).toBe('includes/class-image-renderer.php');
+    expect(loudFinding?.filename).toBe('src/blocks/validate.js');
 
     // LOUD lead must include the ⚠️ alarm and a WordPress version reference.
     expect(loudFinding?.body).toContain('⚠️');

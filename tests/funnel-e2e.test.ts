@@ -16,14 +16,18 @@ import { checkCode } from '../src/detection/catch.js';
  */
 
 /**
- * The flagship Free demo snippet. It calls wp_img_tag_add_decoding_attr(), a
- * CERTAIN signal on a dated breaking change (WP 6.4), which is what earns a LOUD
- * catch. WooCommerce knowledge is Pro-only now, so the funnel is asserted on the
- * LOUD a real free user can hit — these handlers read the shipped Free snapshot.
+ * The flagship Free demo snippet: a CERTAIN signal on a dated removal (WP 5.9),
+ * which is what earns a LOUD catch. WooCommerce knowledge is Pro-only now, so
+ * the funnel is asserted on the LOUD a real free user can hit — these handlers
+ * read the shipped Free snapshot.
+ *
+ * It used to be wp_img_tag_add_decoding_attr(), which is deprecated and not
+ * removed. Nothing breaks there; it reached LOUD only because the entry carried
+ * a wrong breaking_change stamp, so the whole checkout funnel was demonstrated
+ * on a break that never happened. isValidBlockContent() really was removed.
  */
-const LOUD_SNIPPET = `<?php
-$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
-echo $html;`;
+const LOUD_SNIPPET = `const { isValidBlockContent } = wp.blocks;
+const ok = isValidBlockContent( blockType, attrs, inner, html );`;
 
 /**
  * Same signal, but wrapped in a function_exists() shim — the developer is writing
@@ -50,12 +54,12 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
   });
 
   it('the flagship snippet still produces a LOUD catch (the funnel entry point)', () => {
-    const results = checkCode(LOUD_SNIPPET, 'php');
+    const results = checkCode(LOUD_SNIPPET, 'js');
     expect(results.some((r) => r.tier === 'LOUD')).toBe(true);
   });
 
   it('emits the checkout URL with full attribution when a LOUD catch fires', async () => {
-    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'php' });
+    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'js' });
     expect(out).toContain(CHECKOUT);
     // Attribution params the funnel digest joins on — a bare URL is a lost sale.
     expect(out).toMatch(/[?&]ref=catch\b/);
@@ -65,14 +69,14 @@ describe('checkout funnel — catch → attributed upgrade prompt', () => {
 
   it('prints no dead buy-link when no checkout URL is configured', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'php' });
+    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'js' });
     expect(out).not.toContain('buy.example.test');
     expect(out).not.toMatch(/lumo\.so\/pro/); // the default must stay inert too
   });
 
   it('honours the kill-switch even with a checkout URL set', async () => {
     process.env['LUMO_UPGRADE_PROMPT'] = 'off';
-    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'php' });
+    const out = await handleCheckCode({ code: LOUD_SNIPPET, language: 'js' });
     expect(out).not.toContain(CHECKOUT);
   });
 
