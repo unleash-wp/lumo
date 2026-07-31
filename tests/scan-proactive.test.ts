@@ -22,18 +22,19 @@ import { orderFindingsLoudFirst } from '../src/scan/order-findings.js';
 // ---------------------------------------------------------------------------
 // Diff fixtures — same Free-tier patterns used in action-catch-runner tests.
 // The scan pipeline reads the shipped Free snapshot, and WooCommerce knowledge is
-// Pro-only, so the LOUD example is the core deprecation a free user can hit.
+// Pro-only, so the LOUD example is the core removal a free user can hit. It used
+// to be a deprecation, which reached LOUD only through a wrong stamp.
 // ---------------------------------------------------------------------------
 
-/** Adds `wp_img_tag_add_decoding_attr(` — CERTAIN signal, fires LOUD. */
-const loudDiff = `diff --git a/includes/image-renderer.php b/includes/image-renderer.php
+/** Adds `isValidBlockContent(` — CERTAIN signal on a WP 5.9 removal, fires LOUD. */
+const loudDiff = `diff --git a/src/blocks/validate.js b/src/blocks/validate.js
 index abc1234..def5678 100644
---- a/includes/image-renderer.php
-+++ b/includes/image-renderer.php
+--- a/src/blocks/validate.js
++++ b/src/blocks/validate.js
 @@ -10,3 +10,7 @@
- function render_thumbnail( $img ) {
-+    $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );
-     return $html;
+ function check( blockType, attrs, inner, html ) {
++    const ok = isValidBlockContent( blockType, attrs, inner, html );
+     return ok;
  }
 `;
 
@@ -53,7 +54,7 @@ index aaa..bbb 100644
 // ---------------------------------------------------------------------------
 
 describe('proactive scan: LOUD pattern', () => {
-  it('surfaces a LOUD finding when diff contains wp_img_tag_add_decoding_attr', async () => {
+  it('surfaces a LOUD finding when diff contains isValidBlockContent', async () => {
     const result = await runCatch({ diff: loudDiff });
 
     expect(result.loudCount).toBeGreaterThan(0);

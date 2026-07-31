@@ -157,7 +157,15 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
   });
 
   // The Free artifact still needs a version-stamped breaking entry — the catch
-  // engine's LOUD path is structurally barred without one. wp-img-tag is that entry.
+  // engine's LOUD path is structurally barred without one.
+  //
+  // The named entry used to be wp-img-tag-add-decoding-attr-deprecation, which
+  // is a deprecation and not a break: the function still exists and still runs.
+  // It satisfied this test only because it carried a wrong stamp, so the one
+  // guard standing over Free's LOUD reachability was being met by the very
+  // defect it should have caught. Named on a removal now, and the general
+  // condition is asserted first so a future correction to any single entry
+  // fails loudly rather than quietly emptying the set.
   it('ships a version-stamped breaking entry so LOUD stays reachable in Free', () => {
     const snap = loadSnapshot();
     const loudCapable = snap.entries.filter((e) =>
@@ -166,7 +174,7 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
       ),
     );
     expect(loudCapable.length).toBeGreaterThan(0);
-    expect(loudCapable.map((e) => e.slug)).toContain('wp-img-tag-add-decoding-attr-deprecation');
+    expect(loudCapable.map((e) => e.slug)).toContain('gutenberg-isvalidblockcontent-removed');
   });
 
   it('wp-img-tag deprecation entry carries all required Free fields', () => {
@@ -190,13 +198,18 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     expect(Object.prototype.hasOwnProperty.call(entry, 'body')).toBe(false);
   });
 
-  it('wp-img-tag deprecation entry has wp_version_min "6.4.0" and no woo_version_min', () => {
+  // breaking_change is false on purpose, and this test exists to keep it that
+  // way. wp_img_tag_add_decoding_attr() is deprecated: it still exists in core
+  // and emits a notice. While it was stamped as a break it fired LOUD, and
+  // through fail_on_loud a deprecation could fail a paying customer's build —
+  // the exact noise this product exists to avoid, in our own data.
+  it('wp-img-tag entry is stamped as a deprecation, not as a break', () => {
     const snap = loadSnapshot();
     const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
     expect(entry?.versions.length).toBeGreaterThan(0);
     expect(entry?.versions[0]?.wp_version_min).toBe('6.4.0');
     expect(entry?.versions[0]?.woo_version_min).toBeNull();
-    expect(entry?.versions[0]?.breaking_change).toBe(true);
+    expect(entry?.versions[0]?.breaking_change).toBe(false);
   });
 
   it('wp-output-escaping entry carries all required Free fields', () => {
