@@ -158,7 +158,7 @@ Free catches what already broke. Pro keeps your team ahead of what breaks next. 
 
 **3. Commercial-plugin coverage.** Curated, source-verified entries for ACF Pro, Elementor Pro, Gravity Forms, and Meta Box — the plugins agency code actually touches, which the official GPL skills cannot cover by design.
 
-**4. Upgrade compat reports.** `wp_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client — what breaks, where, and the fix for each item. The report you bill for.
+**4. Upgrade compat reports.** `lumo_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client — what breaks, where, and the fix for each item. The report you bill for.
 
 **Terms:** annual license, per seat. 30-day money-back guarantee, no questions asked. Founding members get the founding rate and keep it for as long as their license renews.
 

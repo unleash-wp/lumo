@@ -6,7 +6,7 @@
  * returns structured findings the action entry-point posts as review comments.
  *
  * Pro seam: when proUrl + licenseKey are present, calls the Pro MCP server's
- * wp_check_code tool via the MCP JSON-RPC HTTP protocol. Falls back to the
+ * lumo_check_code tool via the MCP JSON-RPC HTTP protocol. Falls back to the
  * free catch if the Pro server is unreachable.
  */
 
@@ -71,7 +71,7 @@ async function fetchProResults(
       id: 1,
       method: 'tools/call',
       params: {
-        name: 'wp_check_code',
+        name: 'lumo_check_code',
         arguments: { code, language },
       },
     }),
