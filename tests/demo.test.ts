@@ -62,7 +62,12 @@ describe('the demo never poses as a scan', () => {
 
   it('names the free boundary instead of implying full coverage', () => {
     const text = output();
-    expect(text).toContain('Lumo Free covers');
+    // 'covers' was the over-claim: the knowledge holds those areas, the catch
+    // reaches part of them. The tail must not state the claim and retract it
+    // two lines later.
+    expect(text).toContain('Lumo Free holds');
+    expect(text).toContain('as knowledge');
+    expect(text).not.toContain('Lumo Free covers');
     expect(text).toContain('Lumo Pro');
   });
 });
