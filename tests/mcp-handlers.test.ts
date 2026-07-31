@@ -116,8 +116,8 @@ describe('handleAudit', () => {
     // Must contain the entry title
     expect(result).toContain('wp_img_tag_add_decoding_attr');
     // Must contain wrong/correct sections
-    expect(result).toContain('Wrong');
-    expect(result).toContain('Correct');
+    expect(result).toContain('### Wrong');
+    expect(result).toContain('### Correct');
     // Must cite source
     expect(result).toContain('Source:');
     // Must include test step
@@ -174,8 +174,8 @@ describe('handleLookup', () => {
     const result = await handleLookup({ slug: 'wp-img-tag-add-decoding-attr-deprecation' }, snap);
 
     expect(result).toContain('wp_img_tag_add_decoding_attr');
-    expect(result).toContain('Wrong');
-    expect(result).toContain('Correct');
+    expect(result).toContain('### Wrong');
+    expect(result).toContain('### Correct');
     expect(result).toContain('Source:');
     expect(result).toContain('Verify:');
   });

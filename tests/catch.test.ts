@@ -521,7 +521,7 @@ describe('formatCatch — render layer', () => {
     const rendered = formatCatch(soft!);
     // Quiet lead
     expect(rendered).toContain('ADVISORY:');
-    expect(rendered).toContain('ADVISORY:');
+    expect(rendered).toContain('this pattern may not work as expected');
     // No alarm emoji
     expect(rendered).not.toContain('BREAKING:');
     // Condition is stated
@@ -867,7 +867,7 @@ wp_register_ability( 'my-plugin/get-data', [
     const rendered = formatCatch(match!);
     // Quiet SOFT lead
     expect(rendered).toContain('ADVISORY:');
-    expect(rendered).toContain('ADVISORY:');
+    expect(rendered).toContain('this pattern may not work as expected');
     // No LOUD alarm
     expect(rendered).not.toContain('BREAKING:');
     // Condition from signal is stated
@@ -965,7 +965,7 @@ watch( () => { console.log( state.count ); } );
     const { formatCatch } = await import('../src/lib/render.js');
     const rendered = formatCatch(match!);
     expect(rendered).toContain('ADVISORY:');
-    expect(rendered).toContain('ADVISORY:');
+    expect(rendered).toContain('this pattern may not work as expected');
     expect(rendered).not.toContain('BREAKING:');
     // The entry summary contains the dated "WP 7.0" / "May 2026" proof phrase
     expect(rendered).toMatch(/7\.0|May 2026/);
