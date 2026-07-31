@@ -18,7 +18,7 @@
  */
 
 import { checkCode } from '../detection/catch.js';
-import { formatCatch } from '../lib/render.js';
+import { formatCatch, KNOWLEDGE_WIDER_THAN_CATCH } from '../lib/render.js';
 import { loadSnapshot } from '../lib/snapshot.js';
 import { DEMO_SAMPLES } from './samples.js';
 
@@ -117,6 +117,8 @@ export function runDemo(): DemoResult {
     'and theme APIs, and security fundamentals. WooCommerce and the premium',
     'plugins are Lumo Pro, and where the free tier cannot check, it says so',
     'instead of going quiet.',
+    '',
+    KNOWLEDGE_WIDER_THAN_CATCH,
   );
 
   return { lines, findingCount };

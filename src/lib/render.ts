@@ -292,19 +292,51 @@ export const SCAN_NO_MATCH_TEMPLATE =
   'lumo scan: {files} checked against Lumo Free{date} — no covered pattern matched. ' +
   'Outside that coverage nothing was checked, so this is not an all-clear.';
 
-/** Logged when the Action finds nothing. States scope, never a verdict on the PR. */
+/**
+ * Logged when the Action finds nothing. States scope, never a verdict on the PR.
+ *
+ * "Covers security fundamentals" was doing too much work here: the knowledge
+ * covers them, the automatic catch reaches only part of them, and this line is
+ * read at exactly the moment someone decides whether silence means safety.
+ */
 export const ACTION_NO_MATCH_LINE =
   'No covered pattern matched in the added lines. ' +
-  'Lumo Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
+  'Lumo Free carries WordPress Core, block and theme APIs, and security ' +
+  'fundamentals as knowledge, and the catch fires on a subset of that; ' +
   'this is not an all-clear.';
 
 /**
  * Appended to the Action's review summary. Belongs there even when findings exist:
  * without it, the absence of further comments reads as coverage.
  */
+/**
+ * The knowledge is wider than the automatic catch, and saying "covers security
+ * fundamentals" without that distinction lets a reader assume every one of
+ * those topics fires by itself. Measured on 31.07.2026: the free snapshot holds
+ * fifteen security entries; nine carry a detection rule, and two of those nine
+ * reach only part of their topic — so "nine covered" would itself be the kind
+ * of over-claim this constant exists to retire. Seven cover their topic, two
+ * cover half of it, six are documented only.
+ *
+ * Naming the gap turns an over-claim into a useful pointer: the lookup answers
+ * what the watcher stays quiet about.
+ */
+export const KNOWLEDGE_WIDER_THAN_CATCH =
+  'The catch fires on a subset of what Lumo knows, in two ways. Documented ' +
+  'with no detection at all: unescaped output, missing sanitize callbacks on ' +
+  'settings and REST arguments, and permission checks on abilities. Detected ' +
+  'only in part: a REST route with no permission callback is not caught ' +
+  'though a permissive one is, and a superglobal is caught when assigned to a ' +
+  'variable, not when echoed straight out. Silence from the watcher is never a ' +
+  'verdict on any of those. Ask lumo_lookup (or `lumo` in your assistant) for ' +
+  'the knowledge the catch does not reach.';
+
 export const ACTION_SCOPE_LINE =
   '_Scope: the added lines of this diff, checked against what Lumo Free covers. ' +
-  'Unchanged lines and anything outside that coverage were not checked._';
+  'Unchanged lines and anything outside that coverage were not checked. ' +
+  'The catch also reaches only part of what Lumo documents, so a fixed run is ' +
+  'not a cleared one — the rest of the knowledge is in the snapshot, reachable ' +
+  'from an editor with the Lumo MCP server connected._';
 
 /**
  * Posted into the PR when Pro credentials were configured but the Pro server
@@ -344,8 +376,9 @@ export const ACTION_PRO_DEGRADED_LINE =
 // product must never do.
 export const CATCH_NEUTRAL_LINE =
   'Checked against Lumo Free — no covered pattern matched. ' +
-  'Free covers WordPress Core, block and theme APIs, and security fundamentals; ' +
-  'anything outside that was not checked, so this is not an all-clear.';
+  'Free carries WordPress Core, block and theme APIs, and security fundamentals ' +
+  'as knowledge, and the catch reaches only part of that; anything outside what ' +
+  'it reaches was not checked, so this is not an all-clear.';
 
 /** "A", "A and B", "A, B and C" — one grammar for every gap surface. */
 export function joinPluginNames(names: string[]): string {
