@@ -115,6 +115,133 @@ add_action('wp_ajax_unsafe', function() { update_option('b', $_POST['v']); });
   });
 });
 
+/**
+ * Both rules below described a case in their own title that their signal could
+ * not see (issue #101, measured against ordinary insecure PHP). Neither was a
+ * missing entry: the knowledge was there and the signal looked for the wrong
+ * shape, which is the failure mode a bell/silence pair taken from the entry
+ * cannot catch — the entry's own example happened to use the covered form.
+ */
+describe('connected rules — REST route with no permission_callback at all', () => {
+  const REST = 'rest-route-missing-permission-callback';
+  const fires = (code: string) => slugsCaught(code).includes(REST);
+
+  it.each([
+    ['a single-call inline array', `<?php register_rest_route( 'x/v1', '/y', array( 'callback' => 'cb' ) );`],
+    [
+      'a multi-line inline array',
+      `<?php
+register_rest_route(
+    'myplugin/v1',
+    '/settings',
+    [
+        'methods'  => WP_REST_Server::EDITABLE,
+        'callback' => 'myplugin_update_settings',
+    ]
+);`,
+    ],
+  ])('BELL: %s with no permission_callback is caught', (_name, code) => {
+    expect(fires(code)).toBe(true);
+  });
+
+  it.each([
+    [
+      'permission_callback present in the same call',
+      `<?php register_rest_route( 'x/v1', '/y', array( 'callback' => 'cb', 'permission_callback' => 'perm' ) );`,
+    ],
+    [
+      'permission_callback written before callback',
+      `<?php register_rest_route( 'x/v1', '/y', array( 'permission_callback' => 'perm', 'callback' => 'cb' ) );`,
+    ],
+    [
+      // The false positive the issue warned about: no literal 'callback' key
+      // stands in the call, so there is nothing for the signal to key on.
+      'the argument array assembled in a variable',
+      `<?php
+$args = array( 'methods' => 'GET', 'callback' => 'cb', 'permission_callback' => '__return_true' );
+register_rest_route( 'x/v1', '/y', $args );`,
+    ],
+    [
+      'two correct registrations back to back',
+      `<?php
+register_rest_route( 'x/v1', '/a', array( 'callback' => 'a', 'permission_callback' => 'pa' ) );
+register_rest_route( 'x/v1', '/b', array( 'callback' => 'b', 'permission_callback' => 'pb' ) );`,
+    ],
+  ])('SILENCE: %s must not be flagged', (_name, code) => {
+    expect(fires(code)).toBe(false);
+  });
+
+  /**
+   * Stated boundary, not an oversight. A closure among the arguments carries
+   * braces and semicolons, and a regex cannot tell where such a span ends. The
+   * span therefore refuses to cross them, so this registration stays silent
+   * even though it really is missing its permission_callback. Silence with a
+   * boundary the entry states beats an alarm on correct code. Lifting this
+   * needs parsing — delete this test alongside that change, not before.
+   */
+  it('LIMIT: a closure among the arguments keeps the rule silent', () => {
+    const code = `<?php
+register_rest_route( 'x/v1', '/y', [
+    'callback' => function () { return rest_ensure_response( array() ); },
+] );`;
+    expect(fires(code)).toBe(false);
+  });
+});
+
+describe('connected rules — superglobal used inline, not assigned', () => {
+  const SG = 'superglobal-without-sanitize';
+  const fires = (code: string) => slugsCaught(code).includes(SG);
+
+  it.each([
+    ['concatenated straight into echo', `<?php echo '<div>' . $_GET['name'] . '</div>';`],
+    ['echoed bare', `<?php echo $_POST['message'];`],
+    ['printed bare', `<?php print $_REQUEST['q'];`],
+    [
+      // Bounded by `;`, so one escaped statement cannot vouch for the next.
+      'an escaped echo followed by an unescaped one',
+      `<?php echo esc_html( $_GET['ok'] ); echo $_GET['bad'];`,
+    ],
+    [
+      // Found in the Stufe-3 gap pass by probing the channel list: `\bprint\b`
+      // never reaches printf, because the word boundary fails on the trailing f.
+      'passed to printf',
+      `<?php printf( '<b>%s</b>', $_GET['q'] );`,
+    ],
+    ['passed to vprintf', `<?php vprintf( '<b>%s</b>', array( $_GET['q'] ) );`],
+    ['emitted through the short echo tag', `<?= $_GET['name'] ?>`],
+    [
+      // The span crosses newlines — only a semicolon stops it.
+      'concatenated across several lines',
+      `<?php echo '<div>'\n  . '<span>'\n  . $_GET['name']\n  . '</span>';`,
+    ],
+  ])('BELL: a superglobal %s is caught', (_name, code) => {
+    expect(fires(code)).toBe(true);
+  });
+
+  it.each([
+    ['escaped on output', `<?php echo esc_html( $_GET['q'] );`],
+    ['cast with absint', `<?php $id = absint( $_GET['id'] );`],
+    ['escaped inside an attribute', `<?php echo '<input value="' . esc_attr( $_POST['v'] ) . '">';`],
+    ['unslashed then escaped', `<?php echo esc_html( wp_unslash( $_POST['name'] ) );`],
+    ['only checked with isset', `<?php if ( isset( $_GET['x'] ) ) { echo 'yes'; }`],
+    [
+      // A read compared against a literal is not a defect, and flagging it
+      // would be the noise this product exists to avoid.
+      'compared against a literal',
+      `<?php if ( isset( $_POST['action'] ) && 'save' === $_POST['action'] ) { echo 'saved'; }`,
+    ],
+    ['escaped inside printf', `<?php printf( '<b>%s</b>', esc_html( $_GET['q'] ) );`],
+    [
+      // sprintf returns a string rather than emitting one, so its result can
+      // still be escaped on the way out. Treating it as a sink would flag this.
+      'built with sprintf and escaped on output',
+      `<?php $s = sprintf( '<b>%s</b>', $_GET['q'] ); echo wp_kses_post( $s );`,
+    ],
+  ])('SILENCE: %s must not be flagged', (_name, code) => {
+    expect(fires(code)).toBe(false);
+  });
+});
+
 describe('connected rules — the registry really carries them', () => {
   it('all 17 slugs resolve to a snapshot entry', () => {
     for (const slug of CONNECTED_SLUGS) expect(entryFor(slug).slug).toBe(slug);

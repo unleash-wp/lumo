@@ -29,10 +29,37 @@ import {
   ACTION_NO_MATCH_LINE,
   ACTION_SCOPE_LINE,
   ACTION_PRO_DEGRADED_LINE,
+  ACTION_PRO_DEGRADED_FAIL_LINE,
   buildScanLimitsNotice,
   ACTION_REQUIRES_PRO_LINE,
   ENFORCE_CONFIG_UNREADABLE_LINE,
 } from '../lib/render.js';
+
+// ---------------------------------------------------------------------------
+// Opt-in gate on a degraded run
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether a run in which the paid check did not deliver should end red.
+ *
+ * Default off, and it stays off: when our server does not answer, the
+ * contributor's code is not the problem, and failing their build for our outage
+ * is the kind of gate that gets a tool switched off entirely. A team paying for
+ * the check may still want it to be a hard gate, and until now could not have
+ * one.
+ *
+ * Boolean, not a third state, and measured rather than assumed: a JavaScript
+ * action can only end `success` or `failure`. `@actions/core` exposes
+ * `setFailed` and nothing for a neutral conclusion, which would need a separate
+ * check run through the Checks API plus `checks: write`.
+ *
+ * `scanLimits` is deliberately absent from this signature. A limit of the
+ * scanner is not a defect in the contributor's code — the limits are already
+ * not findings — so no setting may turn one into a red check.
+ */
+export function failsOnDegraded(rawInput: string, proDegraded: boolean): boolean {
+  return proDegraded && rawInput.trim().toLowerCase() === 'true';
+}
 
 // ---------------------------------------------------------------------------
 // Enforcement mode from workspace .lumo.json
@@ -207,6 +234,14 @@ async function main(): Promise<void> {
       body: `**[Lumo]** ${ACTION_PRO_DEGRADED_LINE}`,
     });
     core.info('[lumo] Pro check degraded to the free catch — posted the degradation notice');
+
+    // After the notice, never instead of it: a red check with no sentence
+    // saying why is the failure mode this whole notice exists to prevent.
+    // setFailed only sets the exit code, so the findings below still post and
+    // the early returns further down cannot drop the failure again.
+    if (failsOnDegraded(core.getInput('fail_on_degraded'), proDegraded)) {
+      core.setFailed(ACTION_PRO_DEGRADED_FAIL_LINE);
+    }
   }
 
   // One comment for the whole run, naming the files. Per-file would repeat the

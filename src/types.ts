@@ -57,27 +57,12 @@ export interface Snapshot {
   entries: SnapshotEntry[];
 }
 
-// ---------------------------------------------------------------------------
-// Tool-signature contracts — a hand-kept mirror of the MCP tool surface in
-// lumo-pro (src/mcp/server.ts).
-//
-// Nothing in this repo consumes them, and they had drifted: they declared
-// argument names the server has never accepted, where it has always taken
-// `topic` and `plugin`. A mirror with no consumer, and no mechanism keeping it
-// in step, is a statement that goes stale unnoticed. The WordPress plugin held
-// the same wrong names and could not talk to the server at all. Corrected here;
-// if a consumer never appears, delete them rather than maintain a second copy.
-// ---------------------------------------------------------------------------
-
-/** Input shape for the lumo_lookup tool. */
-export interface LumoLookupInput {
-  topic: string;
-}
-
-/** Input shape for the lumo_plugin_advice tool. */
-export interface LumoPluginAdviceInput {
-  plugin: string;
-}
+// A hand-kept mirror of the Pro tool arguments stood here. Nothing imported it,
+// which is why it drifted to names the server has never accepted without
+// anything breaking. Do not add one back: a copy no compiler can check is a
+// second source of truth that only ever gets more wrong. The tool surface is
+// stated once, in lumo-pro/docs/tool-contract.md, and asserted there against
+// the live registry.
 
 /** Free-tier rendered response returned by the local snapshot loader. */
 export interface FreeRenderedEntry {

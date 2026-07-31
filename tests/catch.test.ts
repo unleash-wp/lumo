@@ -287,15 +287,20 @@ $query = new WP_Query( [ 'post_type' => 'shop_order' ] );
     expect(soft?.tier).toBe('SOFT');
   });
 
-  // wp_img_tag_add_decoding_attr → LOUD
-  it('wp_img_tag_add_decoding_attr() fires LOUD', () => {
+  // wp_img_tag_add_decoding_attr → SOFT, and that is the whole point.
+  //
+  // This asserted LOUD while the entry carried breaking_change: true. The
+  // function is deprecated, not removed: it still exists in core and emits a
+  // notice, so nothing breaks. LOUD there meant a deprecation could fail a
+  // paying customer's build through fail_on_loud — the product law broken in
+  // our own data. Still caught, still cited, at the volume the fact supports.
+  it('wp_img_tag_add_decoding_attr() fires SOFT, because a deprecation is not a break', () => {
     const code = `$img = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );`;
     const results = checkCode(code, 'php', catchSnap);
-    const loud = results.find((r) => r.tier === 'LOUD');
-    expect(loud).toBeDefined();
-    expect(loud?.entry.slug).toBe('wp-img-tag-add-decoding-attr-deprecation');
-    expect(loud?.versionFact?.field).toBe('wp');
-    expect(loud?.versionFact?.value).toBe('6.4.0');
+    const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
+    expect(results.some((r) => r.tier === 'LOUD')).toBe(false);
   });
 
   // (a) function_exists shim-downgrade canary — the snapshot bad_pattern itself
@@ -488,16 +493,19 @@ describe('formatCatch — render layer', () => {
   });
 
   it('LOUD: the dated line is screenshot-able (contains version and date)', () => {
+    // A real removal, not a deprecation — the fixture this used to run on was
+    // the mis-stamped one, so the screenshot-able LOUD line was being proved on
+    // a break that never happened.
     const results = checkCode(
-      `$img = wp_img_tag_add_decoding_attr( $img_html, 'ctx' );`,
-      'php',
+      `const ok = isValidBlockContent( blockType, attrs, inner, html );`,
+      'js',
       catchSnap,
     );
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
+    // Version from the entry
     const rendered = formatCatch(loud!);
-    // Version "6.4.0" from the entry
-    expect(rendered).toContain('6.4.0');
+    expect(rendered).toContain('5.9');
     // Date comes from entry.updatedAt (not wall clock)
     expect(rendered).toContain(loud!.entry.updatedAt.slice(0, 10));
   });
@@ -728,12 +736,15 @@ describe('false-LOUD regressions', () => {
     expect(match?.tier).not.toBe('LOUD');
   });
 
-  // C1: real call still fires correctly after the fix
-  it('C1: actual wp_img_tag_add_decoding_attr() call still fires LOUD', () => {
+  // C1: real call still fires correctly after the fix. What C1 guards is that
+  // string-stripping did not silence the actual call — the tier it fires at is
+  // a separate question, settled by the entry's stamp and covered above.
+  it('C1: actual wp_img_tag_add_decoding_attr() call is still caught', () => {
     const code = `<?php\n$img = wp_img_tag_add_decoding_attr( $img_html, 'ctx' );`;
     const results = checkCode(code, 'php', catchSnap);
     const match = results.find((r) => r.entry.slug === 'wp-img-tag-add-decoding-attr-deprecation');
-    expect(match?.tier).toBe('LOUD');
+    expect(match).toBeDefined();
+    expect(match?.tier).toBe('SOFT');
   });
 
   // C1: HPOS 'shop_order' literal must still fire — string stripping must NOT erase it
