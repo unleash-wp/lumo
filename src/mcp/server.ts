@@ -177,7 +177,7 @@ server.registerTool(
       project_root,
     });
     // The verdict travels as data next to the prose — same law the Pro server
-    // follows: clients decide on the flags, never by parsing ⚠️ out of text.
+    // follows: clients decide on the flags, never by parsing an alarm word out of text.
     return {
       content: [{ type: 'text', text: v.text }],
       structuredContent: {

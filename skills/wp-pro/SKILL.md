@@ -40,8 +40,8 @@ lumo_check_code(
 
 | Result | What it means | What to do |
 |--------|---------------|------------|
-| `> ⚠️` LOUD catch | Pattern is confirmed broken in a specific version | Do not present the original code. Lead with Lumo's correct form, cite source and version verbatim. |
-| `> 🔍` SOFT catch | Conditional risk — depends on context | Surface the concern alongside the code. Let the developer decide, but make the risk explicit. |
+| `> BREAKING:` LOUD catch | Pattern is confirmed broken in a specific version | Do not present the original code. Lead with Lumo's correct form, cite source and version verbatim. |
+| `> ADVISORY:` SOFT catch | Conditional risk — depends on context | Surface the concern alongside the code. Let the developer decide, but make the risk explicit. |
 | No catch | No known issue | Proceed. Note "Lumo: no known issues" at the end of the answer. |
 
 For API questions rather than code, call `lumo_lookup` first — see the `wp-binding` skill for the full topic/slug reference. This skill inherits the wp-binding consultation reflex; the two skills work together.

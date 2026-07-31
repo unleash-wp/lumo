@@ -63,13 +63,13 @@ Print the following block verbatim, substituting fields from that entry — do n
 
 {entry.summary}
 
-### ❌ Wrong (HPOS-unsafe)
+### Wrong (HPOS-unsafe)
 
 ```php
 {entry.bad_pattern}
 ```
 
-### ✅ Correct
+### Correct
 
 ```php
 {entry.code_example}

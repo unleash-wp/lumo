@@ -12,7 +12,7 @@
 - **Local-first.** Kein `git commit`/`push`/Deploy ohne ausdrückliche Freigabe. Nie direkt auf `main` —
   Feature-Branch → **`code-reviewer` (Pflicht) + `tester`** → Merge.
 
-## ⚠️ Commit-Regel (verbindlich)
+## BREAKING: Commit-Regel (verbindlich)
 
 **In den Git-Commits darf NICHT erkennbar sein, dass eine KI gearbeitet hat.** Kein `Co-Authored-By: Claude …`,
 kein „Generated with Claude Code", keine KI-Footer. Author/Committer = **Benjamin Zekavica**. Messages im

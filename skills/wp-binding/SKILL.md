@@ -76,14 +76,14 @@ Pass `wp_version` / `woo_version` whenever the project's target versions are kno
 
 **Reading the result:**
 
-- **LOUD catch** (starts with `> ⚠️`): the pattern is either broken since a
+- **LOUD catch** (starts with `> BREAKING:`): the pattern is either broken since a
   specific WordPress/WooCommerce release, **or wrong in every supported version**
   (security fundamentals such as an unprepared `$wpdb` query — the lead then
   says so and cites the documentation instead of a release). Either way: do
   **not** present the original suggestion. Present Lumo's correct form, citing
   the source and the fact line verbatim.
 
-- **SOFT catch** (starts with `> 🔍`): a conditional risk. Surface it alongside
+- **SOFT catch** (starts with `> ADVISORY:`): a conditional risk. Surface it alongside
   the code. Let the user decide, but make the risk explicit and cite the source.
 
 - **Coverage-gap lines** (`Detected <Plugin> in this code …` or
