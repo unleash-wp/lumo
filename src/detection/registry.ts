@@ -813,7 +813,12 @@ export const PATTERNS: readonly PatternDefinition[] = [
         // superglobal starts, so an escaping or sanitising call wrapped
         // directly around the read silences it however the echo was reached.
         // Bounded by `;` so one guarded statement cannot vouch for the next.
-        match: /(?:\becho\b|\bprint\b)[^;]*?(?<!\b(?:esc_\w+|sanitize_\w+|absint|intval|floatval|wp_kses\w*|wp_unslash|number_format)\s*\(\s*)\$_(?:POST|GET|REQUEST)\s*\[/,
+        // printf/vprintf and the short echo tag are output channels too, and
+        // `\bprint\b` does not reach printf — the word boundary fails on the
+        // trailing f. Found by probing the channel list rather than the regex.
+        // sprintf is deliberately absent: it returns a string, so its result
+        // may still be escaped before it reaches the page.
+        match: /(?:\becho\b|\bprint\b|\bv?printf\s*\(|<\?=)[^;]*?(?<!\b(?:esc_\w+|sanitize_\w+|absint|intval|floatval|wp_kses\w*|wp_unslash|number_format)\s*\(\s*)\$_(?:POST|GET|REQUEST)\s*\[/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'superglobal-without-sanitize',
         condition: 'the value reaches output without esc_html() / esc_attr() / wp_kses() or a sanitize_*() call wrapping the read',
