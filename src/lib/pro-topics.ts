@@ -37,7 +37,7 @@ export function buildProTopicTeaser(pluginName: string): string {
   return (
     `${pluginName} knowledge is part of Lumo Pro. ` +
     `Lumo Free covers WordPress Core, block and theme APIs, and security fundamentals; ` +
-    `${pluginName} is not covered by any free or official WordPress skill set. ` +
+    `${pluginName} is covered by neither Lumo Free nor the WordPress agent skills. ` +
     `Lumo Pro adds the premium-plugin catch: ACF Pro, Gravity Forms, Elementor Pro, ` +
     `Meta Box, Carbon Fields, WooCommerce and WooCommerce Subscriptions.`
   );

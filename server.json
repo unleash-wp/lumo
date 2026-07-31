@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.unleash-wp/lumo",
-  "description": "WordPress code review for AI-assisted development — checks PHP/JS against 142 source-verified entries (Core deprecations, Gutenberg/block.json, theme.json, WooCommerce HPOS) and returns the wrong-vs-correct fix with affected version range and dated source.",
+  "description": "WordPress code review for AI-assisted development — checks PHP/JS against 42 source-verified entries (Core deprecations, Gutenberg/block.json, theme.json, WooCommerce HPOS) and returns the wrong-vs-correct fix with affected version range and dated source.",
   "repository": {
     "url": "https://github.com/unleash-wp/lumo",
     "source": "github"

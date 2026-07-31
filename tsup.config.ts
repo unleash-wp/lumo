@@ -6,7 +6,8 @@ export default defineConfig({
     // the package, so this dispatcher is what makes the advertised command real.
     lumo: 'src/cli/main.ts',
     mcp: 'src/mcp/server.ts',
-    // GitHub Action entry point — produces dist/action.mjs referenced by action.yml.
+    // GitHub Action runner. The manifest lives in unleash-wp/lumo-action and
+    // reaches this through the published package, as `lumo action`.
     action: 'src/action/main.ts',
     // Hook catch runner — called by .claude/hooks/wp-enforce.cjs via dynamic import().
     // Bundles checkCode + formatCatch with no MCP/transport deps.

@@ -278,12 +278,12 @@ function detectLanguage(code: string): Language {
 // Token cap — first 2 000 lines of the input
 // ---------------------------------------------------------------------------
 
-const INPUT_LINE_CAP = 2_000;
+export const INPUT_LINE_CAP = 2_000;
 
-function capInput(code: string): string {
+function capInput(code: string): { code: string; truncated: boolean } {
   const lines = code.split('\n');
-  if (lines.length <= INPUT_LINE_CAP) return code;
-  return lines.slice(0, INPUT_LINE_CAP).join('\n');
+  if (lines.length <= INPUT_LINE_CAP) return { code, truncated: false };
+  return { code: lines.slice(0, INPUT_LINE_CAP).join('\n'), truncated: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -367,6 +367,17 @@ export interface CheckCodeOutcome {
    * empty.
    */
   proGaps: ProGap[];
+  /**
+   * True when the blob was longer than the scanner reads, so the tail was never
+   * looked at. Both limits below were invisible: a 3000-line file and a clean
+   * one produced the same neutral line, and a blob with five matches reported
+   * three with nothing to say the other two existed. A cap the reader cannot
+   * see is a coverage limit presented as a result, and the neutral line's own
+   * disclosure covers what Lumo knows, not how much of the input it read.
+   */
+  inputTruncated: boolean;
+  /** Matches found and then dropped by the display cap, lowest tier first. */
+  hitsOmitted: number;
 }
 
 /** Thin wrapper — the ranked results only. See checkCodeWithGaps for Pro gaps. */
@@ -389,7 +400,7 @@ export function checkCodeWithGaps(
     const snap = snapshot ?? loadSnapshot();
 
     // 1. Normalize input
-    const capped = capInput(code);
+    const { code: capped, truncated: inputTruncated } = capInput(code);
     const diffFiltered = filterDiffAddedLines(capped);
 
     const lang: Language = language === 'auto' ? detectLanguage(diffFiltered) : language;
@@ -482,14 +493,19 @@ export function checkCodeWithGaps(
     }
 
     // 3. Sort LOUD before SOFT, cap at CATCH_CAP, then apply project overrides
-    const raw = [...seen.values()]
-      .sort((a, b) => tierRank(b.tier) - tierRank(a.tier))
-      .slice(0, CATCH_CAP);
+    const sorted = [...seen.values()].sort((a, b) => tierRank(b.tier) - tierRank(a.tier));
+    const raw = sorted.slice(0, CATCH_CAP);
 
     const proGaps = [...gapByPlugin.values()];
-    return { results: applyCatchOverrides(raw, overrides), proGap: proGaps[0], proGaps };
+    return {
+      results: applyCatchOverrides(raw, overrides),
+      proGap: proGaps[0],
+      proGaps,
+      inputTruncated,
+      hitsOmitted: sorted.length - raw.length,
+    };
   } catch {
-    return { results: [], proGaps: [] };
+    return { results: [], proGaps: [], inputTruncated: false, hitsOmitted: 0 };
   }
 }
 

@@ -6,8 +6,11 @@
 # `lumo scan`, run over the changes in the pull request.
 #
 # It reports and never blocks, exactly like the local scan: findings are in the
-# job log, the check stays green. The customer-facing CI example lives in
-# docs/ci/github-action-example.yml.
+# job log, the check stays green.
+#
+# It is not the customer-facing CI gate. That one is Lumo Pro, lives in
+# unleash-wp/lumo-action, and needs a licence — which this repository must not
+# carry. What runs here is the branch's own engine, against the branch.
 
 name: Self review
 

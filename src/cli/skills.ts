@@ -1,7 +1,7 @@
 /**
  * `lumo skills` — one grip to both layers of the stack.
  *
- * The official WordPress agent skills (github.com/WordPress/agent-skills,
+ * The WordPress agent skills (github.com/WordPress/agent-skills,
  * GPL-2.0-or-later) are the MANUAL: how to build blocks, themes, REST routes,
  * plugins the current way. Lumo is the WATCHER: what just broke, what is
  * deprecated, what your AI got wrong. The two are designed as companions —
@@ -16,12 +16,12 @@
 
 import { spawn } from 'node:child_process';
 
-export function installOfficialSkills(): Promise<void> {
+export function installWordPressAgentSkills(): Promise<void> {
   console.log(
     [
-      'Installing the official WordPress agent skills (WordPress/agent-skills).',
+      'Installing the WordPress agent skills (WordPress/agent-skills).',
       'They are the manual; Lumo is the watcher — built to run side by side.',
-      'Licence: GPL-2.0-or-later, maintained by the WordPress project.',
+      'Licence: GPL-2.0-or-later, published in the WordPress GitHub organisation.',
       '',
     ].join('\n'),
   );

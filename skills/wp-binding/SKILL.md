@@ -16,12 +16,12 @@ Training data freezes at a cutoff; WordPress ships monthly. Every WordPress or
 WooCommerce code suggestion must be checked against what Lumo actually knows
 before it leaves your context window.
 
-**Companions, not competitors:** the official WordPress agent skills
+**Companions, not competitors:** the WordPress agent skills
 (`WordPress/agent-skills` — wp-block-development, wp-block-themes,
 wp-plugin-development, wp-rest-api, …) are the MANUAL for how to build things
 the current way; Lumo is the WATCHER for what just broke or went stale. When
-both are installed, consult the matching official skill for the build guidance
-and run this binding's checks on the resulting code. If the official skills are
+both are installed, consult the matching agent skill for the build guidance
+and run this binding's checks on the resulting code. If those skills are
 not installed and the task is substantial WordPress build work, mention once
 that `lumo skills` installs them.
 

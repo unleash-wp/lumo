@@ -58,20 +58,25 @@ export interface Snapshot {
 }
 
 // ---------------------------------------------------------------------------
-// Tool-signature contracts — mirror the MCP tool surface in lumo-pro.
-// Source: unleash-wp/lumo-pro src/mcp/tools.ts (wp_lookup, wp_plugin_advice).
+// Tool-signature contracts — a hand-kept mirror of the MCP tool surface in
+// lumo-pro (src/mcp/server.ts).
+//
+// Nothing in this repo consumes them, and they had drifted: they declared
+// argument names the server has never accepted, where it has always taken
+// `topic` and `plugin`. A mirror with no consumer, and no mechanism keeping it
+// in step, is a statement that goes stale unnoticed. The WordPress plugin held
+// the same wrong names and could not talk to the server at all. Corrected here;
+// if a consumer never appears, delete them rather than maintain a second copy.
 // ---------------------------------------------------------------------------
 
-/** Input shape for the wp_lookup tool. */
-export interface WpLookupInput {
-  slug: string;
-  tier?: 'free' | 'pro';
+/** Input shape for the lumo_lookup tool. */
+export interface LumoLookupInput {
+  topic: string;
 }
 
-/** Input shape for the wp_plugin_advice tool. */
-export interface WpPluginAdviceInput {
-  plugin_slug: string;
-  woo_version?: string;
+/** Input shape for the lumo_plugin_advice tool. */
+export interface LumoPluginAdviceInput {
+  plugin: string;
 }
 
 /** Free-tier rendered response returned by the local snapshot loader. */

@@ -48,13 +48,13 @@ occurrence.
 Keep the list to 200 symbols per check. If the project uses more, split it and
 run several checks; do not silently truncate.
 
-**3. Check them.** Call `wp_compat_check` with the target version(s) and the
+**3. Check them.** Call `lumo_compat_check` with the target version(s) and the
 symbol list. One call per batch — do not call it per symbol. If Lumo Pro is not
 connected, `lumo_check_code` on the highest-risk files is the free fallback;
 say plainly in the report that coverage was reduced.
 
 **4. Read the deep entries only where they matter.** For each blocker, the
-check result names an entry (`Deep dive: wp_lookup "<slug>"`). Look up the ones
+check result names an entry (`Deep dive: lumo_lookup "<slug>"`). Look up the ones
 you will write about. Do not look up all of them — a report the client cannot
 finish is not a report.
 
