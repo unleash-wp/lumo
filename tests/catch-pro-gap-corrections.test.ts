@@ -224,3 +224,66 @@ describe('law 3 — the teaser names only what was detected', () => {
     },
   );
 });
+
+/**
+ * Measured 31.07.2026: the free snapshot holds fifteen security entries, nine of
+ * which a detection rule can reach. "Lumo Free covers ... security fundamentals"
+ * therefore let a reader assume the watcher fires on all fifteen — a coverage
+ * claim wider than the engine, read at the moment silence is interpreted.
+ */
+describe('law 2 — the catch never inherits the knowledge’s reach', () => {
+  it('the knowledge/catch distinction is stated, not implied', async () => {
+    const { KNOWLEDGE_WIDER_THAN_CATCH } = await import('../src/lib/render.js');
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('subset of what Lumo knows');
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('Silence from the watcher is never a verdict');
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('lumo_lookup');
+    // Product gate: 'wired vs not wired' hid a third state — a rule that covers
+    // only part of its topic. The two measured cases are named, because the
+    // most expensive one is exactly the reported cancellation scenario.
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('no permission callback is not caught');
+    // The six undetected topics are named too — the heavier state must not be
+    // the anonymous one.
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('unescaped output');
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('permission checks on abilities');
+    expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('not when echoed straight out');
+  });
+
+  it('the MCP neutral line carries the same distinction as the Action’s', () => {
+    // Gemini pass B: the MCP is the surface most answers come from. Fixing the
+    // Action line while leaving this one would have left the distinction
+    // missing exactly where an assistant renders a quiet result as a tick.
+    expect(CATCH_NEUTRAL_LINE).toContain('as knowledge');
+    expect(CATCH_NEUTRAL_LINE).toContain('reaches only part of that');
+    expect(CATCH_NEUTRAL_LINE).toContain('not an all-clear');
+  });
+
+  it('the Action’s no-match line no longer claims the catch covers the category', () => {
+    expect(ACTION_NO_MATCH_LINE).toContain('catch fires on a subset');
+    expect(ACTION_NO_MATCH_LINE).toContain('not an all-clear');
+    expect(ACTION_NO_MATCH_LINE).not.toMatch(/Free covers .*security fundamentals/);
+  });
+
+  it('every security entry either has a rule or is knowingly documented-only', async () => {
+    // Pins the measured number so wiring a rule (or adding an unwired entry)
+    // forces a conscious update of the copy above rather than silent drift.
+    const { readFileSync } = await import('node:fs');
+    const registry = readFileSync(
+      new URL('../src/detection/registry.ts', import.meta.url),
+      'utf8',
+    );
+    const security = snap.entries.filter((e) =>
+      /escap|xss|nonce|capab|sanitiz|permission|sql|redirect|csrf|auth|role|is-admin/i.test(e.slug),
+    );
+    const wired = security.filter((e) => registry.includes(`'${e.slug}'`));
+    // Measured 31.07.2026. The second number is deliberately NOT read as
+    // 'nine topics covered': two of the nine carry a rule that reaches only
+    // part of their topic (listed below), which is why the copy names that
+    // third state instead of implying a clean split.
+    const PARTIAL = ['superglobal-without-sanitize', 'rest-route-missing-permission-callback'];
+    expect(security.length).toBe(15);
+    expect(wired.length).toBe(9);
+    const wiredSlugs = wired.map((e) => e.slug);
+    for (const slug of PARTIAL) expect(wiredSlugs).toContain(slug);
+    expect(wired.length - PARTIAL.length).toBe(7);
+  });
+});
