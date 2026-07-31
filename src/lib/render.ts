@@ -37,7 +37,7 @@ export const FREE_UPGRADE_HINT =
  * before appending. Not shown when the upgrade prompt block already fired.
  */
 export const FRESHNESS_REVEAL_LINE =
-  '_This snapshot is verified as of {date}. Lumo Pro re-checks against every WordPress release — it is the live layer._';
+  '_This snapshot is verified as of {date}. Lumo Pro re-checks against every WordPress release. It is the live layer._';
 
 /**
  * Optional second line of the reveal: how to attach a Pro MCP endpoint.
@@ -67,7 +67,7 @@ export const UPGRADE_REVEAL_LINE =
  */
 export const UPGRADE_PROMPT_BLOCK =
   'Lumo caught {N} stale-pattern {risks} in your {domain} code.\n\n' +
-  'The exact version range — which releases break the old pattern and which do not —\n' +
+  'The exact version range, which releases break the old pattern and which do not,\n' +
   'plus the full written fix is in Pro.\n\n' +
   'Get it: {checkout_url}';
 
@@ -178,10 +178,10 @@ export function versionRelativeLine(
   const ecosystem = versionFact.field === 'woo' ? 'WooCommerce' : 'WordPress';
 
   if (state === 'already-broken') {
-    return `> You're on ${ecosystem} ${projectVersion}; this was removed/changed in ${versionFact.value} — fix now.`;
+    return `> You're on ${ecosystem} ${projectVersion}; this was removed/changed in ${versionFact.value}. Fix now.`;
   }
   if (state === 'upcoming') {
-    return `> You target ${ecosystem} ${projectVersion}; this breaks in ${versionFact.value} — you're writing a soon-dead pattern.`;
+    return `> You target ${ecosystem} ${projectVersion}; this breaks in ${versionFact.value}. You're writing a soon-dead pattern.`;
   }
   return '';
 }
@@ -289,7 +289,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
  * Caller substitutes {files} and {date}.
  */
 export const SCAN_NO_MATCH_TEMPLATE =
-  'lumo scan: {files} checked against Lumo Free{date} — no covered pattern matched. ' +
+  'lumo scan: {files} checked against Lumo Free{date}: no covered pattern matched. ' +
   'Outside that coverage nothing was checked, so this is not an all-clear.';
 
 /**
@@ -312,8 +312,8 @@ export const SCAN_NO_MATCH_TEMPLATE =
 // papered over here.
 export const ACTION_NO_MATCH_LINE =
   'No covered pattern matched in the added lines. Lumo read the lines this ' +
-  'pull request added and nothing else — not the surrounding file, not the ' +
-  'rest of the branch — and matched them against the catch that ran in this ' +
+  'pull request added and nothing else: not the surrounding file, not the ' +
+  'rest of the branch. It matched them against the catch that ran in this ' +
   'check. That catch fires on a subset of what Lumo knows. ' +
   'This is not an all-clear.';
 
@@ -347,7 +347,7 @@ export const ACTION_SCOPE_LINE =
   '_Scope: the added lines of this diff, checked against the catch that ran in ' +
   'this check. Unchanged lines and anything outside that catch were not checked. ' +
   'The catch also reaches only part of what Lumo documents, so a fixed run is ' +
-  'not a cleared one — the rest of the knowledge is in the snapshot, reachable ' +
+  'not a cleared one. The rest of the knowledge is in the snapshot, reachable ' +
   'from an editor with the Lumo MCP server connected._';
 
 /**
@@ -368,7 +368,7 @@ export const ACTION_SCOPE_LINE =
  * boundary rather than a nag.
  */
 export const ACTION_REQUIRES_PRO_LINE =
-  'DID NOT RUN — CI enforcement is part of Lumo Pro, and no licence was configured, ' +
+  'DID NOT RUN: CI enforcement is part of Lumo Pro, and no licence was configured, ' +
   'so no code was checked. This is not a clean result. ' +
   'Set lumo_pro_url and lumo_license_key to run the gate. ' +
   'Without a subscription, `lumo scan` still checks your working tree locally, ' +
@@ -387,14 +387,14 @@ export const ACTION_REQUIRES_PRO_LINE =
 export const ENFORCE_CONFIG_UNREADABLE_LINE =
   'Your .claude/.lumo.json could not be read, or it names an enforce.mode this ' +
   'version does not recognise, so Lumo fell back to advisory for this run. ' +
-  'If that file asked for "block", the gate you configured is not running — ' +
+  'If that file asked for "block", the gate you configured is not running. ' +
   'fix the file rather than reading this run as enforced.';
 
 // "did not deliver a check", not "was unreachable": a server that answers and
 // then reports it could not scan lands here too, and naming the wrong cause
 // sends the reader to look at the network instead of the server.
 export const ACTION_PRO_DEGRADED_LINE =
-  '**The Lumo Pro check did not run** — the Pro server did not deliver a ' +
+  '**The Lumo Pro check did not run**: the Pro server did not deliver a ' +
   'check, so the results in this run come from the free catch only. This is ' +
   'not a Pro verdict. Check the server URL, the license key, and the server ' +
   'status, then re-run the check.';
@@ -451,7 +451,7 @@ export function buildScanLimitsNotice(
 // clean" turns a coverage limit into a verdict, which is the one thing this
 // product must never do.
 export const CATCH_NEUTRAL_LINE =
-  'Checked against Lumo Free — no covered pattern matched. ' +
+  'Checked against Lumo Free: no covered pattern matched. ' +
   'Free carries WordPress Core, block and theme APIs, and security fundamentals ' +
   'as knowledge, and the catch reaches only part of that; anything outside what ' +
   'it reaches was not checked, so this is not an all-clear.';
@@ -490,8 +490,8 @@ export function joinPluginNames(names: string[]): string {
  */
 export function buildCodeProTeaser(pluginName: string): string {
   return (
-    `Detected ${pluginName} in this code, and Lumo Free has no entry for it — ` +
-    `this is not an all-clear. ${pluginName} is not covered by any free or official ` +
+    `Detected ${pluginName} in this code, and Lumo Free has no entry for it. ` +
+    `This is not an all-clear. ${pluginName} is not covered by any free or official ` +
     `WordPress skill set. Lumo Pro covers ${pluginName}.`
   );
 }
@@ -503,8 +503,8 @@ export function buildCodeProTeaser(pluginName: string): string {
  */
 export function buildCodeProGapLine(pluginName: string): string {
   return (
-    `_Also detected ${pluginName} in this code, which Lumo Free does not cover — ` +
-    `the findings above are not the whole picture._`
+    `_Also detected ${pluginName} in this code, which Lumo Free does not cover. ` +
+    `The findings above are not the whole picture._`
   );
 }
 
@@ -514,7 +514,7 @@ export function buildCodeProGapLine(pluginName: string): string {
  * WooCommerce work does not produce an hour of upgrade prompts.
  */
 export function buildCodeProTeaserShort(pluginName: string): string {
-  return `_${pluginName} is in this code and Lumo Free does not cover it — still not an all-clear._`;
+  return `_${pluginName} is in this code and Lumo Free does not cover it. Still not an all-clear._`;
 }
 
 /**
@@ -524,6 +524,6 @@ export function buildCodeProTeaserShort(pluginName: string): string {
 export function buildCodeDetectionNote(pluginName: string): string {
   return (
     `Detected ${pluginName} in this code. Lumo has no curated knowledge for ` +
-    `${pluginName} yet, so this code was not checked against it — this is not an all-clear.`
+    `${pluginName} yet, so this code was not checked against it. This is not an all-clear.`
   );
 }

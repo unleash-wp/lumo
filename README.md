@@ -2,7 +2,7 @@
 
 **The WordPress agent skills are the manual. Lumo is the watcher.**
 
-Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release — Core APIs, block and theme APIs, security fundamentals — the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
+Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release, across Core APIs, block and theme APIs, and security fundamentals, the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
 
 **MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Transport:** stdio, runs locally · **Knowledge:** 42 curated, source-verified entries in Free; the full catalogue in Pro
 
@@ -10,7 +10,7 @@ Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shi
 
 ## The 30-second proof
 
-Nothing to paste, nothing to set up — this runs the real engine over four
+Nothing to paste, nothing to set up. This runs the real engine over four
 bundled samples and prints what it finds:
 
 ```bash
@@ -31,7 +31,7 @@ add_filter( 'the_content', 'my_theme_filter_images' );
 
 It looks fine. It compiles. It has been deprecated since WordPress 6.4 and throws a
 deprecation notice on every modern install. Run the scan on your uncommitted changes
-and Lumo catches it — unprompted:
+and Lumo catches it, unprompted:
 
 ```
 $ npx @unleashwp/lumo scan
@@ -56,7 +56,7 @@ $img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-contex
 Fix the LOUD finding above before committing.
 ```
 
-(Output trimmed — the full catch includes the summary, a test step, and the knowledge
+(Output trimmed. The full catch includes the summary, a test step, and the knowledge
 date. Reproduce it yourself: [docs/catch-demo.md](docs/catch-demo.md).)
 
 Nobody asked Lumo to check. That is the product. The official [WordPress/agent-skills](https://github.com/WordPress/agent-skills) answer when your AI consults them; Lumo fires when your AI is wrong. Run both.
@@ -78,7 +78,7 @@ Then run once in your project to check your current changes:
 npx @unleashwp/lumo scan
 ```
 
-Lumo scans your uncommitted diff and prints either the flagged patterns (LOUD first) or an honest "scanned N files — clean as of {date}".
+Lumo scans your uncommitted diff and prints either the flagged patterns (LOUD first) or an honest "scanned N files: clean as of {date}".
 
 ### Any MCP client (Cursor, Claude Desktop, …)
 
@@ -97,7 +97,7 @@ cd lumo && npm install && npm run build
 
 Cursor setup, the `wp-binding` skill, and the edit-time enforcement hook: [docs/install.md](docs/install.md)
 
-### CI (pull request review) — Lumo Pro
+### CI (pull request review): Lumo Pro
 
 The GitHub Action is part of Lumo Pro and lives in its own repository:
 [unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action). It needs a
@@ -113,7 +113,7 @@ Locally, `lumo scan` checks your working tree with no licence at all.
 
 Every catch shows five things: the wrong pattern, the correct replacement, the source URL, the affected version range, and a test step to run before shipping.
 
-**Coverage — 42 entries, each verified against a primary source:**
+**Coverage: 42 entries, each verified against a primary source:**
 
 - WordPress Core deprecations and removals, through WordPress 7.0 (PHP minimum, Interactivity API changes)
 - Block editor basics: removed block APIs, `apiVersion` migration
@@ -128,27 +128,27 @@ detects one of those rather than reporting a clean bill of health it cannot vouc
 
 **Where it fires:**
 
-- In chat — `lumo_check_code` runs over WordPress code as the AI writes it (`wp-binding` skill)
-- `npx @unleashwp/lumo scan` — your uncommitted diff, from any terminal
-- GitHub Action — review comment per finding on every PR; LOUD blocks the merge
-- Claude Code `PreToolUse` hook — a stale edit is blocked before the file changes
+- In chat: `lumo_check_code` runs over WordPress code as the AI writes it (`wp-binding` skill)
+- `npx @unleashwp/lumo scan`: your uncommitted diff, from any terminal
+- GitHub Action: review comment per finding on every PR; LOUD blocks the merge
+- Claude Code `PreToolUse` hook: a stale edit is blocked before the file changes
 - `/lumo:wp-check` (audit the project) and `/lumo:wp-onboard` (first-run walk-through)
 
-**The precision model** — three tiers, no false alarms:
+**The precision model:** three tiers, no false alarms:
 
 | Tier | Meaning | Action |
 |---|---|---|
-| **LOUD** | Certain, breaking, dated — version fact verified against source | Blocks (hook, Action) |
-| **SOFT** | Real risk that depends on context — the condition is stated | Advisory |
+| **LOUD** | Certain, breaking, dated; version fact verified against source | Blocks (hook, Action) |
+| **SOFT** | Real risk that depends on context; the condition is stated | Advisory |
 | **SILENT** | Repository-state noise | Suppressed |
 
-A LOUD catch requires a verified version fact. Without one it structurally degrades to SOFT — this is enforced in the data model, not by convention.
+A LOUD catch requires a verified version fact. Without one it structurally degrades to SOFT. This is enforced in the data model, not by convention.
 
-**Honest bounds:** Free is a snapshot — verified as of its release date, frozen until the next one. Commercial plugins (ACF Pro, Elementor Pro, Gravity Forms, Meta Box) are detected and named, not covered. The live layer is Pro.
+**Honest bounds:** Free is a snapshot, verified as of its release date and frozen until the next one. Commercial plugins (ACF Pro, Elementor Pro, Gravity Forms, Meta Box) are detected and named, not covered. The live layer is Pro.
 
 ---
 
-## Lumo Pro — the flow
+## Lumo Pro: the flow
 
 Free catches what already broke. Pro keeps your team ahead of what breaks next. Built for agencies: every employee and freelancer writing WordPress code with AI gets a seat, and every seat gets the same current knowledge.
 
@@ -156,13 +156,13 @@ Free catches what already broke. Pro keeps your team ahead of what breaks next. 
 
 **2. Pre-release Core briefings.** What breaks in the next WordPress release, before it ships. Your team stops writing a soon-dead pattern while it is still a warning, not a client incident.
 
-**3. Commercial-plugin coverage.** Curated, source-verified entries for ACF Pro, Elementor Pro, Gravity Forms, and Meta Box — the plugins agency code actually touches, which the official GPL skills cannot cover by design.
+**3. Commercial-plugin coverage.** Curated, source-verified entries for ACF Pro, Elementor Pro, Gravity Forms, and Meta Box, the plugins agency code actually touches, which the official GPL skills cannot cover by design.
 
-**4. Upgrade compat reports.** `lumo_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client — what breaks, where, and the fix for each item. The report you bill for.
+**4. Upgrade compat reports.** `lumo_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client: what breaks, where, and the fix for each item. The report you bill for.
 
 **Terms:** annual license, per seat. 30-day money-back guarantee, no questions asked. Founding members get the founding rate and keep it for as long as their license renews.
 
-**Founding access opens soon — watch this repo.** Checkout is not live yet; watchers are notified first when it opens.
+**Founding access opens soon. Watch this repo.** Checkout is not live yet; watchers are notified first when it opens.
 
 ---
 

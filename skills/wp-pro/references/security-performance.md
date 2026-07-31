@@ -1,8 +1,8 @@
-# WordPress Security and Performance — Stable Reference
+# WordPress Security and Performance: Stable Reference
 
 Security and performance sit on stable APIs that have not materially changed in
 years. The patterns here are safe to apply without routing through Lumo first.
-Where a pattern touches WooCommerce order data, always run `lumo_check_code` —
+Where a pattern touches WooCommerce order data, always run `lumo_check_code`.
 HPOS rewired several assumptions about where and how data is stored.
 
 ---
@@ -14,7 +14,7 @@ HPOS rewired several assumptions about where and how data is stored.
 These are two separate operations at two different points. Mixing them up is the
 root cause of most WordPress XSS and injection bugs.
 
-**Sanitize at entry** — the moment untrusted data enters your code:
+**Sanitize at entry:** the moment untrusted data enters your code
 
 ```php
 $title      = sanitize_text_field( $_POST['title'] ?? '' );
@@ -26,14 +26,14 @@ $url        = esc_url_raw( $_POST['redirect_url'] ?? '' );
 ```
 
 Pick the sanitizer that matches the expected data type. `sanitize_text_field()`
-strips tags and extra whitespace — correct for plain text, too aggressive for
-HTML. `wp_kses_post()` strips disallowed HTML tags and attributes — correct for
+strips tags and extra whitespace, correct for plain text and too aggressive for
+HTML. `wp_kses_post()` strips disallowed HTML tags and attributes, correct for
 user-submitted rich text that will be stored in post content.
 
-`esc_url_raw()` is for URLs that will be stored or compared — it does not add
+`esc_url_raw()` is for URLs that will be stored or compared. It does not add
 HTML-attribute quoting. Use `esc_url()` for URLs in HTML attribute context.
 
-**Escape at output** — the moment data leaves your code into HTML, JS, or SQL:
+**Escape at output:** the moment data leaves your code into HTML, JS, or SQL
 
 ```php
 echo esc_html( $title );
@@ -43,7 +43,7 @@ echo wp_kses( $html, $allowed_tags );
 echo '<script>var data = ' . wp_json_encode( $array ) . ';</script>';
 ```
 
-`esc_html()` converts `<`, `>`, `&`, `"`, `'` to HTML entities — safe for
+`esc_html()` converts `<`, `>`, `&`, `"`, `'` to HTML entities, safe for
 text content between tags. `esc_attr()` does the same for text inside HTML
 attribute values. `esc_url()` encodes a URL for use in `href`, `src`, or
 `action` attributes.
@@ -55,7 +55,7 @@ storage format, not on output context.
 
 A nonce is a one-time token tied to an action, user, and session. WordPress
 nonces expire (default 24 hours, the full lifespan is 12–24 h with a tick
-system) and are not true cryptographic nonces — they are keyed HMACs of
+system) and are not true cryptographic nonces. They are keyed HMACs of
 `$action + $uid + $tick`. Their purpose is CSRF prevention, not replay
 prevention.
 
@@ -111,7 +111,7 @@ current_user_can( 'manage_woocommerce' )    // WooCommerce-specific
 ```
 
 Capability checks must precede any data modification. In REST API callbacks,
-set `permission_callback` to a function that performs the check — never
+set `permission_callback` to a function that performs the check. Never
 `'__return_true'` on routes that touch private data or trigger writes.
 
 ### Database queries
@@ -130,11 +130,11 @@ $results = $wpdb->get_results(
 );
 ```
 
-Do not use `%s` for integers — pass the correct type to the placeholder.
+Do not use `%s` for integers. Pass the correct type to the placeholder.
 `$wpdb->prepare()` in WordPress 5.3+ supports named placeholders (`%1$s`).
 
 When querying custom tables, reference them through defined constants or
-`$wpdb->prefix` — never hardcode `wp_` as the prefix.
+`$wpdb->prefix`: never hardcode `wp_` as the prefix.
 
 ### File and option storage
 
@@ -149,7 +149,7 @@ echo esc_attr( get_option( 'my_plugin_color', '#ffffff' ) );
 ```
 
 For user-uploaded files, validate MIME type server-side using
-`wp_check_filetype_and_ext()` — do not rely on the `$_FILES['type']` field,
+`wp_check_filetype_and_ext()`: do not rely on the `$_FILES['type']` field,
 which is set by the browser and trivially spoofed.
 
 ---
@@ -160,11 +160,11 @@ which is set by the browser and trivially spoofed.
 
 WordPress has three distinct caching layers with different lifetimes:
 
-1. **Object cache (in-memory, per-request)** — `wp_cache_get()` / `wp_cache_set()` / `wp_cache_delete()`. In a default setup this is the non-persistent runtime cache (data lives for one request). When a persistent cache backend (Redis, Memcached) is installed via a `object-cache.php` drop-in, these calls become cross-request.
+1. **Object cache (in-memory, per-request):** `wp_cache_get()` / `wp_cache_set()` / `wp_cache_delete()`. In a default setup this is the non-persistent runtime cache (data lives for one request). When a persistent cache backend (Redis, Memcached) is installed via a `object-cache.php` drop-in, these calls become cross-request.
 
-2. **Transients** — `set_transient()` / `get_transient()` / `delete_transient()`. Stored in `wp_options` by default; stored in the persistent cache when a backend is present (the `_transient_` key prefix is used). Transients have an expiry; they are suitable for expensive external API responses or aggregated query results.
+2. **Transients:** `set_transient()` / `get_transient()` / `delete_transient()`. Stored in `wp_options` by default; stored in the persistent cache when a backend is present (the `_transient_` key prefix is used). Transients have an expiry; they are suitable for expensive external API responses or aggregated query results.
 
-3. **Page/fragment cache** — external to WordPress core (host-level caching, WP Super Cache, W3 Total Cache, or LiteSpeed Cache). These operate below WordPress and cannot be influenced by option or transient calls inside a request. They must be cleared explicitly when underlying data changes.
+3. **Page/fragment cache:** external to WordPress core (host-level caching, WP Super Cache, W3 Total Cache, or LiteSpeed Cache). These operate below WordPress and cannot be influenced by option or transient calls inside a request. They must be cleared explicitly when underlying data changes.
 
 **Choosing between object cache and transients:**
 
@@ -188,7 +188,7 @@ function my_get_expensive_data( int $id ): array {
 ```
 
 `wp_cache_get()` returns `false` on a miss. Guard against storing `false` as a
-real value by using a sentinel — or rely on `wp_cache_set()` with `HOUR_IN_SECONDS`
+real value by using a sentinel, or rely on `wp_cache_set()` with `HOUR_IN_SECONDS`
 expiry and simply re-computing on the next miss.
 
 ### WP_Query performance
@@ -212,7 +212,7 @@ $query = new WP_Query( [
 ```
 
 `'fields' => 'ids'` returns an array of integers and skips building `WP_Post`
-objects entirely — useful for checking existence or passing IDs to a secondary
+objects entirely, useful for checking existence or passing IDs to a secondary
 query.
 
 When querying by meta value, ensure `wp_postmeta` has an index on `meta_key`.
@@ -239,7 +239,7 @@ $user_query = new WP_User_Query( [ 'include' => $author_ids ] );
 ```
 
 WordPress's `update_post_caches()` and related priming functions do this for
-standard post meta and terms — use them when building custom queries.
+standard post meta and terms. Use them when building custom queries.
 
 ### Asset loading
 
@@ -278,7 +278,7 @@ wp_enqueue_script(
 ```
 
 `strategy` accepts `'defer'` or `'async'`. WordPress handles the dependency
-chain automatically — if a deferred script depends on a non-deferred script,
+chain automatically. If a deferred script depends on a non-deferred script,
 WordPress will not set `defer` on the dependency.
 
 This API stabilized in WordPress 6.3 and is available to rely on from that
@@ -288,7 +288,7 @@ version forward.
 
 Transients accumulate in `wp_options` when they are not given an expiry or
 when autoload is not managed. Set expiry always. For site-wide transients in
-multisite, use `set_site_transient()` / `get_site_transient()` — they store in
+multisite, use `set_site_transient()` / `get_site_transient()`. They store in
 the network's `wp_sitemeta` rather than the current site's `wp_options`.
 
 Delete transients explicitly when the underlying data changes rather than

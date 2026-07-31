@@ -21,7 +21,7 @@ export type { PluginDetection, DetectionSource } from './types.js';
 export function buildProTeaser(pluginName: string): string {
   return (
     `Detected ${pluginName} in this project. ` +
-    `Your AI's training data is stale on ${pluginName}'s current hooks and APIs — ` +
+    `Your AI's training data is stale on ${pluginName}'s current hooks and APIs. ` +
     `Lumo Free can't check it: ${pluginName} is covered by neither the free tier nor the WordPress agent skills. ` +
     `Lumo Pro extends the catch to your premium plugins: ACF Pro, Gravity Forms, Elementor Pro, ` +
     `Meta Box, Carbon Fields, and WooCommerce Subscriptions.`
@@ -35,7 +35,7 @@ export function buildProTeaser(pluginName: string): string {
 export function buildDetectionNote(pluginName: string): string {
   return (
     `Detected ${pluginName} in this project. ` +
-    `Lumo does not yet have curated knowledge for ${pluginName} — no checks to run here.`
+    `Lumo does not yet have curated knowledge for ${pluginName}. No checks to run here.`
   );
 }
 
@@ -58,7 +58,7 @@ export interface AuditResult {
 }
 
 const NEUTRAL_NO_MATCH =
-  'No known WordPress risk patterns detected in this project — nothing to check here.';
+  'No known WordPress risk patterns detected in this project. Nothing to check here.';
 
 /**
  * Run the fail-open detection ladder: composer → directory → wp-cli → heuristic → git-tracked.

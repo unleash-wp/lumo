@@ -1,8 +1,8 @@
-# WordPress Theme and Plugin Structure — Stable Reference
+# WordPress Theme and Plugin Structure: Stable Reference
 
 File layout and architectural conventions have been stable since WordPress 3.x.
 The patterns here will not rot. The one area to verify through Lumo is anything
-touching Gutenberg, block themes (FSE), or theme.json — those move faster and
+touching Gutenberg, block themes (FSE), or theme.json. Those move faster and
 belong in `frontier.md`.
 
 ---
@@ -102,7 +102,7 @@ is permanent.
 ### Autoloading
 
 For anything more than a single-file plugin, use a PSR-4 autoloader via
-Composer. The alternative is a manual `spl_autoload_register()` — reasonable
+Composer. The alternative is a manual `spl_autoload_register()`, reasonable
 but more maintenance burden.
 
 ```json
@@ -129,7 +129,7 @@ zip distributed to WordPress.org.
 ### Options and settings storage
 
 Use the Options API for plugin settings. Group related settings into a single
-serialized option rather than storing one option per setting — reduces
+serialized option rather than storing one option per setting. That reduces
 `wp_options` row count and autoload overhead.
 
 ```php
@@ -149,7 +149,7 @@ $settings = wp_parse_args( get_option( 'my_plugin_settings', [] ), $defaults );
 update_option( 'my_plugin_settings', $validated_settings );
 ```
 
-`add_option()` will not overwrite an existing value — safe to call on
+`add_option()` will not overwrite an existing value. It is safe to call on
 activation. `update_option()` creates if absent, updates if present.
 
 Mark options as non-autoloaded when they are large or infrequently accessed:
@@ -189,7 +189,7 @@ programmatically.
 
 `functions.php` runs on every request (including AJAX, REST, and cron). Keep it
 lean. It should register support declarations, load required files, and hook
-callbacks — not implement business logic inline.
+callbacks, not implement business logic inline.
 
 ```php
 // Correct: delegate to files, not inline implementation.
@@ -213,7 +213,7 @@ add_action( 'after_setup_theme', function() {
 
 A child theme overrides parent theme files by providing the same file at the
 same relative path. `functions.php` in a child theme is loaded in addition to
-the parent's — it is not a replacement.
+the parent's. It is not a replacement.
 
 The child theme's `style.css` must declare the `Template` header:
 
@@ -235,7 +235,7 @@ add_action( 'wp_enqueue_scripts', function() {
 } );
 ```
 
-Do not `@import` the parent stylesheet from the child `style.css` — it creates
+Do not `@import` the parent stylesheet from the child `style.css`. It creates
 an extra HTTP request and bypasses the dependency system.
 
 ### Template tags and the Loop
@@ -276,7 +276,7 @@ get_template_part( 'template-parts/card', null, [ 'show_meta' => true ] );
 
 On a WordPress Multisite network, plugins can be network-activated (affecting
 all sites) or site-activated (affecting one site). The plugin code does not
-change — the difference is which `wp_options` table receives the settings and
+change. The difference is which `wp_options` table receives the settings and
 which site's database tables the plugin operates on.
 
 Key differences to account for:
@@ -320,7 +320,7 @@ add_action( 'init', function() {
 block editor. Without it, the classic editor is forced regardless of site
 settings.
 
-Flush rewrite rules after registering new post types or taxonomies — but only
+Flush rewrite rules after registering new post types or taxonomies, but only
 on plugin activation, not on every request:
 
 ```php
@@ -332,5 +332,5 @@ register_activation_hook( __FILE__, function() {
 ```
 
 Calling `flush_rewrite_rules()` on `init` on every request is a significant
-performance hit — it regenerates the rewrite rule set and writes it to the
+performance hit. It regenerates the rewrite rule set and writes it to the
 database every page load.

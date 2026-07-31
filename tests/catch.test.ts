@@ -987,7 +987,7 @@ describe('formatCatch — version-relative lines', () => {
     // LOUD alarm still present
     expect(rendered).toContain('BREAKING:');
     // Relative line: already past the breaking version
-    expect(rendered).toContain('fix now');
+    expect(rendered).toContain('Fix now.');
     expect(rendered).toContain('7.0');
   });
 

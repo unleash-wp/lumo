@@ -38,7 +38,7 @@ function hposEntry(): SnapshotEntry {
     title: 'WooCommerce HPOS: reading and writing order data',
     category_slug: 'woocommerce',
     summary:
-      'Under WooCommerce High-Performance Order Storage (HPOS — the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
+      'Under WooCommerce High-Performance Order Storage (HPOS, the default since WooCommerce 8.2) order data lives in dedicated order tables, not wp_posts/wp_postmeta.',
     code_example: "$order = wc_get_order( $order_id );\n$email = $order->get_billing_email();",
     bad_pattern:
       "$email = get_post_meta( $order_id, '_billing_email', true );\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",

@@ -36,9 +36,9 @@ server.registerTool(
     title: 'Lumo WordPress audit',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     description: [
-      'Scan the open project for stale or incorrect WordPress patterns —',
+      'Scan the open project for stale or incorrect WordPress patterns:',
       'block.json apiVersion, theme.json schema, deprecated Core APIs,',
-      'WooCommerce order-meta, and more — and return the wrong-vs-correct fix',
+      'WooCommerce order-meta, and more. Returns the wrong-vs-correct fix',
       'with the source and a verification step to run before deploying.',
       'Proposes and cites; never applies code changes autonomously.',
     ].join(' '),
@@ -67,11 +67,11 @@ server.registerTool(
     title: 'Lumo WordPress knowledge lookup',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     description: [
-      'Look up the current, evidence-backed correct pattern for a WordPress topic —',
+      'Look up the current, evidence-backed correct pattern for a WordPress topic:',
       'block.json/apiVersion, theme.json schema, Core APIs, WooCommerce, and more.',
       'Pass an entry slug or a category and get back the right approach, the source,',
       'the affected version range, and a test step to verify it.',
-      'Free tier — proposes and cites, never edits autonomously.',
+      'Free tier: proposes and cites, never edits autonomously.',
       'Example slug: "woocommerce-hpos-order-access". Example category: "gutenberg".',
     ].join(' '),
     inputSchema: {
@@ -87,7 +87,7 @@ server.registerTool(
         .string()
         .optional()
         .describe(
-          'Free-text search, e.g. "sql injection prepare" — returns a ranked shortlist of slugs.',
+          'Free-text search, e.g. "sql injection prepare": returns a ranked shortlist of slugs.',
         ),
     },
   },
@@ -108,8 +108,8 @@ server.registerTool(
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     description: [
       'Before presenting WordPress PHP/JS to the user, pass it here.',
-      'Returns any place the code uses a stale pattern — block.json apiVersion,',
-      'theme.json schema, deprecated Core APIs, WooCommerce order-meta — with the',
+      'Returns any place the code uses a stale pattern: block.json apiVersion,',
+      'theme.json schema, deprecated Core APIs, and WooCommerce order-meta, with the',
       'dated source and the correct form.',
       'Call this on every WordPress code suggestion before the user sees it.',
       'Proposes and cites; never edits autonomously.',
@@ -155,7 +155,7 @@ server.registerTool(
         .describe('False = the scan hit one of its own limits (input read only to the line cap, or report capped). The findings returned are still real; there may be more. The text names which limit bit.'),
       found: z
         .boolean()
-        .describe('Whether anything was found — a finding OR a named coverage gap. Decide on this, not on the prose.'),
+        .describe('Whether anything was found: a finding OR a named coverage gap. Decide on this, not on the prose.'),
       loudCount: z.number().describe('LOUD findings (certain, sourced; may fail CI builds).'),
       softCount: z.number().describe('Advisory findings (context-dependent; never block).'),
       gaps: z
@@ -165,7 +165,7 @@ server.registerTool(
             proCovers: z.boolean().describe('Whether Lumo Pro has curated knowledge for it.'),
           }),
         )
-        .describe('Every touched plugin the free tier cannot check — silence on any of them would be a false all-clear.'),
+        .describe('Every touched plugin the free tier cannot check. Silence on any of them would be a false all-clear.'),
     },
   },
   async ({ code, language, wp_version, woo_version, project_root }) => {
