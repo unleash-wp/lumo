@@ -1,5 +1,5 @@
 /**
- * The autonomous review stage — fenced, grounded, fail-open.
+ * The autonomous review stage, fenced, grounded, fail-open.
  *
  * What matters here is not what the model says (that is not testable), but the
  * fences: the prompt carries the engine's findings and the no-version-claims
@@ -27,14 +27,14 @@ describe('prompt fences', () => {
     expect(p).toContain('do NOT repeat them');
   });
 
-  it('forbids fresh version claims — those stay with the engine', () => {
+  it('forbids fresh version claims. Those stay with the engine', () => {
     const p = buildReviewPrompt(INPUT);
     expect(p).toContain('NEVER state that an API changed/was deprecated in a specific version');
   });
 
   it('pins the grounding contract: quote-or-delete, diff-only knowledge, silence in doubt', () => {
     const p = buildReviewPrompt(INPUT);
-    // Copy-regression on the anti-hallucination fences — if one of these lines
+    // Copy-regression on the anti-hallucination fences, if one of these lines
     // leaves the prompt, a model may again assert code it cannot see.
     expect(p).toContain('No quote, no point.');
     expect(p).toContain('Use ONLY the diff and the established findings above');
@@ -43,7 +43,7 @@ describe('prompt fences', () => {
 
   it('says so when the engine found nothing, instead of hiding it', () => {
     const p = buildReviewPrompt({ ...INPUT, findings: [] });
-    expect(p).toContain('none — the rule engine found nothing it covers');
+    expect(p).toContain('none: the rule engine found nothing it covers');
   });
 
   it('a giant diff is truncated and the prompt demands the reply admits it', () => {

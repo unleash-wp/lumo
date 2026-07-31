@@ -32,7 +32,7 @@ describe('detectFromComposer', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null when composer.json is absent — no throw', () => {
+  it('returns null when composer.json is absent, no throw', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'lumo-test-'));
     expect(() => detectFromComposer(emptyDir)).not.toThrow();
     expect(detectFromComposer(emptyDir)).toBeNull();
@@ -53,18 +53,18 @@ describe('detectFromDirectory', () => {
   });
 
   it('returns null when no composer.json present in composer-woo (no plugin dir)', () => {
-    // composer-woo has no wp-content directory — directory detector returns null
+    // composer-woo has no wp-content directory, directory detector returns null
     const result = detectFromDirectory(join(fixturesDir, 'composer-woo'));
     expect(result).toBeNull();
   });
 
-  it('returns null when plugin directory is absent — no throw', () => {
+  it('returns null when plugin directory is absent, no throw', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'lumo-test-'));
     expect(() => detectFromDirectory(emptyDir)).not.toThrow();
     expect(detectFromDirectory(emptyDir)).toBeNull();
   });
 
-  // env-in-git detection moved to the git rung — the directory rung no longer owns .env.
+  // env-in-git detection moved to the git rung: the directory rung no longer owns .env.
   // A .env that merely exists on disk (without being git-tracked) is the normal correct state
   // and must not be flagged as a false positive by the directory detector.
   it('returns null for a tmp dir that contains only a .env file (directory rung no longer owns .env)', () => {
@@ -82,7 +82,7 @@ describe('detectFromDirectory', () => {
 describe('detectStack', () => {
   it('uses composer result and never consults directory when both present', () => {
     // composer-and-dir has composer.json (^8.5 → "8.5") AND a plugin dir with Version: 9.0.0
-    // The ladder must stop at composer — result version is "8.5", not "9.0.0"
+    // The ladder must stop at composer, result version is "8.5", not "9.0.0"
     const result = detectStack(join(fixturesDir, 'composer-and-dir'));
     expect(result).not.toBeNull();
     expect(result?.source).toBe('composer');
@@ -96,13 +96,13 @@ describe('detectStack', () => {
     expect(result?.version).toBe('8.6.1');
   });
 
-  it('returns null on a completely empty temp dir — no throw', () => {
+  it('returns null on a completely empty temp dir, no throw', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'lumo-test-'));
     expect(() => detectStack(emptyDir)).not.toThrow();
     expect(detectStack(emptyDir)).toBeNull();
   });
 
-  it('returns null for a tmp dir with only a .env file — directory rung no longer fires on .env alone', () => {
+  it('returns null for a tmp dir with only a .env file, directory rung no longer fires on .env alone', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
     writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
     const result = detectStack(dir);
@@ -129,7 +129,7 @@ describe('detectStack', () => {
 
 describe('auditProject', () => {
   // WooCommerce knowledge is Pro-only, so a detected Woo project yields the Pro
-  // teaser instead of a Free entry. Detection itself must still fire — silence
+  // teaser instead of a Free entry. Detection itself must still fire, silence
   // here would read as a clean bill of health on code Lumo cannot see.
   it('returns detected:true + Pro teaser on composer-woo fixture', () => {
     const result = auditProject(join(fixturesDir, 'composer-woo'));
@@ -140,7 +140,7 @@ describe('auditProject', () => {
     expect(result.detection?.source).toBe('composer');
   });
 
-  it('returns detected:false + neutral message on empty temp dir — no throw', () => {
+  it('returns detected:false + neutral message on empty temp dir, no throw', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'lumo-test-'));
     expect(() => auditProject(emptyDir)).not.toThrow();
     const result = auditProject(emptyDir);
@@ -149,14 +149,14 @@ describe('auditProject', () => {
     expect(result.entry).toBeUndefined();
   });
 
-  it('returns detected:false + neutral message on non-woo fixture — no throw', () => {
+  it('returns detected:false + neutral message on non-woo fixture, no throw', () => {
     expect(() => auditProject(join(fixturesDir, 'non-woo'))).not.toThrow();
     const result = auditProject(join(fixturesDir, 'non-woo'));
     expect(result.detected).toBe(false);
     expect(result.message).toMatch(/No known WordPress risk patterns detected/);
   });
 
-  it('returns detected:false for a dir with an untracked .env — git rung requires tracking, not mere presence', () => {
+  it('returns detected:false for a dir with an untracked .env, git rung requires tracking, not mere presence', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-env-test-'));
     writeFileSync(join(dir, '.env'), 'API_KEY=placeholder\n');
     expect(() => auditProject(dir)).not.toThrow();
@@ -171,7 +171,7 @@ describe('auditProject', () => {
 // ---------------------------------------------------------------------------
 
 /**
- * Skip all git-rung tests when `git` is not on PATH — the detector itself is
+ * Skip all git-rung tests when `git` is not on PATH: the detector itself is
  * fail-open in that case, so there is nothing to assert.
  */
 function gitAvailable(): boolean {
@@ -185,7 +185,7 @@ function gitAvailable(): boolean {
 
 /** Init a bare git repo in `dir` and add (stage) `.env` so ls-files sees it. */
 function initAndAddEnv(dir: string): void {
-  // Staging (git add) is enough for `git ls-files` to report .env — no commit,
+  // Staging (git add) is enough for `git ls-files` to report .env, no commit,
   // so no user identity needed (keeps the fixture green on a bare CI runner).
   spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
   writeFileSync(join(dir, '.env'), 'DB_PASSWORD=SuperSecret\nAPI_KEY=sk-live-123\n');
@@ -210,26 +210,26 @@ describe('detectFromGitTracked', () => {
     spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
     writeFileSync(join(dir, '.gitignore'), '.env\n');
     writeFileSync(join(dir, '.env'), 'DB_PASSWORD=secret\n');
-    // .env is NOT added — ls-files --error-unmatch exits non-zero
+    // .env is NOT added, ls-files --error-unmatch exits non-zero
     const result = detectFromGitTracked(dir);
     expect(result).toBeNull();
   });
 
-  it('returns null for a non-git dir with a .env — fail-open, no throw', () => {
+  it('returns null for a non-git dir with a .env, fail-open, no throw', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-no-git-'));
     writeFileSync(join(dir, '.env'), 'DB_PASSWORD=secret\n');
     expect(() => detectFromGitTracked(dir)).not.toThrow();
     expect(detectFromGitTracked(dir)).toBeNull();
   });
 
-  it('returns null for a completely empty non-git dir — fail-open, no throw', () => {
+  it('returns null for a completely empty non-git dir, fail-open, no throw', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-empty-'));
     expect(() => detectFromGitTracked(dir)).not.toThrow();
     expect(detectFromGitTracked(dir)).toBeNull();
   });
 });
 
-describe('detectStack — git rung fires when .env is tracked', () => {
+describe('detectStack, git rung fires when .env is tracked', () => {
   it('returns env-in-git with source git for a repo with a staged .env', () => {
     if (!gitAvailable()) return;
     const dir = mkdtempSync(join(tmpdir(), 'lumo-stack-git-'));
@@ -256,7 +256,7 @@ describe('detectStack — git rung fires when .env is tracked', () => {
   });
 });
 
-describe('auditProject — tracked .env end-to-end', () => {
+describe('auditProject, tracked .env end-to-end', () => {
   it('detected:true, slug env-file-committed-to-git, source git, rendered output contains title and all supported versions', async () => {
     if (!gitAvailable()) return;
     const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-git-'));
@@ -301,7 +301,7 @@ describe('detectFromSource', () => {
 // 2a: orchestrator falls through to heuristic
 // ---------------------------------------------------------------------------
 
-describe('detectStack — heuristic fallback', () => {
+describe('detectStack, heuristic fallback', () => {
   it('returns heuristic detection for heuristic-woo (no composer/directory/wp-cli hit)', () => {
     const result = detectStack(join(fixturesDir, 'heuristic-woo'));
     expect(result).not.toBeNull();
@@ -310,7 +310,7 @@ describe('detectStack — heuristic fallback', () => {
   });
 });
 
-describe('auditProject — heuristic path', () => {
+describe('auditProject, heuristic path', () => {
   // Heuristic detection still reaches the WooCommerce pattern; the result is the
   // Pro teaser now that the knowledge behind it is Pro-only.
   it('returns detected:true and routes to the Pro teaser for heuristic-woo', () => {
@@ -327,7 +327,7 @@ describe('auditProject — heuristic path', () => {
 // Non-WooCommerce detection: wordpress-core pattern via heuristic source signal
 // ---------------------------------------------------------------------------
 
-describe('detectFromSource — wordpress-core', () => {
+describe('detectFromSource. Wordpress-core', () => {
   it('detects wordpress-core pattern when source contains wp_img_tag_add_decoding_attr(', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-wp-core-'));
     writeFileSync(
@@ -348,7 +348,7 @@ describe('detectFromSource — wordpress-core', () => {
   });
 });
 
-describe('auditProject — non-WooCommerce end-to-end (wordpress-core)', () => {
+describe('auditProject, non-WooCommerce end-to-end (wordpress-core)', () => {
   it('detects:true, routes to wp-img-tag entry, and renders WordPress ≥ 6.4.0 affected line', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-wp-core-audit-'));
     writeFileSync(
@@ -368,7 +368,7 @@ describe('auditProject — non-WooCommerce end-to-end (wordpress-core)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 2b: WP-CLI guard — env-independent short-circuit
+// 2b: WP-CLI guard, env-independent short-circuit
 // ---------------------------------------------------------------------------
 
 describe('detectFromWpCli', () => {
@@ -383,7 +383,7 @@ describe('detectFromWpCli', () => {
 // 2c: composer constraint variants
 // ---------------------------------------------------------------------------
 
-describe('detectFromComposer — constraint variants', () => {
+describe('detectFromComposer, constraint variants', () => {
   function makeComposerDir(composerJson: object): string {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-composer-'));
     writeFileSync(join(dir, 'composer.json'), JSON.stringify(composerJson));
@@ -418,10 +418,10 @@ describe('detectFromComposer — constraint variants', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 2d: directory detector — Bedrock path
+// 2d: directory detector, Bedrock path
 // ---------------------------------------------------------------------------
 
-describe('detectFromDirectory — Bedrock layout', () => {
+describe('detectFromDirectory, Bedrock layout', () => {
   it('detects WooCommerce 8.7.2 from bedrock-woo fixture (web/app/plugins path)', () => {
     const result = detectFromDirectory(join(fixturesDir, 'bedrock-woo'));
     expect(result).not.toBeNull();
@@ -435,7 +435,7 @@ describe('detectFromDirectory — Bedrock layout', () => {
 // composer.lock absent (wordpress-dependencies pattern)
 // ---------------------------------------------------------------------------
 
-describe('detectFromGitTracked — composer.lock absent', () => {
+describe('detectFromGitTracked, composer.lock absent', () => {
   function initWithComposerJson(dir: string): void {
     spawnSync('git', ['init'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
     writeFileSync(join(dir, 'composer.json'), JSON.stringify({ require: { 'vendor/pkg': '^1.0' } }));
@@ -457,7 +457,7 @@ describe('detectFromGitTracked — composer.lock absent', () => {
     if (!gitAvailable()) return;
     const dir = mkdtempSync(join(tmpdir(), 'lumo-both-tracked-'));
     initWithComposerJson(dir);
-    // composer.lock present and tracked — correct state, must NOT fire
+    // composer.lock present and tracked, correct state, must NOT fire
     writeFileSync(join(dir, 'composer.lock'), JSON.stringify({ packages: [] }));
     spawnSync('git', ['add', 'composer.lock'], { cwd: dir, timeout: 5000, encoding: 'utf8' });
     const result = detectFromGitTracked(dir);
@@ -466,7 +466,7 @@ describe('detectFromGitTracked — composer.lock absent', () => {
   });
 });
 
-describe('detectStack — composer.lock absent fires wordpress-dependencies', () => {
+describe('detectStack, composer.lock absent fires wordpress-dependencies', () => {
   it('returns { pattern: wordpress-dependencies, source: git } when composer.json tracked, composer.lock absent', () => {
     if (!gitAvailable()) return;
     const dir = mkdtempSync(join(tmpdir(), 'lumo-stack-composer-'));
@@ -480,7 +480,7 @@ describe('detectStack — composer.lock absent fires wordpress-dependencies', ()
   });
 });
 
-describe('auditProject — missing composer.lock end-to-end', () => {
+describe('auditProject, missing composer.lock end-to-end', () => {
   it('detected:true, slug missing-composer-lock-file, renders the entry', async () => {
     if (!gitAvailable()) return;
     const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-composer-'));
@@ -501,7 +501,7 @@ describe('auditProject — missing composer.lock end-to-end', () => {
 // hardcoded-secrets (heuristic via sourceSignals)
 // ---------------------------------------------------------------------------
 
-describe('detectFromSource — hardcoded-secrets', () => {
+describe('detectFromSource, hardcoded-secrets', () => {
   it('detects hardcoded-secrets when PHP source contains sk_live_ prefix', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-hc-secrets-'));
     writeFileSync(
@@ -522,7 +522,7 @@ describe('detectFromSource — hardcoded-secrets', () => {
   });
 });
 
-describe('detectStack — hardcoded-secrets heuristic', () => {
+describe('detectStack, hardcoded-secrets heuristic', () => {
   it('returns { pattern: hardcoded-secrets, source: heuristic } for PHP with sk_live_ key', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-stack-hc-'));
     writeFileSync(
@@ -536,7 +536,7 @@ describe('detectStack — hardcoded-secrets heuristic', () => {
   });
 });
 
-describe('auditProject — hardcoded-secrets end-to-end', () => {
+describe('auditProject, hardcoded-secrets end-to-end', () => {
   it('detected:true, slug hardcoded-api-keys-secrets, renders the entry', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-hc-'));
     writeFileSync(
@@ -565,7 +565,7 @@ describe('buildProTeaser', () => {
     expect(msg).not.toContain('undefined');
   });
 
-  it('names the consequence — stale training data — before the upgrade pitch', () => {
+  it('names the consequence (stale training data) before the upgrade pitch', () => {
     const msg = buildProTeaser('Gravity Forms');
     expect(msg).toContain('stale');
     // The stale-data consequence must appear before the "Lumo Pro extends" sentence.
@@ -576,7 +576,7 @@ describe('buildProTeaser', () => {
     expect(staleIdx).toBeLessThan(proIdx);
   });
 
-  it('states Free cannot check the plugin — honest scope of the Free agent', () => {
+  it('states Free cannot check the plugin, honest scope of the Free agent', () => {
     const msg = buildProTeaser('Elementor Pro');
     expect(msg).toContain("can't check it");
   });
@@ -613,7 +613,7 @@ describe('buildDetectionNote', () => {
   });
 });
 
-describe('detectFromDirectory — ACF Pro fixture', () => {
+describe('detectFromDirectory, ACF Pro fixture', () => {
   it('detects premium-acf-pro from directory with version 6.8.4', () => {
     const result = detectFromDirectory(join(fixturesDir, 'acf-pro'));
     expect(result).not.toBeNull();
@@ -623,7 +623,7 @@ describe('detectFromDirectory — ACF Pro fixture', () => {
   });
 });
 
-describe('detectFromDirectory — Gravity Forms fixture', () => {
+describe('detectFromDirectory, Gravity Forms fixture', () => {
   it('detects premium-gravity-forms from directory with version 2.10.4', () => {
     const result = detectFromDirectory(join(fixturesDir, 'gravity-forms'));
     expect(result).not.toBeNull();
@@ -633,7 +633,7 @@ describe('detectFromDirectory — Gravity Forms fixture', () => {
   });
 });
 
-describe('detectFromDirectory — Elementor Pro fixture', () => {
+describe('detectFromDirectory, Elementor Pro fixture', () => {
   it('detects premium-elementor-pro from directory with version 3.35.1', () => {
     const result = detectFromDirectory(join(fixturesDir, 'elementor-pro'));
     expect(result).not.toBeNull();
@@ -643,7 +643,7 @@ describe('detectFromDirectory — Elementor Pro fixture', () => {
   });
 });
 
-describe('auditProject — Pro teaser path (covered plugins: upgrade promise is honest)', () => {
+describe('auditProject. Pro teaser path (covered plugins: upgrade promise is honest)', () => {
   it('detected:true, proTeaser set, no entry for ACF Pro fixture', () => {
     const result = auditProject(join(fixturesDir, 'acf-pro'));
     expect(result.detected).toBe(true);
@@ -673,11 +673,11 @@ describe('auditProject — Pro teaser path (covered plugins: upgrade promise is 
   });
 });
 
-describe('auditProject — honest detection note (uncovered plugins: no upgrade promise)', () => {
+describe('auditProject, honest detection note (uncovered plugins: no upgrade promise)', () => {
   it('detected:true, detectionNote set, no proTeaser for WPBakery fixture', () => {
     const result = auditProject(join(fixturesDir, 'wpbakery'));
     expect(result.detected).toBe(true);
-    // Must NOT carry an upgrade promise — no Pro coverage yet
+    // Must NOT carry an upgrade promise, no Pro coverage yet
     expect(result.proTeaser).toBeUndefined();
     // Must carry an honest detection note instead
     expect(result.detectionNote).toBeDefined();
@@ -687,7 +687,7 @@ describe('auditProject — honest detection note (uncovered plugins: no upgrade 
   });
 });
 
-describe('detectFromDirectory — WC Subscriptions fixture', () => {
+describe('detectFromDirectory, WC Subscriptions fixture', () => {
   it('detects premium-wc-subscriptions from directory with version 6.3.0', () => {
     const result = detectFromDirectory(join(fixturesDir, 'wc-subscriptions'));
     expect(result).not.toBeNull();
@@ -697,7 +697,7 @@ describe('detectFromDirectory — WC Subscriptions fixture', () => {
   });
 });
 
-describe('auditProject — WC Subscriptions Pro teaser (covered: upgrade promise is honest)', () => {
+describe('auditProject, WC Subscriptions Pro teaser (covered: upgrade promise is honest)', () => {
   it('detected:true, proTeaser set, no Free entry for wc-subscriptions fixture', () => {
     const result = auditProject(join(fixturesDir, 'wc-subscriptions'));
     expect(result.detected).toBe(true);
@@ -709,23 +709,23 @@ describe('auditProject — WC Subscriptions Pro teaser (covered: upgrade promise
   });
 });
 
-describe('detectStack — Pro-teaser patterns do not shadow Free patterns (ladder precedence)', () => {
+describe('detectStack. Pro-teaser patterns do not shadow Free patterns (ladder precedence)', () => {
   it('WooCommerce composer key wins over any subsequent pro-teaser directory path', () => {
-    // composer-woo has a WooCommerce composer.json — ladder stops at composer rung
+    // composer-woo has a WooCommerce composer.json, ladder stops at composer rung
     const result = detectStack(join(fixturesDir, 'composer-woo'));
     expect(result?.pattern).toBe('woocommerce');
     expect(result?.source).toBe('composer');
   });
 
   it('classic-wp WooCommerce directory wins before pro-teaser patterns', () => {
-    // classic-wp has wp-content/plugins/woocommerce — detected at directory rung
+    // classic-wp has wp-content/plugins/woocommerce, detected at directory rung
     const result = detectStack(join(fixturesDir, 'classic-wp'));
     expect(result?.pattern).toBe('woocommerce');
     expect(result?.source).toBe('directory');
   });
 });
 
-describe('auditProject — Pro-teaser does not bleed into Free-covered results', () => {
+describe('auditProject. Pro-teaser does not bleed into Free-covered results', () => {
   // WooCommerce is a teaser pattern itself now, so the no-bleed guard runs on a
   // pattern Free still covers: wordpress-core must return its entry and no teaser.
   it('a wordpress-core project returns the Free entry, no proTeaser', () => {

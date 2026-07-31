@@ -1,9 +1,9 @@
 /**
- * File-level ABSPATH check — the rule the blob catch measurably cannot carry.
+ * File-level ABSPATH check: the rule the blob catch measurably cannot carry.
  *
  * The curated rule asks "does this PHP file open with an ABSPATH guard?".
  * Handed snippets, it fired on 16 of the 42 documented correct examples,
- * because a snippet is never a whole file — so it was excluded from the catch
+ * because a snippet is never a whole file, so it was excluded from the catch
  * and parked for a file-aware surface. lumo-scan is that surface, with one
  * honesty constraint: only for NEW files is the diff the whole file. For an
  * edit hunk the file's opening is invisible, and a rule that cannot see the
@@ -11,7 +11,7 @@
  *
  * Exemption mirrors the curated condition: class-only files (whose first
  * construct after <?php / declare / namespace / use is a type declaration) are
- * loaded by autoloaders, not requested directly — no guard expected.
+ * loaded by autoloaders, not requested directly, no guard expected.
  */
 
 import { findEntry } from '../lib/snapshot.js';
@@ -25,7 +25,7 @@ interface NewPhpFile {
   content: string;
 }
 
-/** Extract NEW .php files from a unified diff — the only file-complete case. */
+/** Extract NEW .php files from a unified diff: the only file-complete case. */
 export function newPhpFilesFromDiff(diff: string): NewPhpFile[] {
   const out: NewPhpFile[] = [];
   const sections = diff.split(/^diff --git /m).slice(1);

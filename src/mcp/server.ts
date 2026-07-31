@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Local Free-tier MCP server — stdio transport.
+ * Local Free-tier MCP server, stdio transport.
  *
  * Wire-up: McpServer (high-level) + StdioServerTransport.
  * Registers two tools:
- *   lumo_audit   — scan a project for stale or incorrect WordPress patterns
- *   lumo_lookup  — look up a Free snapshot entry by slug or category
+ *   lumo_audit: scan a project for stale or incorrect WordPress patterns
+ *   lumo_lookup: look up a Free snapshot entry by slug or category
  *
  * SDK pinned to 1.29.0 (matches lumo-pro).
- * Transport: stdio only — designed for local IDE spawn, NOT remote HTTP.
+ * Transport: stdio only, designed for local IDE spawn, NOT remote HTTP.
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -18,7 +18,7 @@ import { handleAudit, handleLookup, handleCheckCodeFull } from './handlers.js';
 // Static JSON import: esbuild inlines it at build time, so the manifest is the
 // single version source and the bundle carries no runtime path dependency.
 // (A createRequire('../../package.json') variant stayed a RUNTIME require and
-// broke in the installed package — dist/../../ points outside the tarball.)
+// broke in the installed package, dist/././ points outside the tarball.)
 import pkg from '../../package.json';
 
 const server = new McpServer({
@@ -176,7 +176,7 @@ server.registerTool(
       woo_version,
       project_root,
     });
-    // The verdict travels as data next to the prose — same law the Pro server
+    // The verdict travels as data next to the prose, same law the Pro server
     // follows: clients decide on the flags, never by parsing an alarm word out of text.
     return {
       content: [{ type: 'text', text: v.text }],
@@ -193,11 +193,11 @@ server.registerTool(
 );
 
 // ---------------------------------------------------------------------------
-// Resources — the catalogue, discoverable without insider slug knowledge.
+// Resources: the catalogue, discoverable without insider slug knowledge.
 //
 // Every Free-snapshot entry is a static resource lumo://entry/<slug>, so a
 // client can LIST the knowledge instead of guessing slugs. The listed set is
-// exactly the Free snapshot — the same no-leak boundary every other surface
+// exactly the Free snapshot: the same no-leak boundary every other surface
 // enforces. Fail-open: if the snapshot cannot load, the server still starts
 // with tools only (the catch must never die for the catalogue's sake).
 // ---------------------------------------------------------------------------
@@ -223,7 +223,7 @@ try {
     );
   }
 } catch {
-  // snapshot unavailable — tools stay up, catalogue simply absent
+  // snapshot unavailable, tools stay up, catalogue simply absent
 }
 
 // ---------------------------------------------------------------------------

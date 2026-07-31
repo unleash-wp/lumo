@@ -1,5 +1,5 @@
 /**
- * Tests for the proactive scan pipeline — the logic surface used by lumo-scan.
+ * Tests for the proactive scan pipeline: the logic surface used by lumo-scan.
  *
  * The scan CLI entry point (src/scan/main.ts) is thin process glue: it runs
  * `git diff HEAD`, feeds the output through runCatch(), and prints a result.
@@ -20,13 +20,13 @@ import { loadSnapshot } from '../src/lib/snapshot.js';
 import { orderFindingsLoudFirst } from '../src/scan/order-findings.js';
 
 // ---------------------------------------------------------------------------
-// Diff fixtures — same Free-tier patterns used in action-catch-runner tests.
+// Diff fixtures, same Free-tier patterns used in action-catch-runner tests.
 // The scan pipeline reads the shipped Free snapshot, and WooCommerce knowledge is
 // Pro-only, so the LOUD example is the core removal a free user can hit. It used
 // to be a deprecation, which reached LOUD only through a wrong stamp.
 // ---------------------------------------------------------------------------
 
-/** Adds `isValidBlockContent(` — CERTAIN signal on a WP 5.9 removal, fires LOUD. */
+/** Adds `isValidBlockContent(`: CERTAIN signal on a WP 5.9 removal, fires LOUD. */
 const loudDiff = `diff --git a/src/blocks/validate.js b/src/blocks/validate.js
 index abc1234..def5678 100644
 --- a/src/blocks/validate.js
@@ -38,7 +38,7 @@ index abc1234..def5678 100644
  }
 `;
 
-/** Adds only safe wc_get_order() code — no catch expected. */
+/** Adds only safe wc_get_order() code, no catch expected. */
 const cleanDiff = `diff --git a/includes/safe-handler.php b/includes/safe-handler.php
 index aaa..bbb 100644
 --- a/includes/safe-handler.php
@@ -50,7 +50,7 @@ index aaa..bbb 100644
 `;
 
 // ---------------------------------------------------------------------------
-// Suite 1 — LOUD pattern in diff surfaces a LOUD finding
+// Suite 1, LOUD pattern in diff surfaces a LOUD finding
 // ---------------------------------------------------------------------------
 
 describe('proactive scan: LOUD pattern', () => {
@@ -63,7 +63,7 @@ describe('proactive scan: LOUD pattern', () => {
     const loud = result.findings.find((f) => f.tier === 'LOUD');
     expect(loud).toBeDefined();
 
-    // LOUD lead must contain the BREAKING: alarm — verifies formatCatch path is used.
+    // LOUD lead must contain the BREAKING: alarm, verifies formatCatch path is used.
     expect(loud?.body).toContain('BREAKING:');
     // Must reference WooCommerce or WordPress in the output.
     expect(loud?.body).toMatch(/WooCommerce|WordPress/);
@@ -82,7 +82,7 @@ describe('proactive scan: LOUD pattern', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Suite 2 — Clean diff produces the dated-clean output
+// Suite 2, Clean diff produces the dated-clean output
 // ---------------------------------------------------------------------------
 
 describe('proactive scan: clean diff', () => {
@@ -113,7 +113,7 @@ describe('proactive scan: clean diff', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Suite 3 — Fail-open: no diff / empty diff exits gracefully
+// Suite 3, Fail-open: no diff / empty diff exits gracefully
 // ---------------------------------------------------------------------------
 
 describe('proactive scan: fail-open paths', () => {
@@ -148,7 +148,7 @@ index ccc..ddd 100644
 });
 
 // ---------------------------------------------------------------------------
-// Suite 4 — loudCount + softCount accounting
+// Suite 4, loudCount + softCount accounting
 // ---------------------------------------------------------------------------
 
 describe('proactive scan: finding counts', () => {

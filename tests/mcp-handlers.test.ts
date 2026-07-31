@@ -24,14 +24,14 @@ function makeFreeAuditProject(): string {
   return dir;
 }
 
-/** The Free-tier LOUD blob — the catch a real free user hits (WP 6.4, breaking). */
+/** The Free-tier LOUD blob: the catch a real free user hits (WP 6.4, breaking). */
 // A WP 5.9 removal, so LOUD rests on a break that really happened. This was
 // wp_img_tag_add_decoding_attr(), which is deprecated and not removed.
 const loudBlob = `const ok = isValidBlockContent( blockType, attrs, inner, html );`;
 
 // Gutenberg entries are Pro-MCP-only (freeSnapshot:false); WooCommerce knowledge is
 // Pro-only too. Neither ships in the redistributable Free snapshot. Tests that verify
-// catch-engine or handler wiring against these entries use catchSnap — an extended
+// catch-engine or handler wiring against these entries use catchSnap: an extended
 // snapshot with synthetic entries for test-only purposes.
 const proOnlyCatchEntries: SnapshotEntry[] = [
   {
@@ -124,7 +124,7 @@ describe('handleAudit', () => {
     expect(result).toContain('Verify:');
   });
 
-  it('output contains NO "body" key — Free tier boundary', async () => {
+  it('output contains NO "body" key. Free tier boundary', async () => {
     const result = await handleAudit({ project_root: makeFreeAuditProject() });
     // The literal string "body" must not appear as a JSON key or Markdown heading
     expect(result).not.toMatch(/^"body":/m);
@@ -136,17 +136,17 @@ describe('handleAudit', () => {
     expect(result).toContain('No known WordPress risk patterns detected');
   });
 
-  it('returns neutral message for a non-existent path — never throws', async () => {
+  it('returns neutral message for a non-existent path, never throws', async () => {
     await expect(
       handleAudit({ project_root: '/tmp/__lumo_nonexistent_fixture__' }),
     ).resolves.toContain('No known WordPress risk patterns detected');
   });
 
-  it('defaults to process.cwd() when project_root is omitted — never throws', async () => {
+  it('defaults to process.cwd() when project_root is omitted, never throws', async () => {
     await expect(handleAudit({})).resolves.toBeTypeOf('string');
   });
 
-  it('returns a string when project_root is an empty string — never throws', async () => {
+  it('returns a string when project_root is an empty string, never throws', async () => {
     await expect(handleAudit({ project_root: '' })).resolves.toBeTypeOf('string');
   });
 
@@ -154,7 +154,7 @@ describe('handleAudit', () => {
     const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
     const snap = loadSnapshot();
     const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
-    if (!entry) throw new Error('wp-img-tag entry missing from snapshot — test setup broken');
+    if (!entry) throw new Error('wp-img-tag entry missing from snapshot, test setup broken');
 
     const expected = formatFreeMarkdown(renderFree(entry));
     const actual = await handleAudit({ project_root: makeFreeAuditProject() });
@@ -168,7 +168,7 @@ describe('handleAudit', () => {
 
 describe('handleLookup', () => {
   // Lookup reads the shipped Free snapshot, so both the slug and the category case
-  // use Free-tier knowledge — WooCommerce slugs/categories are Pro-only now.
+  // use Free-tier knowledge. WooCommerce slugs/categories are Pro-only now.
   it('returns Free Markdown for a known slug', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'wp-img-tag-add-decoding-attr-deprecation' }, snap);
@@ -180,7 +180,7 @@ describe('handleLookup', () => {
     expect(result).toContain('Verify:');
   });
 
-  it('output contains NO "body" key for slug lookup — Free tier boundary', async () => {
+  it('output contains NO "body" key for slug lookup. Free tier boundary', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'wp-img-tag-add-decoding-attr-deprecation' }, snap);
     expect(result).not.toMatch(/^"body":/m);
@@ -195,7 +195,7 @@ describe('handleLookup', () => {
     expect(result).toContain('Source:');
   });
 
-  it('output contains NO "body" key for category lookup — Free tier boundary', async () => {
+  it('output contains NO "body" key for category lookup. Free tier boundary', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ category: 'wordpress-security' }, snap);
     expect(result).not.toMatch(/^"body":/m);
@@ -264,30 +264,30 @@ describe('handleLookup', () => {
     expect(result).toContain('Source:');
   });
 
-  // Gutenberg entries are now in the Free snapshot (freeSnapshot:true) —
-  // they are present and return content from the Free lookup handler.
-  it('gutenberg category returns entries — now in Free snapshot', async () => {
+  // Gutenberg entries are now in the Free snapshot (freeSnapshot:true).
+  // They are present and return content from the Free lookup handler.
+  it('gutenberg category returns entries, now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ category: 'gutenberg' }, snap);
     expect(result).not.toContain('No curated entry found');
     expect(result).toContain('Source:');
   });
 
-  it('gutenberg-usesetting slug returns content — now in Free snapshot', async () => {
+  it('gutenberg-usesetting slug returns content, now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-usesetting-deprecated-wp6-5' }, snap);
     expect(result).not.toContain('No curated entry found');
     expect(result).toContain('Source:');
   });
 
-  it('gutenberg-isvalidblockcontent slug returns content — now in Free snapshot', async () => {
+  it('gutenberg-isvalidblockcontent slug returns content, now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-isvalidblockcontent-removed' }, snap);
     expect(result).not.toContain('No curated entry found');
     expect(result).toContain('Source:');
   });
 
-  it('gutenberg-apiversion slug returns content — now in Free snapshot', async () => {
+  it('gutenberg-apiversion slug returns content, now in Free snapshot', async () => {
     const snap = loadSnapshot();
     const result = await handleLookup({ slug: 'gutenberg-apiversion-2-deprecated-wp6-9' }, snap);
     expect(result).not.toContain('No curated entry found');
@@ -296,10 +296,10 @@ describe('handleLookup', () => {
 });
 
 // ---------------------------------------------------------------------------
-// handleCheckCode — version-scoping
+// handleCheckCode, version-scoping
 // ---------------------------------------------------------------------------
 
-describe('handleCheckCode — version-scoping', () => {
+describe('handleCheckCode, version-scoping', () => {
   // These tests exercise version-relative LOUD output for a gutenberg LOUD signal.
   // isValidBlockContent has breaking_change:true (removed in WP 5.9) so it produces LOUD.
   it('explicit wp_version produces relative line in LOUD output', async () => {
@@ -328,12 +328,12 @@ describe('handleCheckCode — version-scoping', () => {
     ).resolves.toBeTypeOf('string');
   });
 
-  it('project_root with no version detection falls back gracefully — still emits LOUD', async () => {
+  it('project_root with no version detection falls back gracefully, still emits LOUD', async () => {
     const result = await handleCheckCode(
       { code: loudBlob, language: 'js', project_root: join(fixturesDir, 'non-woo') },
       catchSnap,
     );
-    // LOUD still fires; no relative line because version unknown — but no throw
+    // LOUD still fires; no relative line because version unknown, but no throw
     expect(result).toContain('BREAKING:');
   });
 
@@ -341,7 +341,7 @@ describe('handleCheckCode — version-scoping', () => {
     const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
     const s = loadSnapshot();
     const entry = s.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
-    if (!entry) throw new Error('wp-img-tag entry missing — test setup broken');
+    if (!entry) throw new Error('wp-img-tag entry missing, test setup broken');
 
     const expected = formatFreeMarkdown(renderFree(entry));
     const actual = await handleAudit({ project_root: makeFreeAuditProject() });
@@ -350,11 +350,11 @@ describe('handleCheckCode — version-scoping', () => {
 });
 
 // ---------------------------------------------------------------------------
-// handleCheckCode — upgrade prompt wiring
+// handleCheckCode, upgrade prompt wiring
 // ---------------------------------------------------------------------------
 
-describe('handleCheckCode — upgrade prompt wiring', () => {
-  // The funnel is asserted on the Free LOUD entry — that is the catch a free user
+describe('handleCheckCode, upgrade prompt wiring', () => {
+  // The funnel is asserted on the Free LOUD entry. That is the catch a free user
   // reaches now. The WooCommerce domain label is covered separately below via the
   // Pro fixture, since that mapping still ships.
   const hposBlob = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
@@ -400,7 +400,7 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
   });
 
   // WooCommerce catches are Pro knowledge now, so this runs off the Pro fixture in
-  // catchSnap — the woocommerce → "WooCommerce" label mapping still ships in handlers.
+  // catchSnap: the woocommerce → "WooCommerce" label mapping still ships in handlers.
   it('WooCommerce LOUD catch → WooCommerce domain label, singular "risk" for a single result', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
@@ -409,7 +409,7 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
     expect(result).not.toContain('stale-pattern risks in your');
   });
 
-  it('prompt copy does not contain "HPOS" — wedge is now domain-neutral', async () => {
+  it('prompt copy does not contain "HPOS": wedge is now domain-neutral', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     const result = await handleCheckCode({ code: hposBlob, language: 'php' }, catchSnap);
     // The upgrade prompt block must not re-introduce the old HPOS framing
@@ -419,13 +419,13 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
 });
 
 // ---------------------------------------------------------------------------
-// handleCheckCode — freshness-gap reveal (C4)
+// handleCheckCode, freshness-gap reveal (C4)
 //
 // Appears only on gated (catch) answers, only when the upgrade prompt block did
 // NOT fire on the same response. Kill-switch gates both. Never on lumo_audit.
 // ---------------------------------------------------------------------------
 
-describe('handleCheckCode — freshness-gap reveal (C4)', () => {
+describe('handleCheckCode, freshness-gap reveal (C4)', () => {
   afterEach(() => {
     delete process.env['LUMO_CHECKOUT_URL'];
     delete process.env['LUMO_UPGRADE_PROMPT'];
@@ -472,7 +472,7 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
 
   it('reveal fires on a SOFT catch (any gated result, not just LOUD)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    // useSetting() call — breaking_change:false → SOFT signal (not a call-free import)
+    // useSetting() call, breaking_change:false → SOFT signal (not a call-free import)
     const code = `const fontSize = useSetting( 'typography.fontSize' );`;
     const result = await handleCheckCode({ code, language: 'js' }, catchSnap);
     expect(result).toContain('verified as of');
@@ -485,7 +485,7 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
     expect(result).toMatch(/verified as of \d{4}-\d{2}-\d{2}/);
   });
 
-  it('reveal says "verified as of" — never "out of date" or "stale"', async () => {
+  it('reveal says "verified as of": never "out of date" or "stale"', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     const lower = result.toLowerCase();
@@ -498,7 +498,7 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
     const { formatFreeMarkdown, renderFree } = await import('../src/lib/render.js');
     const s = loadSnapshot();
     const entry = s.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
-    if (!entry) throw new Error('wp-img-tag entry missing — test setup broken');
+    if (!entry) throw new Error('wp-img-tag entry missing, test setup broken');
 
     const expected = formatFreeMarkdown(renderFree(entry));
     const actual = await handleAudit({ project_root: makeFreeAuditProject() });

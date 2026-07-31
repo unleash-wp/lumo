@@ -1,4 +1,4 @@
-// AI Forge plugin surface for Lumo — the knowledge layer that feeds the Forge.
+// AI Forge plugin surface for Lumo: the knowledge layer that feeds the Forge.
 //
 // AI Forge is the platform; this file is the zero-dependency adapter that makes
 // the Lumo knowledge base (data/snapshot.json, curated + source-verified) a
@@ -6,14 +6,14 @@
 // through `uwp mcp` alongside changelog/contributors.
 //
 // Two tools, honest split:
-//   lumo_lookup     — pure data: query the bundled snapshot (always works).
-//   lumo_check_code — the live catch, delegated to the REAL Lumo engine by
+//   lumo_lookup, pure data: query the bundled snapshot (always works).
+//   lumo_check_code: the live catch, delegated to the REAL Lumo engine by
 //                         spawning the installed `lumo-mcp` binary (npm package
 //                         @unleashwp/lumo). The precision engine is never
 //                         reimplemented here; without the binary the tool
-//                         degrades to an install hint — it never guesses.
+//                         degrades to an install hint. It never guesses.
 //
-// Zero runtime dependencies, plain Node >=18 — matches the Forge contract.
+// Zero runtime dependencies, plain Node >=18, matches the Forge contract.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -35,7 +35,7 @@ function loadSnapshot() {
 }
 
 // ---------------------------------------------------------------------------
-// Lookup — simple deterministic scoring over slug/title/summary/category.
+// Lookup, simple deterministic scoring over slug/title/summary/category.
 // ---------------------------------------------------------------------------
 
 function scoreEntry(entry, terms) {
@@ -82,13 +82,13 @@ function lookup(topic, top) {
     return { found: false, text: `No knowledge entry matches "${topic}" (${snap.entries.length} entries searched).` };
   }
   const parts = [renderEntry(ranked[0].e, snap.generatedAt)];
-  const also = ranked.slice(1, top).map((r) => `- ${r.e.slug} — ${r.e.title}`);
+  const also = ranked.slice(1, top).map((r) => `- ${r.e.slug}, ${r.e.title}`);
   if (also.length) parts.push('', '**Related entries:**', ...also);
   return { found: true, text: parts.join('\n') };
 }
 
 // ---------------------------------------------------------------------------
-// Live catch — delegate to the installed @unleashwp/lumo MCP binary.
+// Live catch, delegate to the installed @unleashwp/lumo MCP binary.
 // One JSON-RPC roundtrip over stdio, bounded; never reimplements the engine.
 // ---------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ function checkCodeViaEngine(code, language) {
   return new Promise((resolve) => {
     const bin = process.env.LUMO_MCP_BIN || 'lumo-mcp';
     // A .mjs/.js target (e.g. a repo checkout's dist/mcp.mjs) has no shebang on
-    // every platform — run it through node; a bare binary name goes to PATH.
+    // every platform, run it through node; a bare binary name goes to PATH.
     const viaNode = /\.(mjs|cjs|js)$/.test(bin);
     let srv;
     try {
@@ -182,7 +182,7 @@ export const mcpTools = [
 ];
 
 // ---------------------------------------------------------------------------
-// Browser-panel routes (AI Forge). `open: true` — this data comes from the
+// Browser-panel routes (AI Forge). `open: true`, this data comes from the
 // local snapshot and the local engine, not from wordpress.org, so the wp.org
 // cookie gate does not apply. The panel is a shop window: status, setup, one
 // live bark. The work itself stays in the assistant and the terminal.

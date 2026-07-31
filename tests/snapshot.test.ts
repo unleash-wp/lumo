@@ -3,11 +3,11 @@ import { loadSnapshot, validateEntry } from '../src/lib/snapshot.js';
 import type { Snapshot } from '../src/types.js';
 
 // ---------------------------------------------------------------------------
-// Helpers — build minimal valid and deliberately broken snapshot objects so we
+// Helpers, build minimal valid and deliberately broken snapshot objects so we
 // can exercise the exported validateEntry directly, without going to disk.
 // ---------------------------------------------------------------------------
 
-/** Minimal valid Free entry — all required fields present, no `body`. */
+/** Minimal valid Free entry, all required fields present, no `body`. */
 function validEntry() {
   return {
     slug: 'woocommerce-hpos-order-access',
@@ -38,12 +38,12 @@ function validSnapshot(entries: unknown[] = [validEntry()]): Snapshot {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('snapshot validation — required Free fields', () => {
+describe('snapshot validation, required Free fields', () => {
   it('accepts a fully valid entry', () => {
     expect(() => validateEntry(validEntry(), 0)).not.toThrow();
   });
 
-  // All 8 required fields — 5 evidence fields + slug/title/category_slug
+  // All 8 required fields, 5 evidence fields + slug/title/category_slug
   const requiredFields = [
     'slug',
     'title',
@@ -77,7 +77,7 @@ describe('snapshot validation — required Free fields', () => {
   it('rejects an entry that contains the Pro "body" field', () => {
     const entry = {
       ...validEntry(),
-      body: '## Audit — what to flag in order context\n- get_post_meta on order id',
+      body: '## Audit, what to flag in order context\n- get_post_meta on order id',
     };
     expect(() => validateEntry(entry, 0)).toThrow('body');
   });
@@ -94,7 +94,7 @@ describe('snapshot validation — required Free fields', () => {
   });
 });
 
-describe('snapshot artifact — actual data/snapshot.json', () => {
+describe('snapshot artifact, actual data/snapshot.json', () => {
   it('loads without throwing', () => {
     expect(() => loadSnapshot()).not.toThrow();
   });
@@ -134,9 +134,9 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
   });
 
   // WooCommerce knowledge is Pro-only: the HPOS flagship entry must NOT be in the
-  // redistributable Free artifact. This is the shipping boundary — if it ever
+  // redistributable Free artifact. This is the shipping boundary, if it ever
   // reappears here, paid knowledge is being given away.
-  it('does NOT ship the HPOS entry — WooCommerce knowledge is Pro-only', () => {
+  it('does NOT ship the HPOS entry. WooCommerce knowledge is Pro-only', () => {
     const snap = loadSnapshot();
     const hpos = snap.entries.find((e) => e.slug === 'woocommerce-hpos-order-access');
     expect(hpos).toBeUndefined();
@@ -156,7 +156,7 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
     }
   });
 
-  // The Free artifact still needs a version-stamped breaking entry — the catch
+  // The Free artifact still needs a version-stamped breaking entry: the catch
   // engine's LOUD path is structurally barred without one.
   //
   // The named entry used to be wp-img-tag-add-decoding-attr-deprecation, which
@@ -201,7 +201,7 @@ describe('snapshot artifact — actual data/snapshot.json', () => {
   // breaking_change is false on purpose, and this test exists to keep it that
   // way. wp_img_tag_add_decoding_attr() is deprecated: it still exists in core
   // and emits a notice. While it was stamped as a break it fired LOUD, and
-  // through fail_on_loud a deprecation could fail a paying customer's build —
+  // through fail_on_loud a deprecation could fail a paying customer's build:
   // the exact noise this product exists to avoid, in our own data.
   it('wp-img-tag entry is stamped as a deprecation, not as a break', () => {
     const snap = loadSnapshot();

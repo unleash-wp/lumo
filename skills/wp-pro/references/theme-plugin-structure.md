@@ -79,7 +79,7 @@ function my_plugin_activate(): void {
 }
 
 function my_plugin_deactivate(): void {
-    // Clean up scheduled events. Do NOT delete data here — use uninstall.php.
+    // Clean up scheduled events. Do NOT delete data here, use uninstall.php.
     wp_clear_scheduled_hook( 'my_plugin_cron_event' );
 }
 ```

@@ -7,21 +7,21 @@ import type { VersionFact } from '../detection/catch.js';
 // not kept in sync with it. The Free agent ships the full wrong-vs-correct
 // contrast (summary, code diff, source, test step, the ≥8.2 line) and points
 // to Pro for the written breakdown + full version matrix; the Pro server's free
-// tier returns a summary-only projection. Two surfaces, two correct messages —
+// tier returns a summary-only projection. Two surfaces, two correct messages,
 // reconciling them would be wrong.
 export const FREE_UPGRADE_HINT =
   'Lumo Pro has the full breakdown, the complete version range, and what breaks in upcoming WP releases before they ship.';
 
 // ---------------------------------------------------------------------------
-// C4 — Freshness-gap reveal line
+// C4: Freshness-gap reveal line
 //
 // Shown once per session on gated (catch) answers, frequency-capped by the same
 // kill-switch as the upgrade prompt. Never shown on lumo_audit (that path ends
-// at formatFreeMarkdown — no append). Never shown when the upgrade prompt block
+// at formatFreeMarkdown, no append). Never shown when the upgrade prompt block
 // already fired on the same response (avoids double-printing).
 //
 // The MCP add command is always inert-safe: it points at the Pro MCP server,
-// which requires a valid license key — the free-to-add instruction costs the
+// which requires a valid license key: the free-to-add instruction costs the
 // founder nothing to ship before go-live.
 //
 // Honesty constraints (hard):
@@ -42,7 +42,7 @@ export const FRESHNESS_REVEAL_LINE =
 /**
  * Optional second line of the reveal: how to attach a Pro MCP endpoint.
  *
- * Only appended when `LUMO_PRO_MCP_URL` names a real server — the same
+ * Only appended when `LUMO_PRO_MCP_URL` names a real server: the same
  * dead-link rule the checkout prompt follows. Pro is delivered as a licensed
  * knowledge pack, so there is no default hosted endpoint to advertise; a
  * hardcoded URL here would print an install command for a server the reader
@@ -52,7 +52,7 @@ export const PRO_MCP_ADD_LINE =
   '_Add the Pro MCP: `claude mcp add lumo-pro --transport http {url}`_';
 
 // ---------------------------------------------------------------------------
-// W4 upgrade-prompt copy constants — single tested source of truth.
+// W4 upgrade-prompt copy constants, single tested source of truth.
 // Markdown surfaces import and print verbatim; runtime fills {N}/{checkout_url}.
 // ---------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ export const UPGRADE_PROMPT_BLOCK =
  * Render a Free-tier response from a snapshot entry.
  *
  * Hard guard: `body` is NEVER read from or emitted to the output.
- * The `versions` array is passed through verbatim — it is the basic constraint
+ * The `versions` array is passed through verbatim. It is the basic constraint
  * row, not the Pro multi-row matrix. This distinction plus `body` omission is
  * what keeps the Free tier materially distinct from Pro.
  */
@@ -111,7 +111,7 @@ export function renderFree(entry: SnapshotEntry): FreeRenderedEntry {
  *   _Knowledge current as of verifiedAt (date only)_
  *   _upgradeHint_
  *
- * Pure function — no Date.now / Math.random (the date comes from the entry data).
+ * Pure function, no Date.now / Math.random (the date comes from the entry data).
  */
 export function formatFreeMarkdown(r: FreeRenderedEntry): string {
   const v0 = r.versions[0];
@@ -156,7 +156,7 @@ export function formatFreeMarkdown(r: FreeRenderedEntry): string {
 }
 
 // ---------------------------------------------------------------------------
-// versionRelativeLine — version-scoping for the catch lead
+// versionRelativeLine, version-scoping for the catch lead
 //
 // Pure: no I/O, no Date.now(). Returns '' for 'unknown' so the caller can
 // safely append without emitting a fabricated claim.
@@ -187,7 +187,7 @@ export function versionRelativeLine(
 }
 
 // ---------------------------------------------------------------------------
-// formatCatch — Phase 02
+// formatCatch, Phase 02
 //
 // Wraps formatFreeMarkdown with a tier-specific lead block. Pure: all dates
 // come from entry data (versionFact.date / entry.updatedAt), never Date.now().
@@ -205,9 +205,9 @@ export function versionRelativeLine(
  *
  * Reuses `formatFreeMarkdown` for the body (DRY). Adds only the lead line and
  * the verification footnote. Never emits a LOUD lead without a real version fact
- * — if versionFact is absent the function renders SOFT regardless of tier input.
+ *, if versionFact is absent the function renders SOFT regardless of tier input.
  *
- * Optional `projectVersion` — when provided and `result.versionFact` is present,
+ * Optional `projectVersion`: when provided and `result.versionFact` is present,
  * a relative-version line is appended to the LOUD lead. Absent arg ⇒ byte-identical
  * output to calling without it (no fabricated claims).
  */
@@ -215,7 +215,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   const { tier, entry, versionFact, alwaysWrongFact, condition } = result;
   const rendered = renderFree(entry);
 
-  // Trust footnote — verification axis (phase 00):
+  // Trust footnote, verification axis (phase 00):
   // 'runnable' entries had their fix executed in sandbox CI; 'advice' are source-checked.
   // SnapshotEntry does not expose the Pro `verification` field, so we infer from
   // the entry's category: WooCommerce PHP entries run in sandbox; JS/advice entries don't.
@@ -223,7 +223,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
   const isSandboxed = entry.category_slug === 'woocommerce';
   const verificationNote = isSandboxed ? 'Fix proven to run' : 'Source-verified';
 
-  // Determine effective tier: LOUD requires an anchor — a version fact (dated
+  // Determine effective tier: LOUD requires an anchor, a version fact (dated
   // release claim) or an always-wrong fact (source-carried claim). Without one
   // the loud template has nothing to interpolate, so we structurally degrade to
   // SOFT. This mirrors classify(): no LOUD without a citable anchor.
@@ -264,7 +264,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
     lead = `> ADVISORY: ${conditionText} this pattern may not work as expected.`;
   }
 
-  // Body from formatFreeMarkdown — same spine, same freshness line, same source.
+  // Body from formatFreeMarkdown, same spine, same freshness line, same source.
   const body = formatFreeMarkdown(rendered);
 
   // For LOUD catches, end with the upgrade hint so the catch creates the felt
@@ -284,7 +284,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
 
 /**
  * Printed when lumo-scan finds nothing. Same law as every other channel: state
- * the scope that was checked, never pronounce the changes clean — the fifth
+ * the scope that was checked, never pronounce the changes clean: the fifth
  * channel carrying a "clean" verdict, retired like the other four.
  * Caller substitutes {files} and {date}.
  */
@@ -303,7 +303,7 @@ export const SCAN_NO_MATCH_TEMPLATE =
 // coverage, which was true while the Action was free. It is not any more: CI
 // enforcement is Pro, so the only readers of these lines hold a licence, and a
 // paid run described as a free one is an unfounded claim about what the machine
-// did — in the one place a customer looks to see what they got. It also
+// did, in the one place a customer looks to see what they got. It also
 // undersells the catch, which is the wrong error to leave in on purpose.
 //
 // "the catch that ran in this check" is deliberately vague about which catch:
@@ -326,7 +326,7 @@ export const ACTION_NO_MATCH_LINE =
  * fundamentals" without that distinction lets a reader assume every one of
  * those topics fires by itself. Measured on 31.07.2026: the free snapshot holds
  * fifteen security entries; nine carry a detection rule, and two of those nine
- * reach only part of their topic — so "nine covered" would itself be the kind
+ * reach only part of their topic, so "nine covered" would itself be the kind
  * of over-claim this constant exists to retire. Seven cover their topic, two
  * cover half of it, six are documented only.
  *
@@ -354,7 +354,7 @@ export const ACTION_SCOPE_LINE =
  * Posted into the PR when Pro credentials were configured but the Pro server
  * could not be reached and the run fell back to the free catch. Must be
  * visible in the run's own output, not only in the job log: a silently
- * degraded Pro run reads as "Pro checked and found nothing" — a false
+ * degraded Pro run reads as "Pro checked and found nothing": a false
  * all-clear on exactly the layer the customer pays for.
  */
 /**
@@ -362,8 +362,8 @@ export const ACTION_SCOPE_LINE =
  * feature: the gate answers from the licensed server, and running the free
  * local knowledge as a pipeline gate would promise a verdict it cannot back.
  *
- * The check stays green — a missing subscription is not a reason to block a
- * merge — so the line must carry the whole weight of saying that nothing was
+ * The check stays green: a missing subscription is not a reason to block a
+ * merge, so the line must carry the whole weight of saying that nothing was
  * checked. It also names what the free tier still does, so this reads as a
  * boundary rather than a nag.
  */
@@ -375,7 +375,7 @@ export const ACTION_REQUIRES_PRO_LINE =
   'and the MCP server and skills stay free.';
 
 /**
- * Posted when .claude/.lumo.json exists but cannot be honoured — unparseable,
+ * Posted when .claude/.lumo.json exists but cannot be honoured, unparseable,
  * or naming an enforce.mode this version does not know.
  *
  * The run still falls open to advisory, because a broken config file is not a
@@ -447,7 +447,7 @@ export function buildScanLimitsNotice(
 // Neutral line when checkCode finds nothing to flag.
 //
 // It reports the scope that was checked, never the state of the code. Lumo cannot
-// know that a blob is clean — only that nothing it covers matched. Saying "looks
+// know that a blob is clean, only that nothing it covers matched. Saying "looks
 // clean" turns a coverage limit into a verdict, which is the one thing this
 // product must never do.
 export const CATCH_NEUTRAL_LINE =
@@ -470,7 +470,7 @@ export const catchHitsOmittedLine = (omitted: number): string =>
   `${omitted} further ${omitted === 1 ? 'match is' : 'matches are'} not listed: ` +
   'the report is capped, and the lowest-severity matches were dropped first.';
 
-/** "A", "A and B", "A, B and C" — one grammar for every gap surface. */
+/** "A", "A and B", "A, B and C": one grammar for every gap surface. */
 export function joinPluginNames(names: string[]): string {
   if (names.length <= 1) return names[0] ?? '';
   return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
@@ -478,12 +478,12 @@ export function joinPluginNames(names: string[]): string {
 
 /**
  * Pro-only knowledge was hit by a fired signal in a code blob. Names the plugin
- * and what covers it. Sibling of buildProTeaser (project path) — the wording here
+ * and what covers it. Sibling of buildProTeaser (project path): the wording here
  * speaks about the code in hand, not about a project on disk.
  *
  * It names ONLY what was detected, and only what Lumo can substantiate: the
  * detection itself and Lumo's own coverage. Two sentences were removed for the
- * same reason — the rest of the Pro catalogue, and a claim that the reader's AI
+ * same reason: the rest of the Pro catalogue, and a claim that the reader's AI
  * has stale training data. Neither was checked at the moment of output, and both
  * appeared identically regardless of the code, which makes them sales copy inside
  * a finding.

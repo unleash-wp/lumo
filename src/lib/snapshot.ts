@@ -29,10 +29,10 @@ export function validateEntry(entry: unknown, index: number): asserts entry is S
 
   const obj = entry as Record<string, unknown>;
 
-  // Pro leak guard — body must never appear in a Free artifact.
+  // Pro leak guard, body must never appear in a Free artifact.
   if ('body' in obj) {
     throw new Error(
-      `snapshot.entries[${index}] (slug: ${String(obj['slug'])}) contains Pro field "body" — ` +
+      `snapshot.entries[${index}] (slug: ${String(obj['slug'])}) contains Pro field "body", ` +
         'the Free snapshot must never include the Pro body.',
     );
   }
@@ -48,7 +48,7 @@ export function validateEntry(entry: unknown, index: number): asserts entry is S
 
   if (obj['tier'] !== 'free') {
     throw new Error(
-      `snapshot.entries[${index}] (slug: ${String(obj['slug'])}) has tier "${String(obj['tier'])}" — ` +
+      `snapshot.entries[${index}] (slug: ${String(obj['slug'])}) has tier "${String(obj['tier'])}", ` +
         'only "free" entries are valid in the Free snapshot.',
     );
   }
@@ -60,9 +60,9 @@ export function validateEntry(entry: unknown, index: number): asserts entry is S
  * Resolves the path relative to import.meta.url so the loader works regardless
  * of the process cwd (plugin can be installed anywhere).
  *
- * Path strategy — two candidates are tried in order:
- *   1. '../data/snapshot.json'  — bundle layout (dist/mcp.mjs → <pkg>/data/)
- *   2. '../../data/snapshot.json' — source layout (src/lib/snapshot.ts → <pkg>/data/)
+ * Path strategy, two candidates are tried in order:
+ *   1. './data/snapshot.json': bundle layout (dist/mcp.mjs → <pkg>/data/)
+ *   2. '././data/snapshot.json': source layout (src/lib/snapshot.ts → <pkg>/data/)
  *
  * tsup inlines this module into each dist/*.mjs bundle, so at runtime
  * import.meta.url is the bundle file (e.g. <pkg>/dist/mcp.mjs).
@@ -70,7 +70,7 @@ export function validateEntry(entry: unknown, index: number): asserts entry is S
  * Candidate 2 would walk above the package root and is only correct when
  * running directly from source (vitest, ts-node).
  *
- * Throws on any schema violation — the caller must not silently swallow the
+ * Throws on any schema violation: the caller must not silently swallow the
  * error; a broken snapshot means no Free answers, which is a startup failure.
  */
 export function loadSnapshot(): Snapshot {
@@ -103,7 +103,7 @@ export function loadSnapshot(): Snapshot {
 
   if (snap['schemaVersion'] !== 1) {
     throw new Error(
-      `snapshot.json schemaVersion is ${String(snap['schemaVersion'])} — expected 1`,
+      `snapshot.json schemaVersion is ${String(snap['schemaVersion'])}, expected 1`,
     );
   }
 
@@ -118,14 +118,14 @@ export function loadSnapshot(): Snapshot {
 
 /**
  * Look up a single entry by slug. Returns undefined when the slug is not in
- * the snapshot — callers should degrade gracefully (not throw).
+ * the snapshot, callers should degrade gracefully (not throw).
  */
 export function findEntry(snapshot: Snapshot, slug: string): SnapshotEntry | undefined {
   return snapshot.entries.find((e) => e.slug === slug);
 }
 
 /**
- * Look up entries by category slug. Returns an empty array when no match —
+ * Look up entries by category slug. Returns an empty array when no match:
  * the detection → advice routing path (FA-14) depends on this.
  */
 export function findByCategory(snapshot: Snapshot, categorySlug: string): SnapshotEntry[] {

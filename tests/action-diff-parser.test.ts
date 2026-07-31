@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { parseDiff } from '../src/action/diff-parser.js';
 
 // ---------------------------------------------------------------------------
-// Fixtures — minimal unified diffs
+// Fixtures, minimal unified diffs
 // ---------------------------------------------------------------------------
 
 const phpHposDiff = `diff --git a/includes/class-order.php b/includes/class-order.php

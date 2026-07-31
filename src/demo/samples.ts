@@ -2,7 +2,7 @@
  * The sample blobs `lumo demo` runs the catch over.
  *
  * Every one of them is the kind of code an assistant produces when asked for
- * an ordinary WordPress task — that is the point. They are held here as data,
+ * an ordinary WordPress task. That is the point. They are held here as data,
  * and the demo runs them through the SAME engine a real scan uses, so the
  * demo can never claim a catch the product cannot make. If a rule stops
  * firing, the demo stops showing it, loudly, in a test.
@@ -13,7 +13,7 @@
  */
 
 export interface DemoSample {
-  /** What someone asked an assistant for — sets the scene in one line. */
+  /** What someone asked an assistant for, sets the scene in one line. */
   prompt: string;
   /** The code that came back. */
   code: string;

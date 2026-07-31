@@ -12,12 +12,12 @@ import type { SnapshotEntry } from '../src/types.js';
  * containing a CERTAIN literal reported only an advisory.
  *
  * The example is a Free-tier signal because that is the LOUD a free user can
- * actually hit — WooCommerce knowledge is Pro-only.
+ * actually hit. WooCommerce knowledge is Pro-only.
  *
  * It used to be wp_img_tag_add_decoding_attr(), which is deprecated and not
  * removed: nothing breaks, and it only reached LOUD because the entry carried a
  * wrong breaking_change stamp. Once that was corrected the whole suite went red
- * here, which is the right outcome — the fixture had been standing in for a
+ * here, which is the right outcome: the fixture had been standing in for a
  * break that never happened. isValidBlockContent() is a real removal in WP 5.9,
  * so the version route to LOUD is exercised on a claim that holds.
  */
@@ -38,7 +38,7 @@ const UNIFIED_DIFF = [
 ].join('\n');
 
 /**
- * Synthetic Pro-only HPOS entry — the dedupe rule (one entry, two signals of
+ * Synthetic Pro-only HPOS entry: the dedupe rule (one entry, two signals of
  * different class, highest tier wins) is engine behaviour and did not change, so
  * it keeps being exercised on the entry that actually carries both signal classes.
  */

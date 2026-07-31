@@ -1,5 +1,5 @@
 /**
- * `lumo demo` — show the catch working, in under a minute, on nothing.
+ * `lumo demo`: show the catch working, in under a minute, on nothing.
  *
  * The problem this solves: a tool whose value is invisible until it catches
  * something. A fresh install in a clean repository prints an honest scope line
@@ -7,7 +7,7 @@
  * who never sees it bark has no reason to keep it.
  *
  * So the demo runs the real engine over four blobs of the kind an assistant
- * produces for ordinary WordPress tasks, and prints the real output — same
+ * produces for ordinary WordPress tasks, and prints the real output, same
  * renderer, same tiering, same sources as a scan of the user's own code. It
  * cannot flatter the product: if a rule stops firing, the demo stops showing
  * that finding, and a test fails.
@@ -39,7 +39,7 @@ function knowledgeDate(): string | null {
 
 export interface DemoResult {
   lines: string[];
-  /** Findings shown across all samples — the number a test can hold the demo to. */
+  /** Findings shown across all samples: the number a test can hold the demo to. */
   findingCount: number;
 }
 
@@ -86,7 +86,7 @@ export function runDemo(): DemoResult {
     lines.push('', '─'.repeat(60), `Asked for: ${sample.prompt}`, '', sample.code, '');
 
     if (failed) {
-      // Say which sample went unchecked rather than skipping it silently — a
+      // Say which sample went unchecked rather than skipping it silently: a
       // demo that quietly drops a sample overstates the catch.
       lines.push(`(sample ${index + 1} could not be checked: the engine failed on it)`);
       continue;

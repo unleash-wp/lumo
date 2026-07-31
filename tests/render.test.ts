@@ -22,12 +22,12 @@ import type { SnapshotEntry } from '../src/types.js';
 function freeEntry(): SnapshotEntry {
   const snap = loadSnapshot();
   const entry = findEntry(snap, 'wp-img-tag-add-decoding-attr-deprecation');
-  if (!entry) throw new Error('wp-img-tag entry missing from snapshot — test setup broken');
+  if (!entry) throw new Error('wp-img-tag entry missing from snapshot, test setup broken');
   return entry;
 }
 
 /**
- * Synthetic Pro-only HPOS entry — the render engine still has a WooCommerce branch
+ * Synthetic Pro-only HPOS entry: the render engine still has a WooCommerce branch
  * (HPOS heading, "WooCommerce ≥" affected line) and that behaviour did not change,
  * so it keeps being exercised from a fixture rather than the Free artifact.
  * Same approach as tests/catch.test.ts.
@@ -57,8 +57,8 @@ function hposEntry(): SnapshotEntry {
 // FA-16: renderFree
 // ---------------------------------------------------------------------------
 
-// renderFree is tier-agnostic, so it is asserted against the shipped Free entry —
-// that is the projection a free user actually receives.
+// renderFree is tier-agnostic, so it is asserted against the shipped Free entry.
+// That is the projection a free user actually receives.
 describe('renderFree', () => {
   it('returns all required Free fields', () => {
     const entry = freeEntry();
@@ -145,7 +145,7 @@ describe('formatFreeMarkdown', () => {
     expect(md).toContain('### Correct');
   });
 
-  // WooCommerce branch of the renderer — Pro-only content, so it runs off the fixture.
+  // WooCommerce branch of the renderer. Pro-only content, so it runs off the fixture.
   it('keeps the HPOS framing in the wrong-heading for a WooCommerce entry', () => {
     const rendered = renderFree(hposEntry());
     const md = formatFreeMarkdown(rendered);
@@ -167,7 +167,7 @@ describe('formatFreeMarkdown', () => {
     expect(md).toContain(`_Knowledge current as of ${entry.updatedAt.slice(0, 10)}._`);
   });
 
-  it('is deterministic — same input produces identical string on repeated calls', () => {
+  it('is deterministic, same input produces identical string on repeated calls', () => {
     const rendered = renderFree(freeEntry());
     const first = formatFreeMarkdown(rendered);
     const second = formatFreeMarkdown(rendered);
@@ -222,7 +222,7 @@ describe('formatFreeMarkdown', () => {
   it('renders wp-img-tag deprecation entry with "WordPress ≥ 6.4.0" affected line', () => {
     const snap = loadSnapshot();
     const entry = snap.entries.find((e) => e.slug === 'wp-img-tag-add-decoding-attr-deprecation');
-    if (!entry) throw new Error('wp-img-tag entry missing from snapshot — test setup broken');
+    if (!entry) throw new Error('wp-img-tag entry missing from snapshot, test setup broken');
     const rendered = renderFree(entry);
     const md = formatFreeMarkdown(rendered);
     expect(md).toContain('**Affected:** WordPress ≥ 6.4.0');
@@ -279,10 +279,10 @@ describe('formatFreeMarkdown', () => {
 });
 
 // ---------------------------------------------------------------------------
-// FREE_UPGRADE_HINT — corrected true delta (must NOT name Free-shipped fields)
+// FREE_UPGRADE_HINT: corrected true delta (must NOT name Free-shipped fields)
 // ---------------------------------------------------------------------------
 
-describe('FREE_UPGRADE_HINT — corrected copy', () => {
+describe('FREE_UPGRADE_HINT, corrected copy', () => {
   it('does not mention "source" (Free already ships source_url)', () => {
     expect(FREE_UPGRADE_HINT.toLowerCase()).not.toContain('source');
   });
@@ -312,7 +312,7 @@ describe('FREE_UPGRADE_HINT — corrected copy', () => {
 
   it('names upcoming release foresight as a Pro-only differentiator', () => {
     const lower = FREE_UPGRADE_HINT.toLowerCase();
-    // The hint must now name the foresight angle — upcoming WP releases / before they ship.
+    // The hint must now name the foresight angle, upcoming WP releases / before they ship.
     const hasForesight =
       lower.includes('upcoming') ||
       lower.includes('before they ship') ||
@@ -322,7 +322,7 @@ describe('FREE_UPGRADE_HINT — corrected copy', () => {
 });
 
 // ---------------------------------------------------------------------------
-// UPGRADE_REVEAL_LINE + UPGRADE_PROMPT_BLOCK — constants exist and are correct
+// UPGRADE_REVEAL_LINE + UPGRADE_PROMPT_BLOCK, constants exist and are correct
 // ---------------------------------------------------------------------------
 
 describe('UPGRADE_REVEAL_LINE', () => {
@@ -361,7 +361,7 @@ describe('UPGRADE_PROMPT_BLOCK', () => {
 });
 
 // ---------------------------------------------------------------------------
-// FRESHNESS_REVEAL_LINE — C4 honesty + wiring constraints
+// FRESHNESS_REVEAL_LINE: C4 honesty + wiring constraints
 // ---------------------------------------------------------------------------
 
 describe('FRESHNESS_REVEAL_LINE', () => {
@@ -374,7 +374,7 @@ describe('FRESHNESS_REVEAL_LINE', () => {
     expect(FRESHNESS_REVEAL_LINE).toContain('{date}');
   });
 
-  it('names no Pro endpoint — the add-command moved behind LUMO_PRO_MCP_URL', () => {
+  it('names no Pro endpoint: the add-command moved behind LUMO_PRO_MCP_URL', () => {
     // Pro ships as a licensed knowledge pack; there is no default hosted
     // server, so the reveal must never print an install command for a host
     // the reader cannot reach (same dead-link rule as the checkout prompt).
@@ -388,18 +388,18 @@ describe('FRESHNESS_REVEAL_LINE', () => {
     expect(PRO_MCP_ADD_LINE).not.toMatch(/https?:\/\//);
   });
 
-  it('says "verified as of" — honest claim about snapshot date, not a staleness verdict', () => {
+  it('says "verified as of": honest claim about snapshot date, not a staleness verdict', () => {
     expect(FRESHNESS_REVEAL_LINE).toContain('verified as of');
   });
 
-  it('does not say "out of date" or "stale" — those are unprovable per-entry verdicts', () => {
+  it('does not say "out of date" or "stale": those are unprovable per-entry verdicts', () => {
     const lower = FRESHNESS_REVEAL_LINE.toLowerCase();
     expect(lower).not.toContain('out of date');
     expect(lower).not.toContain('is stale');
     expect(lower).not.toContain('is outdated');
   });
 
-  it('does not claim Free "stays current" or "keeps current" — Free is a static snapshot', () => {
+  it('does not claim Free "stays current" or "keeps current": Free is a static snapshot', () => {
     const lower = FRESHNESS_REVEAL_LINE.toLowerCase();
     expect(lower).not.toContain('stays current');
     expect(lower).not.toContain('keeps current');

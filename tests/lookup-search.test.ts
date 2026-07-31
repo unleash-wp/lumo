@@ -10,7 +10,7 @@ import { loadSnapshot } from '../src/lib/snapshot.js';
 
 const snap = loadSnapshot();
 
-describe('lookup query — relevance goldens', () => {
+describe('lookup query, relevance goldens', () => {
   it.each([
     ['sql injection prepare', 'wpdb-query-without-prepare-sql-injection'],
     ['nonce ajax', 'wp-ajax-handler-without-nonce'],
@@ -30,7 +30,7 @@ describe('lookup query — relevance goldens', () => {
   });
 });
 
-describe('lookup query — honest misses', () => {
+describe('lookup query, honest misses', () => {
   it('a Pro topic goes through the paywall teaser, not "nothing found"', async () => {
     const out = await handleLookup({ query: 'woocommerce hpos orders' }, snap);
     expect(out.toLowerCase()).toContain('pro');
@@ -64,7 +64,7 @@ describe('check_code structured verdict', () => {
     expect(v.text).toContain('BREAKING:');
   });
 
-  it('SILENCE: clean code is computed:true found:false — a real verdict, not a shrug', async () => {
+  it('SILENCE: clean code is computed:true found:false, a real verdict, not a shrug', async () => {
     const { handleCheckCodeFull } = await import('../src/mcp/handlers.js');
     const v = await handleCheckCodeFull(
       { code: `<?php echo esc_html__( 'Hi', 'my-plugin' );`, language: 'php' },

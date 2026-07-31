@@ -55,7 +55,7 @@ lumo scan: 1 LOUD finding in your current changes.
 > This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
 > Your model's training likely predates this release.
 
-## wp_img_tag_add_decoding_attr() deprecated in WP 6.4 — use wp_img_tag_add_loading_optimization_attrs()
+## wp_img_tag_add_decoding_attr() deprecated in WP 6.4: use wp_img_tag_add_loading_optimization_attrs()
 
 The wp_img_tag_add_decoding_attr() function was deprecated in WordPress 6.4.0
 in favor of wp_img_tag_add_loading_optimization_attrs(), which consolidates
@@ -64,13 +64,13 @@ using the old function will trigger deprecation notices on WP 6.4+.
 
 ### Wrong
 
-// WRONG — deprecated since WP 6.4.0
+// WRONG: deprecated since WP 6.4.0
 $img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );
 echo $img_html;
 
 ### Correct
 
-// CORRECT — WP 6.4.0+
+// CORRECT: WP 6.4.0+
 $img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );
 [… full block also shows letting Core handle it via the_post_thumbnail() …]
 

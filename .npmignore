@@ -1,6 +1,6 @@
 # The "files" allowlist in package.json controls what ships to npm.
 # This file is a defence-in-depth guard for anything not covered by the
-# allowlist — particularly dotfiles that npm publishes by default.
+# allowlist: particularly dotfiles that npm publishes by default.
 
 # Source and dev
 src/

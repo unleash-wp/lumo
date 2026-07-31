@@ -60,7 +60,7 @@ child.stdout.on('data', (chunk) => {
       continue;
     }
 
-    // Step 1: server responds to initialize — send initialized notification, then tools/list
+    // Step 1: server responds to initialize, send initialized notification, then tools/list
     if (msg.id === 1 && msg.result?.serverInfo) {
       send({ jsonrpc: '2.0', method: 'notifications/initialized', params: {} });
       send({ jsonrpc: '2.0', id: nextId(), method: 'tools/list', params: {} });

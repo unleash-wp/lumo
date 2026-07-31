@@ -17,7 +17,7 @@ function wpBinaryAvailable(): boolean {
 }
 
 /**
- * Return true when `projectRoot` looks like a WordPress installation —
+ * Return true when `projectRoot` looks like a WordPress installation,
  * presence of wp-load.php or wp-content is sufficient.
  */
 function looksLikeWordPress(projectRoot: string): boolean {

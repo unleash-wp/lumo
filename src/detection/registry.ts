@@ -1,15 +1,15 @@
 // ---------------------------------------------------------------------------
-// CatchSignal — additive blob-in detection (does NOT affect sourceSignals or
+// CatchSignal, additive blob-in detection (does NOT affect sourceSignals or
 // the project-scan path; those are read independently by detectFromSource).
 // ---------------------------------------------------------------------------
 
 /**
  * Signal class per the precision model.
  *
- * CERTAIN        — self-evident from the blob alone; eligible for LOUD (gated by
+ * CERTAIN: self-evident from the blob alone; eligible for LOUD (gated by
  *                  version stamp + breaking_change).
- * CONTEXT_DEPENDENT — truth depends on a fact the blob cannot prove; caps at SOFT.
- * REPO_STATE     — a repository-level fact (tracked file, missing lock); caps at
+ * CONTEXT_DEPENDENT: truth depends on a fact the blob cannot prove; caps at SOFT.
+ * REPO_STATE: a repository-level fact (tracked file, missing lock); caps at
  *                  SILENT on a bare blob (domain of lumo_audit, not lumo_check_code).
  */
 export type SignalClass = 'CERTAIN' | 'CONTEXT_DEPENDENT' | 'REPO_STATE';
@@ -33,7 +33,7 @@ export interface CatchSignal {
   /**
    * Optional suppress-guard: if this RegExp matches anywhere in the blob, the signal
    * is suppressed entirely (SILENT). Used for absence-in-presence signals where a
-   * correct form of the same pattern is already present — e.g. the flag we expect
+   * correct form of the same pattern is already present, e.g. the flag we expect
    * to be missing is actually there.
    */
   suppressGuard?: RegExp;
@@ -41,10 +41,10 @@ export interface CatchSignal {
   /**
    * When true, test this signal against a blob with BOTH comments AND quoted string
    * bodies stripped. Use for call-pattern signals whose match target is a function
-   * name with an open paren — a function name inside a string literal is not a call.
+   * name with an open paren: a function name inside a string literal is not a call.
    *
    * When false/absent, only comments are stripped (default). Use for signals whose
-   * match target IS a string literal (e.g. 'shop_order', 'sk_live_') — stripping
+   * match target IS a string literal (e.g. 'shop_order', 'sk_live_'), stripping
    * the string body would erase the very signal being detected.
    */
   stripStrings?: boolean;
@@ -57,7 +57,7 @@ export interface PatternDefinition {
   composerKeys: readonly string[];
   /** plugin-file paths (relative to projectRoot) whose presence implies it. */
   directoryPaths: readonly string[];
-  /** wp-cli: `wp plugin get <wpCliSlug>` — omit to skip wp-cli for this pattern. */
+  /** wp-cli: `wp plugin get <wpCliSlug>`, omit to skip wp-cli for this pattern. */
   wpCliSlug?: string;
   /** substrings in project .php source that imply it (heuristic last resort). */
   sourceSignals: readonly string[];
@@ -74,7 +74,7 @@ export interface PatternDefinition {
    */
   gitMissingPaths?: readonly string[];
   /**
-   * Blob-in catch signals for lumo_check_code. Additive — sourceSignals and the
+   * Blob-in catch signals for lumo_check_code. Additive, sourceSignals and the
    * project-scan path are NEVER read from this field and remain byte-identical.
    */
   catchSignals?: readonly CatchSignal[];
@@ -93,7 +93,7 @@ export interface PatternDefinition {
   /**
    * When true, Pro has curated knowledge for this plugin and the upgrade
    * promise is honest. When false or absent on a proTeaser entry, the upgrade
-   * CTA is suppressed — detection is kept as a demand signal but no promise
+   * CTA is suppressed, detection is kept as a demand signal but no promise
    * is made to the user that Pro has answers.
    */
   hasProCoverage?: true;
@@ -101,13 +101,13 @@ export interface PatternDefinition {
 
 export const PATTERNS: readonly PatternDefinition[] = [
   {
-    // WordPress Abilities API — fires when wp_register_ability() is called AND
+    // WordPress Abilities API, fires when wp_register_ability() is called AND
     // the mcp.public flag is absent. Absence-in-presence: the call exists but the
     // MCP opt-in flag does not. CONTEXT_DEPENDENT because the developer may not
-    // intend this ability to be MCP-visible — always SOFT, never LOUD.
+    // intend this ability to be MCP-visible, always SOFT, never LOUD.
     //
     // suppressGuard: if 'public' => true already appears in the mcp array of this
-    // blob, the ability is correctly configured — suppress the signal entirely.
+    // blob, the ability is correctly configured, suppress the signal entirely.
     // The guard pattern is intentionally broad ('public'\s*=>\s*true) so it catches
     // both single and double quotes; false positives here are safe (suppression =
     // conservative, the user already did the right thing or something similar).
@@ -130,7 +130,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     pattern: 'woocommerce',
     // WooCommerce knowledge is Pro-only. Detection must still fire, or a Free
     // user auditing a WooCommerce project would be told "nothing to check here"
-    // — silence read as a clean bill of health on code Lumo simply cannot see.
+    //, silence read as a clean bill of health on code Lumo simply cannot see.
     // The teaser names what was detected and what covers it.
     proTeaser: true,
     proTeaserName: 'WooCommerce',
@@ -157,10 +157,10 @@ export const PATTERNS: readonly PatternDefinition[] = [
         language: 'php',
       },
       // SOFT: $order_id-shaped variable passed to get_post_meta / update_post_meta /
-      // get_post — CONTEXT_DEPENDENT because the variable could be any post id.
+      // get_post, CONTEXT_DEPENDENT because the variable could be any post id.
       //
       // The name must be order-shaped AND id-shaped. A bare \w*order\w* also matched
-      // $recorder_id, $border_id, $orderby_post_id and $reorder_id — none of them
+      // $recorder_id, $border_id, $orderby_post_id and $reorder_id. None of them
       // WooCommerce. Allowing any _suffix then still matched $order_status and
       // $order_number, which are not post ids either. Since a dropped Pro entry now
       // surfaces a named teaser instead of silence, that imprecision would put a
@@ -197,7 +197,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     catchSignals: [
       // LOUD: the deprecated function name is self-evident.
       // shimGuard: if the same blob contains a function_exists guard for this
-      // symbol, the dev is writing a polyfill — downgrade to SOFT.
+      // symbol, the dev is writing a polyfill, downgrade to SOFT.
       // stripStrings: the match target is a call pattern; a mention inside a
       // string literal is not a call and must not fire.
       {
@@ -211,7 +211,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
   },
   {
-    // Fires when composer.json IS tracked but composer.lock is NOT — missing lock file.
+    // Fires when composer.json IS tracked but composer.lock is NOT, missing lock file.
     pattern: 'wordpress-dependencies',
     composerKeys: [],
     directoryPaths: [],
@@ -222,14 +222,14 @@ export const PATTERNS: readonly PatternDefinition[] = [
   },
   {
     // Heuristic: tight key prefixes for real Stripe / GitHub / AWS keys. SendGrid's
-    // "SG." is omitted — as a substring it would match "MSG." etc.; precision wins.
+    // "SG." is omitted, as a substring it would match "MSG." etc; precision wins.
     pattern: 'hardcoded-secrets',
     composerKeys: [],
     directoryPaths: [],
     sourceSignals: ['sk_live_', 'sk_test_', 'ghp_', 'AKIA'],
     catchSignals: [
       // SOFT (REPO_STATE edge): a literal key prefix in a blob is suspicious
-      // but we can't make a dated version claim — always SOFT, never LOUD.
+      // but we can't make a dated version claim, always SOFT, never LOUD.
       {
         match: /['"]sk_live_/,
         class: 'REPO_STATE',
@@ -250,7 +250,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     directoryPaths: [],
     sourceSignals: [],
     catchSignals: [
-      // LOUD: isValidBlockContent was removed — self-evident JS symbol.
+      // LOUD: isValidBlockContent was removed, self-evident JS symbol.
       // stripStrings: a call in a string literal is not an actual call.
       {
         match: /\bisValidBlockContent\s*\(/,
@@ -261,7 +261,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
       // LOUD: apiVersion: 2 (v2 specifically) inside a registerBlockType call.
       // Narrowed from [12] to 2: the entry documents v2 deprecation; a v1 match
-      // would cite v2 evidence against v1 code — a factual misalignment.
+      // would cite v2 evidence against v1 code: a factual misalignment.
       // stripStrings: a mention inside a string comment is not a registration.
       {
         match: /apiVersion\s*:\s*2\b/,
@@ -270,7 +270,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
         language: 'js',
         stripStrings: true,
       },
-      // SOFT: useSetting — deprecated but not breaking (breaking_change: false).
+      // SOFT: useSetting, deprecated but not breaking (breaking_change: false).
       // The precision model caps this at SOFT regardless of import presence.
       // stripStrings: a mention in a string is not an actual call.
       {
@@ -283,7 +283,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
   },
   // ---------------------------------------------------------------------------
-  // Premium agency plugins — Pro-teaser only.
+  // Premium agency plugins. Pro-teaser only.
   // Detection fires when the plugin is found; Free has no knowledge entry for
   // these. auditProject surfaces a measured teaser instead of a blank no-match.
   // ---------------------------------------------------------------------------
@@ -302,7 +302,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['acf_add_local_field_group(', 'acf_register_block_type('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       { match: 'acf_get_field(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
       { match: 'get_sub_field(', class: 'CERTAIN', entrySlug: 'acf-get-field-unescaped-output', stripStrings: true, language: 'php' },
@@ -336,7 +336,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['acfe_add_options_page(', 'acfe_get_post_field_groups('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "acfe_add_options_page(",
@@ -368,7 +368,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['GFForms::', 'gform_after_submission'],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       { match: 'GFAPI::', class: 'CERTAIN', entrySlug: 'gf-server-side-validation', stripStrings: true, language: 'php' },
       {
@@ -399,7 +399,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['rwmb_meta(', 'rwmb_the_field('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "rwmb_meta(",
@@ -430,7 +430,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['pods_field(', 'pods_field_display('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "pods_field(",
@@ -461,7 +461,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['carbon_get_post_meta(', 'Carbon_Fields\\Container\\Container'],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "carbon_get_post_meta(",
@@ -492,7 +492,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['types_render_field(', 'types_field('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "types_render_field(",
@@ -524,7 +524,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['\\Elementor\\Widget_Base'],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       { match: '\\Elementor\\Plugin', class: 'CERTAIN', entrySlug: 'elementor-register-controls-not-underscore-register-controls', stripStrings: true, language: 'php' },
       {
@@ -549,7 +549,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['vc_map(', 'vc_add_param('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "vc_map(",
@@ -582,7 +582,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['pll_e(', 'pll_current_language('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "pll_e(",
@@ -615,7 +615,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['RankMath\\JSON_LD\\', 'rank_math_get_head('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: 'RankMath\\JSON_LD\\',
@@ -646,7 +646,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['rocket_clean_domain(', 'rocket_clean_post('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "rocket_clean_domain(",
@@ -677,7 +677,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['wfBlock::', 'wordfence::liveTraf('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "wfBlock::",
@@ -707,7 +707,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     sourceSignals: ['WC_Subscriptions::', 'wcs_get_subscription('],
     // Presence signals for the blob catch, verbatim from the curated
     // sourceSignals above. The entry is Pro-only (or a synthetic gap slug), so
-    // a hit surfaces the named coverage gap — never a Free finding.
+    // a hit surfaces the named coverage gap, never a Free finding.
     catchSignals: [
       {
         match: "WC_Subscriptions::",
@@ -730,7 +730,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
   },
 
   {
-    // WordPress 7.0 Interactivity API changes (released May 20, 2026 — after model training cutoff).
+    // WordPress 7.0 Interactivity API changes (released May 20, 2026, after model training cutoff).
     //
     // Signal 1: state.navigation.hasStarted / state.navigation.hasFinished read from
     // the core/router store. CERTAIN because the property chain is self-evident; caps
@@ -738,7 +738,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     // stripStrings: a mention inside a string is not a property access.
     //
     // Signal 2: import { effect } from '@preact/signals' alongside @wordpress/interactivity
-    // usage. CONTEXT_DEPENDENT because @preact/signals is a general-purpose library —
+    // usage. CONTEXT_DEPENDENT because @preact/signals is a general-purpose library:
     // the signal only fires when the two co-occur, but we cannot prove the caller
     // intended this as an @wordpress/interactivity-specific pattern from the blob alone.
     pattern: 'wordpress-7-0',
@@ -746,7 +746,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     directoryPaths: [],
     sourceSignals: [],
     catchSignals: [
-      // SOFT: deprecated state.navigation properties — breaking_change: false in entry
+      // SOFT: deprecated state.navigation properties, breaking_change: false in entry
       // (they deprecated in 7.0; will stop working in 7.1).
       // stripStrings: property access inside a string is not a real access.
       {
@@ -757,9 +757,9 @@ export const PATTERNS: readonly PatternDefinition[] = [
         stripStrings: true,
       },
       // SOFT: effect imported directly from @preact/signals alongside @wordpress/interactivity.
-      // Cannot be LOUD — CONTEXT_DEPENDENT because @preact/signals is a general library.
+      // Cannot be LOUD, CONTEXT_DEPENDENT because @preact/signals is a general library.
       // suppressGuard: if the blob already imports watch from @wordpress/interactivity,
-      // the developer is doing the right thing — suppress entirely.
+      // the developer is doing the right thing, suppress entirely.
       {
         match: /from\s+['"]@preact\/signals['"]/,
         class: 'CONTEXT_DEPENDENT',
@@ -778,11 +778,11 @@ export const PATTERNS: readonly PatternDefinition[] = [
   // Held back deliberately: 14 further curated rules match on the mere presence
   // of a call (add_action('wp_ajax_…'), register_rest_route(…)) rather than on the
   // absence of the guard, so they also fire on the fix the entry itself
-  // recommends. Connecting them needs a suppressGuard each — judgement work, not
+  // recommends. Connecting them needs a suppressGuard each, judgement work, not
   // translation. See PROGRESS.md.
   // ---------------------------------------------------------------------------
   {
-    // Security fundamentals — wrong in every WordPress version, so no version fact
+    // Security fundamentals, wrong in every WordPress version, so no version fact
     // anchors them and classify() caps them at SOFT. Raising that is the open
     // severity decision; this translation does not pre-empt it.
     //
@@ -802,19 +802,19 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
       {
         // The signal above needs an assignment, so the inline form stayed
-        // silent — and inline straight into output is the more dangerous one:
+        // silent, and inline straight into output is the more dangerous one:
         // `echo '<div>' . $_GET['name'] . '</div>';` reaches the page unescaped
         // with no variable to trace. This covers that sink specifically rather
         // than every read of a superglobal: a read fed to isset(), compared to
         // a literal, or passed to in_array() is not a defect, and flagging it
         // would be the noise this product exists to avoid.
         //
-        // The lookbehind is what makes it precise — it is evaluated where the
+        // The lookbehind is what makes it precise. It is evaluated where the
         // superglobal starts, so an escaping or sanitising call wrapped
         // directly around the read silences it however the echo was reached.
         // Bounded by `;` so one guarded statement cannot vouch for the next.
         // printf/vprintf and the short echo tag are output channels too, and
-        // `\bprint\b` does not reach printf — the word boundary fails on the
+        // `\bprint\b` does not reach printf: the word boundary fails on the
         // trailing f. Found by probing the channel list rather than the regex.
         // sprintf is deliberately absent: it returns a string, so its result
         // may still be escaped before it reaches the page.
@@ -837,7 +837,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
         language: 'php',
       },
       // The presence-matchers below were held back until each carried a
-      // suppressGuard on the correct form its own entry recommends — without
+      // suppressGuard on the correct form its own entry recommends, without
       // the guard they fired on the documented fix (measured, 13 of 13).
       // Guards were validated against both documented forms per rule before
       // connecting: signal catches bad_pattern, guard recognises code_example,
@@ -860,7 +860,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
       },
       {
         // CERTAIN on the literal: '__return_true' as permission_callback is
-        // self-evident. The guard encodes the one documented-correct case — a
+        // self-evident. The guard encodes the one documented-correct case: a
         // read-only public route, where __return_true is intentional.
         match: /'permission_callback'\s*=>\s*'__return_true'/,
         class: 'CERTAIN',
@@ -870,7 +870,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
         language: 'php',
       },
       {
-        // The signal above catches the deliberate case — someone typed
+        // The signal above catches the deliberate case, someone typed
         // __return_true. The case the slug and the title actually name is the
         // forgotten one, where permission_callback is absent, which is what an
         // assistant writes and what WordPress has warned about with
@@ -879,7 +879,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
         // Scoped to a single register_rest_route() statement rather than the
         // blob: the span may not cross `;`, `{`, `}` or a second
         // register_rest_route, and must contain a literal 'callback' key. That
-        // is what keeps the two shapes the issue warned about quiet — args
+        // is what keeps the two shapes the issue warned about quiet, args
         // assembled in a variable carry no literal 'callback' in the call, and
         // a closure argument contains the braces the span refuses to cross.
         //
@@ -912,7 +912,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
   },
   {
-    // Plugin-standard rules — structure and hygiene the WordPress handbook requires.
+    // Plugin-standard rules, structure and hygiene the WordPress handbook requires.
     //
     // Signals translated 1:1 from the knowledge base. Only rules whose documented
     // wrong form is caught AND whose documented fix stays quiet are connected here.
@@ -925,14 +925,14 @@ export const PATTERNS: readonly PatternDefinition[] = [
         match: /\b__\s*\(\s*['"][^'"]+['"]\s*\)/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'i18n-function-missing-text-domain',
-        condition: 'the call is missing the second argument (text-domain) — e.g. __( \'Hello\' ) instead of __( \'Hello\', \'myplugin\' )',
+        condition: 'the call is missing the second argument (text-domain), e.g. __( \'Hello\' ) instead of __( \'Hello\', \'myplugin\' )',
         language: 'php',
       },
       {
         match: /\b_e\s*\(\s*['"][^'"]+['"]\s*\)/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'i18n-function-missing-text-domain',
-        condition: 'the call is missing the second argument (text-domain) — e.g. _e( \'Hello\' ) instead of _e( \'Hello\', \'myplugin\' )',
+        condition: 'the call is missing the second argument (text-domain), e.g. _e( \'Hello\' ) instead of _e( \'Hello\', \'myplugin\' )',
         language: 'php',
       },
       {
@@ -945,7 +945,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
       // php-file-missing-abspath-guard is NOT connected, on purpose. Its signal
       // asks a file-level question ("does this file open with an ABSPATH guard?")
       // of a blob checker that is handed snippets. Measured against the 42
-      // documented correct examples in the snapshot it fired on 16 of them — by
+      // documented correct examples in the snapshot it fired on 16 of them, by
       // far the loudest rule in the set, and always wrong, because a snippet is
       // never a whole file. It belongs to a file-aware scan, not to the catch.
       {
@@ -960,14 +960,14 @@ export const PATTERNS: readonly PatternDefinition[] = [
         // correct example uses wp_safe_redirect() and so never met the signal.
         //
         // `wp_redirect( site_url( 'home' ) )` next to a whitelist check on $_GET is
-        // therefore quiet — the target is a call, not a variable.
+        // therefore quiet: the target is a call, not a variable.
         // Two shapes, because request data reaches the call either way: assigned to
         // a variable first, or passed inline.
         match:
           /\$_(?:GET|POST|REQUEST)\b[\s\S]{0,400}?\bwp_redirect\s*\(\s*\$\w+|\bwp_redirect\s*\(\s*[^;)]{0,80}\$_(?:GET|POST|REQUEST)\b/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'wp-redirect-with-user-input-use-wp-safe-redirect',
-        condition: 'the URL argument may be derived from user-controlled input ($_GET, $_POST, $_REQUEST, or any unsanitized variable) — wp_safe_redirect() restricts the destination to the same host + allowed hosts list, eliminating open redirect risk',
+        condition: 'the URL argument may be derived from user-controlled input ($_GET, $_POST, $_REQUEST, or any unsanitized variable), wp_safe_redirect() restricts the destination to the same host + allowed hosts list, eliminating open redirect risk',
         stripStrings: true,
         language: 'php',
       },
@@ -984,7 +984,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
     ],
   },
   {
-    // Core API breadth — the everyday Core surface: HTTP, roles and capabilities.
+    // Core API breadth, the everyday Core surface: HTTP, roles and capabilities.
     //
     // Signals translated 1:1 from the knowledge base. Only rules whose documented
     // wrong form is caught AND whose documented fix stays quiet are connected here.
@@ -1041,7 +1041,7 @@ export const PATTERNS: readonly PatternDefinition[] = [
         match: /\bis_admin\s*\(\s*\)/,
         class: 'CONTEXT_DEPENDENT',
         entrySlug: 'wp-is-admin-not-authorization-check',
-        condition: 'is_admin() is used as an authorization check — it only tests whether an admin PAGE is rendering, not whether the user may act',
+        condition: 'is_admin() is used as an authorization check. It only tests whether an admin PAGE is rendering, not whether the user may act',
         suppressGuard: /current_user_can\s*\(/,
         language: 'php',
       },

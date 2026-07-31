@@ -2,7 +2,7 @@
  * Unified diff parser for the Lumo GitHub Action.
  *
  * Extracts per-file blobs of added lines from a unified diff string.
- * Pure function — no I/O, no side effects.
+ * Pure function, no I/O, no side effects.
  */
 
 export interface FileDiff {
@@ -30,7 +30,7 @@ export function parseDiff(diff: string): FileDiff[] {
 
     const filename = headerMatch[1].trim();
 
-    // Only PHP and JS/TS files — skip everything else (YAML, CSS, etc.)
+    // Only PHP and JS/TS files, skip everything else (YAML, CSS, etc.)
     const language: 'php' | 'js' | null = filename.endsWith('.php')
       ? 'php'
       : /\.(js|ts|jsx|tsx|mjs|cjs)$/.test(filename)

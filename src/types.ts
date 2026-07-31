@@ -1,6 +1,6 @@
 // Shared type contracts for the Free Agent.
 //
-// Mirrored by contract from lumo-pro — copy field names/shape, do NOT import.
+// Mirrored by contract from lumo-pro, copy field names/shape, do NOT import.
 // Source: unleash-wp/lumo-pro src/knowledge/hpos-content.ts + src/knowledge/lookup.ts
 // (as of the initial W0 seed; update when the Pro contract changes).
 //
@@ -17,7 +17,7 @@ export interface SnapshotVersion {
 }
 
 /**
- * One entry in data/snapshot.json — the Free projection of a published entry.
+ * One entry in data/snapshot.json: the Free projection of a published entry.
  * Fields are the allow-listed Free subset; `body` is NEVER present.
  * tier is always "free" in a valid snapshot artifact.
  */
@@ -26,7 +26,7 @@ export interface SnapshotEntry {
   title: string;
   /** Routing key: maps a detected plugin to this entry (e.g. "woocommerce"). */
   category_slug: string;
-  /** The Free answer — byte-identical to the Pro summary column. */
+  /** The Free answer, byte-identical to the Pro summary column. */
   summary: string;
   /** The correct code pattern; ships with Free (wrong-vs-correct is the value). */
   code_example: string;
@@ -46,7 +46,7 @@ export interface SnapshotEntry {
 export interface Snapshot {
   schemaVersion: 1;
   /**
-   * Sourced from max(updatedAt) across entries — deterministic, not wall-clock,
+   * Sourced from max(updatedAt) across entries, deterministic, not wall-clock,
    * so re-running on unchanged content produces an identical file.
    */
   generatedAt: string;
@@ -77,6 +77,6 @@ export interface FreeRenderedEntry {
   versions: SnapshotVersion[];
   /** ISO date this entry was last verified-current; rendered as the freshness line. */
   verifiedAt: string;
-  /** Quiet depth reveal — appended after the Free answer, never a hard block. */
+  /** Quiet depth reveal, appended after the Free answer, never a hard block. */
   upgradeHint: string;
 }

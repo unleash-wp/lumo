@@ -68,7 +68,7 @@ function scanForSignals(dir: string, depth: number, fileCount: { n: number }): s
         }
       }
     } catch {
-      // Unreadable — skip
+      // Unreadable, skip
     }
   }
 

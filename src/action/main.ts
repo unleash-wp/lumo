@@ -5,15 +5,15 @@
  * findings as PR review comments. Fails the check (exit 1) when LOUD
  * catches fire and fail_on_loud is true (the default).
  *
- * Enforcement ladder — gated on .claude/.lumo.json enforce.mode in the
+ * Enforcement ladder, gated on .claude/.lumo.json enforce.mode in the
  * checked-out workspace (GITHUB_WORKSPACE):
  *   block     → LOUD fires = non-zero exit (fails the PR build)
  *   warn-only → comment-only on every finding; no non-zero exit
  *   off       → no comments, no exit signal
- *   (absent)  → advisory/comment only — byte-identical to warn-only
+ *   (absent)  → advisory/comment only, byte-identical to warn-only
  *
  * The fail_on_loud action input remains for backwards compatibility and
- * is OR-combined with enforce.mode:block — either can trigger failure.
+ * is OR-combined with enforce.mode:block. Either can trigger failure.
  *
  * Block/advise model (no-false-LOUD):
  *   LOUD  → comment + fail when fail_on_loud=true OR enforce.mode=block.
@@ -54,8 +54,8 @@ import {
  * check run through the Checks API plus `checks: write`.
  *
  * `scanLimits` is deliberately absent from this signature. A limit of the
- * scanner is not a defect in the contributor's code — the limits are already
- * not findings — so no setting may turn one into a red check.
+ * scanner is not a defect in the contributor's code: the limits are already
+ * not findings, so no setting may turn one into a red check.
  */
 export function failsOnDegraded(rawInput: string, proDegraded: boolean): boolean {
   return proDegraded && rawInput.trim().toLowerCase() === 'true';
@@ -83,7 +83,7 @@ export function resolveActionEnforceMode(
   let cfg: Record<string, unknown>;
   try {
     // No file is not a broken file. Most repositories never write one, and the
-    // documented default for them is advisory — nothing to report.
+    // documented default for them is advisory. Nothing to report.
     if (!fs.existsSync(cfgPath)) return 'warn-only';
     cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8')) as Record<string, unknown>;
   } catch {
@@ -110,7 +110,7 @@ export function resolveActionEnforceMode(
  * Put a line where a reader will actually meet it.
  *
  * `core.info` writes to the step log, and nobody opens the log of a green
- * check — which is precisely when these lines matter, because every one of them
+ * check, which is precisely when these lines matter, because every one of them
  * exists to say the green tick is not a verdict. The job summary is rendered on
  * the run page; a warning becomes an annotation on the checks page next to the
  * tick itself. Neither blocks a merge.
@@ -118,7 +118,7 @@ export function resolveActionEnforceMode(
  * A pull request comment would be louder still and is deliberately not used for
  * these: both repeat on every pull request in a repository that is simply
  * unconfigured, or that has a quiet diff. A comment each time is the Cobra
- * effect — noise that teaches people to filter Lumo out. Comments stay reserved
+ * effect, noise that teaches people to filter Lumo out. Comments stay reserved
  * for the case where something a customer is paying for stopped working
  * mid-run.
  */
@@ -128,7 +128,7 @@ export async function announce(heading: string, line: string, annotate: boolean)
   } else {
     core.info(`[lumo] ${line}`);
   }
-  // Absent outside a real Actions run — a local invocation must not die here.
+  // Absent outside a real Actions run: a local invocation must not die here.
   if (process.env['GITHUB_STEP_SUMMARY']) {
     try {
       await core.summary.addHeading(heading, 3).addRaw(line).write();
@@ -170,12 +170,12 @@ async function main(): Promise<void> {
 
   // When enforce.mode is "off", skip comments entirely.
   if (enforceMode === 'off') {
-    core.info('[lumo] enforce.mode=off — skipping all catch output');
+    core.info('[lumo] enforce.mode=off, skipping all catch output');
     return;
   }
 
   // CI enforcement is licensed. Without a licence there is no gate: the check
-  // stays green — a missing subscription must never block someone's merge —
+  // stays green: a missing subscription must never block someone's merge,
   // but it has to say that nothing was checked somewhere the reader will meet
   // it. This used to be a core.info, which put the sentence in a log nobody
   // opens beside a green tick, and a green tick that nothing contradicts reads
@@ -195,7 +195,7 @@ async function main(): Promise<void> {
   const ctx = github.context;
 
   if (ctx.eventName !== 'pull_request') {
-    core.info('[lumo] Not a pull_request event — skipping');
+    core.info('[lumo] Not a pull_request event, skipping');
     return;
   }
 
@@ -224,7 +224,7 @@ async function main(): Promise<void> {
     licenseKey: licenseKey || undefined,
   });
 
-  // The degradation must speak in the PR itself, not only in the job log —
+  // The degradation must speak in the PR itself, not only in the job log,
   // same contract as the scanner's DID-NOT-RUN line. One comment per run.
   if (proDegraded) {
     await octokit.rest.issues.createComment({
@@ -233,7 +233,7 @@ async function main(): Promise<void> {
       issue_number: pullNumber,
       body: `**[Lumo]** ${ACTION_PRO_DEGRADED_LINE}`,
     });
-    core.info('[lumo] Pro check degraded to the free catch — posted the degradation notice');
+    core.info('[lumo] Pro check degraded to the free catch, posted the degradation notice');
 
     // After the notice, never instead of it: a red check with no sentence
     // saying why is the failure mode this whole notice exists to prevent.
@@ -254,10 +254,10 @@ async function main(): Promise<void> {
       issue_number: pullNumber,
       body: `**[Lumo]** ${buildScanLimitsNotice(scanLimits)}`,
     });
-    core.info(`[lumo] Scan limits hit on ${scanLimits.length} file(s) — posted one summary`);
+    core.info(`[lumo] Scan limits hit on ${scanLimits.length} file(s), posted one summary`);
   }
 
-  // Optional autonomous review stage — advisory, fenced, fail-open. Defined
+  // Optional autonomous review stage, advisory, fenced, fail-open. Defined
   // here so BOTH paths run it: a diff with zero engine findings is exactly
   // where a human-style read adds the most. Never touches counts or exit code.
   const maybeClaudeReview = async (): Promise<void> => {
@@ -276,7 +276,7 @@ async function main(): Promise<void> {
         repo: ctx.repo.repo,
         issue_number: pullNumber,
         body: [
-          '**[Lumo] Autonomous WordPress review** _(advisory — never blocks the merge)_',
+          '**[Lumo] Autonomous WordPress review** _(advisory, never blocks the merge)_',
           '',
           review.body,
           '',
@@ -285,13 +285,13 @@ async function main(): Promise<void> {
       });
       core.info('[lumo] Posted the autonomous review comment');
     } else {
-      core.info('[lumo] Autonomous review skipped (API unavailable or empty) — CI unaffected');
+      core.info('[lumo] Autonomous review skipped (API unavailable or empty), CI unaffected');
     }
   };
 
   if (findings.length === 0) {
     // Reports the scope that was checked, never a verdict on the PR. Lumo saw
-    // the added lines only, and only against the catch that ran — calling that
+    // the added lines only, and only against the catch that ran, calling that
     // a clean PR turns a coverage limit into an approval.
     //
     // Summarised, not annotated: the engine did run here, and a yellow warning
@@ -316,12 +316,12 @@ async function main(): Promise<void> {
 
   if (loudCount > 0 && blockOnLoud) {
     summaryLines.push(
-      `**${loudCount} LOUD catch${loudCount > 1 ? 'es' : ''}** — certain breaking changes; this check will fail.`,
+      `**${loudCount} LOUD catch${loudCount > 1 ? 'es' : ''}**, certain breaking changes; this check will fail.`,
     );
   }
   if (softCount > 0) {
     summaryLines.push(
-      `**${softCount} advisory finding${softCount > 1 ? 's' : ''}** — context-dependent; will not block merge.`,
+      `**${softCount} advisory finding${softCount > 1 ? 's' : ''}**, context-dependent; will not block merge.`,
     );
   }
 
@@ -329,10 +329,10 @@ async function main(): Promise<void> {
     '',
     ACTION_SCOPE_LINE,
     '',
-    '_Lumo proposes and cites — never auto-fixes. See each comment for the dated source and correct pattern._',
+    '_Lumo proposes and cites, never auto-fixes. See each comment for the dated source and correct pattern._',
   );
 
-  // Post the review summary (COMMENT event — does not request changes or approve).
+  // Post the review summary (COMMENT event, does not request changes or approve).
   await octokit.rest.pulls.createReview({
     owner: ctx.repo.owner,
     repo: ctx.repo.repo,
@@ -363,7 +363,7 @@ async function main(): Promise<void> {
   }
 
   core.info(
-    `[lumo] Posted ${findings.length} finding(s) — ${loudCount} LOUD, ${softCount} advisory`,
+    `[lumo] Posted ${findings.length} finding(s), ${loudCount} LOUD, ${softCount} advisory`,
   );
 
   // Runs after the engine findings are posted so its prompt can build on them,
@@ -373,7 +373,7 @@ async function main(): Promise<void> {
 
   if (loudCount > 0 && blockOnLoud) {
     core.setFailed(
-      `Lumo caught ${loudCount} LOUD WordPress/WooCommerce pattern${loudCount > 1 ? 's' : ''} — review the PR comments and fix before merging.`,
+      `Lumo caught ${loudCount} LOUD WordPress/WooCommerce pattern${loudCount > 1 ? 's' : ''}, review the PR comments and fix before merging.`,
     );
   }
 }

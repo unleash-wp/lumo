@@ -34,7 +34,7 @@ export function detectFromDirectory(projectRoot: string): PluginDetection | null
           source: 'directory',
         };
       } catch {
-        // File not found or unreadable — try next path
+        // File not found or unreadable, try next path
       }
     }
   }

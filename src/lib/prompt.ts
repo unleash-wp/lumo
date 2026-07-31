@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// Upgrade-prompt state machine — pure module. No fs, no Date.now, no
+// Upgrade-prompt state machine, pure module. No fs, no Date.now, no
 // Math.random in decision paths. All ambient values injected by caller.
 //
 // Persistence wrappers (readPromptState / writePromptState /
-// getOrAssignPromptVariant) live in events.ts — the single fs owner.
+// getOrAssignPromptVariant) live in events.ts: the single fs owner.
 // ---------------------------------------------------------------------------
 
 export type PromptVariant = string;
@@ -11,7 +11,7 @@ export type PromptVariant = string;
 export interface PromptState {
   /** Current eligibility threshold: 3 → 6 → 12 */
   threshold: number;
-  /** ISO timestamp — prompt suppressed until this time */
+  /** ISO timestamp, prompt suppressed until this time */
   cooldownUntil?: string;
   /** Consecutive non-clicks (ignores); silence at 2 */
   ignoreCount: number;
@@ -25,7 +25,7 @@ export interface PromptState {
   sessionRevealShown: boolean;
   /** Two ignores reached this session → no more prompts rest of session */
   sessionSilenced: boolean;
-  /** Checkout CTA was clicked this session — distinguishes click-terminal from show-and-ignore */
+  /** Checkout CTA was clicked this session, distinguishes click-terminal from show-and-ignore */
   sessionClickedThrough?: boolean;
 }
 
@@ -34,7 +34,7 @@ export interface PromptDecision {
   showReveal: boolean;
   /** Show the upgrade prompt block? */
   showPrompt: boolean;
-  /** The live gated count — the number the copy leads with */
+  /** The live gated count: the number the copy leads with */
   gatedCount: number;
   /** A/B arm for checkout_started + copy selection */
   promptVariant: PromptVariant;
@@ -57,13 +57,13 @@ export const DEFAULT_PROMPT_STATE: PromptState = {
 };
 
 // ---------------------------------------------------------------------------
-// 30-day windowed touch helper — pure, operates over event-log timestamps.
+// 30-day windowed touch helper, pure, operates over event-log timestamps.
 // Exported so tests can exercise it directly without fs.
 // ---------------------------------------------------------------------------
 
 /**
  * Count how many touch `at` timestamps fall within the trailing 30-day window.
- * Pure — caller supplies the `now` reference and the list of ISO timestamps.
+ * Pure, caller supplies the `now` reference and the list of ISO timestamps.
  */
 export function countTouchesInWindow(
   touchTimestamps: readonly string[],
@@ -83,11 +83,11 @@ export function countTouchesInWindow(
 }
 
 // ---------------------------------------------------------------------------
-// decidePrompt — pure decision. No I/O, no Date.now.
+// decidePrompt, pure decision. No I/O, no Date.now.
 // ---------------------------------------------------------------------------
 
 /**
- * Compute what to show after a Free answer. Pure — caller injects all ambient
+ * Compute what to show after a Free answer. Pure, caller injects all ambient
  * values (now, gatedCount, state, killSwitchOn, sessionId).
  */
 export function decidePrompt(input: {
@@ -147,7 +147,7 @@ export function decidePrompt(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Pure reducers — return NEXT state; caller persists. No I/O.
+// Pure reducers, return NEXT state; caller persists. No I/O.
 // ---------------------------------------------------------------------------
 
 /**
@@ -237,7 +237,7 @@ export function rollSession(state: PromptState, sessionId: string): PromptState 
  * - Same session OR no prior sessionId → return state unchanged (no-op)
  */
 export function reconcileSession(state: PromptState, sessionId: string, now: string): PromptState {
-  // No prior session recorded — first ever run, or already on the current session.
+  // No prior session recorded, first ever run, or already on the current session.
   if (state.sessionId === undefined || state.sessionId === sessionId) {
     // Ensure the session is bound on first ever call.
     if (state.sessionId === undefined) {
@@ -249,11 +249,11 @@ export function reconcileSession(state: PromptState, sessionId: string, now: str
   // A prior session exists and differs from the current one.
   // Check if that prior session ended in a checkout click.
   if (state.sessionPromptShown && !state.sessionClickedThrough) {
-    // Prompt was shown but not clicked — this is a non-click (ignore).
+    // Prompt was shown but not clicked. This is a non-click (ignore).
     const afterIgnore = onIgnore(state, now);
     return rollSession(afterIgnore, sessionId);
   }
 
-  // Prior session ended in a click, or no prompt was shown — just roll.
+  // Prior session ended in a click, or no prompt was shown, just roll.
   return rollSession(state, sessionId);
 }

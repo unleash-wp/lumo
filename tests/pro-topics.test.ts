@@ -6,7 +6,7 @@ import { handleLookup } from '../src/mcp/handlers.js';
  * A lookup miss on a Pro-covered topic is the paywall, not a miss.
  *
  * Before this, `lumo_lookup` answered "No curated entry found" to someone who
- * typed "HPOS" — untrue (Lumo does know it) and a dead end at the highest-intent
+ * typed "HPOS": untrue (Lumo does know it) and a dead end at the highest-intent
  * moment the free tier gets, while `lumo_audit` on the same project correctly
  * showed the Pro teaser. The two surfaces must tell the same story.
  */
@@ -24,7 +24,7 @@ describe('proTopicFor', () => {
     expect(proTopicFor('cf7')).toBe('Contact Form 7');
   });
 
-  it('leaves genuinely unknown queries alone — a real miss stays a miss', () => {
+  it('leaves genuinely unknown queries alone: a real miss stays a miss', () => {
     expect(proTopicFor('gibt-es-nicht')).toBeNull();
     expect(proTopicFor('block-theme-currency')).toBeNull();
     expect(proTopicFor('')).toBeNull();
@@ -45,7 +45,7 @@ describe('handleLookup on Pro-covered topics', () => {
     expect(result).not.toContain('No curated entry found');
   });
 
-  it('answers the HPOS slug the same way — the entry exists, it is just licensed', async () => {
+  it('answers the HPOS slug the same way: the entry exists, it is just licensed', async () => {
     const result = await handleLookup({ slug: 'woocommerce-hpos-order-access' });
     expect(result).toContain('WooCommerce knowledge is part of Lumo Pro');
   });

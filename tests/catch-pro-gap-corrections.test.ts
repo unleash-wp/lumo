@@ -1,11 +1,11 @@
 /**
  * The three corrections the product gate demanded on Paket 0.
  *
- *   Law 2 — a Free finding used to swallow the Pro gap, so an incomplete check
+ *   Law 2: a Free finding used to swallow the Pro gap, so an incomplete check
  *           read as a result. The gap is now named alongside findings.
- *   Law 1 — the hook repeated the full teaser on every edit. Full teaser once
+ *   Law 1: the hook repeated the full teaser on every edit. Full teaser once
  *           per plugin, short line after that.
- *   Law 3 — the teaser listed the whole Pro catalogue next to a WooCommerce
+ *   Law 3: the teaser listed the whole Pro catalogue next to a WooCommerce
  *           finding. It now names only what was detected.
  *
  * Each with the pair §3 demands.
@@ -41,7 +41,7 @@ const PRO_ONLY = `<?php
 update_post_meta( $order_id, '_billing_email', 'a@b.de' );
 `;
 
-/** Neither — the near case that must stay quiet. */
+/** Neither: the near case that must stay quiet. */
 const NEITHER = `<?php
 function my_plugin_render_notice() {
     echo esc_html__( 'Hello', 'my-plugin' );
@@ -53,7 +53,7 @@ function freshStateDir(): string {
   return mkdtempSync(join(tmpdir(), 'lumo-test-state-'));
 }
 
-describe('law 2 — a Free finding must not swallow the Pro gap', () => {
+describe('law 2: a Free finding must not swallow the Pro gap', () => {
   it('BELL: the answer names WooCommerce even though a Free rule fired', async () => {
     const out = await handleCheckCode({ code: BOTH, language: 'php' }, snap);
     // The Free finding is still the substance of the answer...
@@ -70,7 +70,7 @@ describe('law 2 — a Free finding must not swallow the Pro gap', () => {
   });
 });
 
-describe('law 1 — the hook says it once, then keeps it short', () => {
+describe('law 1: the hook says it once, then keeps it short', () => {
   it('BELL: the first edit gets the full teaser', () => {
     const dir = freshStateDir();
     const first = runHookCatch(PRO_ONLY, 'php', undefined, dir);
@@ -95,7 +95,7 @@ describe('law 1 — the hook says it once, then keeps it short', () => {
     expect(second.message).toBe(third.message);
   });
 
-  it('a separate install starts over — the marker is per state dir, not global', () => {
+  it('a separate install starts over: the marker is per state dir, not global', () => {
     const a = freshStateDir();
     const b = freshStateDir();
     runHookCatch(PRO_ONLY, 'php', undefined, a);
@@ -105,7 +105,7 @@ describe('law 1 — the hook says it once, then keeps it short', () => {
   });
 });
 
-describe('law 2 — the hook names the gap next to a finding too', () => {
+describe('law 2: the hook names the gap next to a finding too', () => {
   it('BELL: hook output carries both the finding and the gap line', () => {
     const dir = freshStateDir();
     const res = runHookCatch(BOTH, 'php', undefined, dir);
@@ -114,7 +114,7 @@ describe('law 2 — the hook names the gap next to a finding too', () => {
     expect(res.message).toContain('not the whole picture');
   });
 
-  it('the gap line is NOT throttled — honesty repeats where the pitch does not', () => {
+  it('the gap line is NOT throttled, honesty repeats where the pitch does not', () => {
     const dir = freshStateDir();
     const first = runHookCatch(BOTH, 'php', undefined, dir);
     const tenth = runHookCatch(BOTH, 'php', undefined, dir);
@@ -131,7 +131,7 @@ describe('law 2 — the hook names the gap next to a finding too', () => {
   });
 });
 
-describe('law 2 — the GitHub Action names the gap too', () => {
+describe('law 2: the GitHub Action names the gap too', () => {
   const diffFor = (body: string) =>
     [
       'diff --git a/inc/orders.php b/inc/orders.php',
@@ -147,7 +147,7 @@ describe('law 2 — the GitHub Action names the gap too', () => {
     expect(res.findings.some((f) => f.body.includes('WooCommerce'))).toBe(true);
   });
 
-  it('the gap is always SOFT — a coverage gap must never fail a build', async () => {
+  it('the gap is always SOFT: a coverage gap must never fail a build', async () => {
     const res = await runCatch({ diff: diffFor(PRO_ONLY) });
     const gap = res.findings.find((f) => f.body.includes('WooCommerce'))!;
     expect(gap.tier).toBe('SOFT');
@@ -164,7 +164,7 @@ describe('law 2 — the GitHub Action names the gap too', () => {
  * The gate's own note: this phrasing has regressed once per channel, because each
  * channel carried its own literal. Pinned here so a fourth regression fails a build.
  */
-describe('law 2 — no channel may phrase a coverage limit as a verdict', () => {
+describe('law 2, no channel may phrase a coverage limit as a verdict', () => {
   it.each([
     ['CATCH_NEUTRAL_LINE', CATCH_NEUTRAL_LINE],
     ['ACTION_NO_MATCH_LINE', ACTION_NO_MATCH_LINE],
@@ -187,7 +187,7 @@ describe('law 2 — no channel may phrase a coverage limit as a verdict', () => 
   });
 });
 
-describe('law 1 — the order-shaped variable must also be id-shaped', () => {
+describe('law 1: the order-shaped variable must also be id-shaped', () => {
   const gap = (code: string) => checkCodeWithGaps(code, 'php', snap).proGap;
 
   it.each([
@@ -205,9 +205,9 @@ describe('law 1 — the order-shaped variable must also be id-shaped', () => {
   });
 });
 
-describe('law 3 — the teaser names only what was detected', () => {
+describe('law 3: the teaser names only what was detected', () => {
   it('makes no claim about the reader’s AI', () => {
-    // Unverifiable at output time and identical regardless of the code — the same
+    // Unverifiable at output time and identical regardless of the code: the same
     // defect as listing unrelated plugins.
     expect(buildCodeProTeaser('WooCommerce')).not.toContain('training data');
     expect(buildCodeProTeaser('WooCommerce')).not.toContain('your AI');
@@ -228,20 +228,20 @@ describe('law 3 — the teaser names only what was detected', () => {
 /**
  * Measured 31.07.2026: the free snapshot holds fifteen security entries, nine of
  * which a detection rule can reach. "Lumo Free covers ... security fundamentals"
- * therefore let a reader assume the watcher fires on all fifteen — a coverage
+ * therefore let a reader assume the watcher fires on all fifteen: a coverage
  * claim wider than the engine, read at the moment silence is interpreted.
  */
-describe('law 2 — the catch never inherits the knowledge’s reach', () => {
+describe('law 2: the catch never inherits the knowledge’s reach', () => {
   it('the knowledge/catch distinction is stated, not implied', async () => {
     const { KNOWLEDGE_WIDER_THAN_CATCH } = await import('../src/lib/render.js');
     expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('subset of what Lumo knows');
     expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('Silence from the watcher is never a verdict');
     expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('lumo_lookup');
-    // Product gate: 'wired vs not wired' hid a third state — a rule that covers
+    // Product gate: 'wired vs not wired' hid a third state, a rule that covers
     // only part of its topic. The two measured cases are named, because the
     // most expensive one is exactly the reported cancellation scenario.
     expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('no permission callback is not caught');
-    // The six undetected topics are named too — the heavier state must not be
+    // The six undetected topics are named too: the heavier state must not be
     // the anonymous one.
     expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('unescaped output');
     expect(KNOWLEDGE_WIDER_THAN_CATCH).toContain('permission checks on abilities');

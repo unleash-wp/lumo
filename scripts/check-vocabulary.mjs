@@ -31,7 +31,7 @@ const TOOL_SUFFIXES = [
 const RETIRED_IDENTIFIERS = ['plugin_slug', 'WpLookupInput', 'WpPluginAdviceInput', 'forge_wp_'];
 
 // No \b: git grep -E is POSIX ERE, which has no word-boundary escape. It does
-// not error on one, it just never matches — the first version of this check was
+// not error on one, it just never matches: the first version of this check was
 // green on a tree with fifteen leftovers in it. The names are specific enough
 // that a substring match is not a real risk.
 const PATTERN = [`wp_(${TOOL_SUFFIXES.join('|')})`, ...RETIRED_IDENTIFIERS].join('|');

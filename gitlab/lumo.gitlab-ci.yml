@@ -3,24 +3,24 @@
 # CI enforcement is part of Lumo Pro: the gate answers from the licensed
 # server, which carries the daily-tended knowledge and the premium-plugin
 # coverage. Without LUMO_PRO_URL and LUMO_LICENSE_KEY the job prints an
-# explicit DID NOT RUN line and stays green — a missing subscription never
+# explicit DID NOT RUN line and stays green: a missing subscription never
 # blocks a merge, and a green job never reads as a passed review.
 #
 # Free without a subscription: the local `lumo scan` over your working tree,
 # the MCP server, and the skills.
 #
 # Runs Lumo's WordPress/WooCommerce catch on the merge request diff
-# (base...HEAD). Lumo proposes a fix and cites a dated source — it never
+# (base..HEAD). Lumo proposes a fix and cites a dated source: it never
 # auto-fixes and never rewrites your code.
 #
 # Exit contract (same gate the GitHub Action provides):
 #   - LOUD findings (certain breaks, each carried by a source) fail the job.
 #   - SOFT/advisory findings never fail the job.
 #   - If the scan cannot run at all, it prints an explicit DID NOT RUN line
-#     and leaves the job green — a skipped scan announces itself and is
+#     and leaves the job green: a skipped scan announces itself and is
 #     never presented as a clean result.
 #
-# Usage — include this template from your .gitlab-ci.yml:
+# Usage, include this template from your .gitlab-ci.yml:
 #
 #   include:
 #     - remote: 'https://raw.githubusercontent.com/unleash-wp/lumo/main/gitlab/lumo.gitlab-ci.yml'
@@ -44,7 +44,7 @@ lumo_check:
   variables:
     # Full history instead of the default shallow fetch: the scan diffs
     # against $CI_MERGE_REQUEST_DIFF_BASE_SHA, and on a shallow clone that
-    # commit may not exist locally — the scan would then report DID NOT RUN
+    # commit may not exist locally: the scan would then report DID NOT RUN
     # instead of checking the diff. On very large repositories a full fetch
     # is slow; you may override GIT_DEPTH with a depth that still contains
     # the merge base (the scan tells you when it does not).

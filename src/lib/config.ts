@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Config resolvers — pure, env-injectable. No fs, no Date.now.
+// Config resolvers, pure, env-injectable. No fs, no Date.now.
 //
 // Kill-switch: LUMO_UPGRADE_PROMPT (default ON; explicit opt-out only)
 // Checkout URL: LUMO_CHECKOUT_URL (default https://lumo.so/pro)
@@ -17,7 +17,7 @@ export function isUpgradePromptEnabled(env: Record<string, string | undefined> =
 
 /**
  * Resolve the checkout base URL from the environment.
- * Defaults to 'https://lumo.so/pro' — a stable 301 the founder controls.
+ * Defaults to 'https://lumo.so/pro', a stable 301 the founder controls.
  * The actual Lemon Squeezy destination is a redirect target, not a code constant.
  */
 export function getCheckoutUrl(env: Record<string, string | undefined> = process.env): string {
