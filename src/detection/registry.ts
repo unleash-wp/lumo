@@ -801,6 +801,25 @@ export const PATTERNS: readonly PatternDefinition[] = [
         language: 'php',
       },
       {
+        // The signal above needs an assignment, so the inline form stayed
+        // silent — and inline straight into output is the more dangerous one:
+        // `echo '<div>' . $_GET['name'] . '</div>';` reaches the page unescaped
+        // with no variable to trace. This covers that sink specifically rather
+        // than every read of a superglobal: a read fed to isset(), compared to
+        // a literal, or passed to in_array() is not a defect, and flagging it
+        // would be the noise this product exists to avoid.
+        //
+        // The lookbehind is what makes it precise — it is evaluated where the
+        // superglobal starts, so an escaping or sanitising call wrapped
+        // directly around the read silences it however the echo was reached.
+        // Bounded by `;` so one guarded statement cannot vouch for the next.
+        match: /(?:\becho\b|\bprint\b)[^;]*?(?<!\b(?:esc_\w+|sanitize_\w+|absint|intval|floatval|wp_kses\w*|wp_unslash|number_format)\s*\(\s*)\$_(?:POST|GET|REQUEST)\s*\[/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'superglobal-without-sanitize',
+        condition: 'the value reaches output without esc_html() / esc_attr() / wp_kses() or a sanitize_*() call wrapping the read',
+        language: 'php',
+      },
+      {
         match: /\$wpdb\s*->\s*(?:query|get_results|get_var|get_row|get_col)\s*\(\s*"[^"]*\$\w/,
         class: 'CERTAIN',
         entrySlug: 'wpdb-query-without-prepare-sql-injection',
@@ -843,6 +862,30 @@ export const PATTERNS: readonly PatternDefinition[] = [
         entrySlug: 'rest-route-missing-permission-callback',
         condition: 'the route performs a mutating operation (POST/PUT/PATCH/DELETE)',
         suppressGuard: /['"]methods['"]\s*=>\s*(?:WP_REST_Server::READABLE|['"]GET['"])/,
+        language: 'php',
+      },
+      {
+        // The signal above catches the deliberate case — someone typed
+        // __return_true. The case the slug and the title actually name is the
+        // forgotten one, where permission_callback is absent, which is what an
+        // assistant writes and what WordPress has warned about with
+        // _doing_it_wrong since 5.5. That form was measured silent.
+        //
+        // Scoped to a single register_rest_route() statement rather than the
+        // blob: the span may not cross `;`, `{`, `}` or a second
+        // register_rest_route, and must contain a literal 'callback' key. That
+        // is what keeps the two shapes the issue warned about quiet — args
+        // assembled in a variable carry no literal 'callback' in the call, and
+        // a closure argument contains the braces the span refuses to cross.
+        //
+        // Deliberate boundary: a route whose args contain a closure AND omits
+        // permission_callback stays silent. Regex cannot bound that span
+        // reliably, and a stated silence costs less than a wrong alarm on
+        // correct code. The pair for it is pinned as a documented limit.
+        match: /register_rest_route\s*\((?:(?![;{}]|permission_callback|register_rest_route)[\s\S])*?['"]callback['"]\s*=>(?:(?![;{}]|permission_callback|register_rest_route)[\s\S])*?\)\s*;/,
+        class: 'CONTEXT_DEPENDENT',
+        entrySlug: 'rest-route-missing-permission-callback',
+        condition: 'the registration passes no permission_callback, so WordPress applies no permission check at all',
         language: 'php',
       },
       {
