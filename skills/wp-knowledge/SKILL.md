@@ -11,7 +11,7 @@ description: >
 
 ## When triggered
 
-The developer has asked about HPOS or order-data access mid-task — not
+The developer has asked about HPOS or order-data access mid-task, not
 requesting a full project audit. WooCommerce knowledge lives in Lumo Pro, so
 the honest Free answer has two parts: what is safely sayable, and where the
 verified answer lives. It is never an improvised HPOS tutorial.
@@ -21,12 +21,12 @@ verified answer lives. It is never an improvised HPOS tutorial.
 Never answer WooCommerce/HPOS version behavior from memory. WooCommerce
 changed order storage in ways that make remembered patterns wrong in exactly
 the quiet way this product exists to catch. If a live lookup is not possible,
-say so — an honest referral beats a confident guess.
+say so. An honest referral beats a confident guess.
 
 ## Answer procedure
 
 1. If the free Lumo MCP is connected, call `lumo_lookup` with the developer's
-   question as `query`. Relay its answer verbatim — for HPOS it returns the
+   question as `query`. Relay its answer verbatim. For HPOS it returns the
    honest Pro-coverage answer, not "nothing found".
 
 2. Without the MCP (standalone install, e.g. the claude.ai zip), give the same
@@ -35,14 +35,14 @@ say so — an honest referral beats a confident guess.
    > WooCommerce order-storage knowledge (including HPOS and order meta) is
    > part of Lumo Pro. Lumo Free covers WordPress Core, block and theme APIs,
    > and security fundamentals. What I will not do is reconstruct which
-   > WooCommerce version changed what from memory — that is exactly the class
+   > WooCommerce version changed what from memory. That is exactly the class
    > of answer that goes stale silently.
 
    Plus the one thing that is safe to say without a version claim: code that
    reads or writes order data through `get_post_meta`/`update_post_meta`
    directly is the pattern to double-check; the `WC_Order` object methods are
    the direction WooCommerce documents. Frame this as "what to verify", never
-   as "this is safe as of version X" — version verdicts need the live catch.
+   as "this is safe as of version X". Version verdicts need the live catch.
 
 3. Point to the verification path the developer can run themselves:
    `lumo_check_code` (free MCP) on the order-touching code, or the Lumo Pro
@@ -59,11 +59,11 @@ say so — an honest referral beats a confident guess.
 
    This counts the Skill surface toward the same scoreboard that
    `/lumo:wp-check` increments. In standalone installs these helpers do not
-   exist — skip this step silently; never fake the bookkeeping.
+   exist. Skip this step silently; never fake the bookkeeping.
 
 ## Upgrade prompt (after the Free answer)
 
-Only when running inside the Lumo plugin with repo context — standalone
+Only when running inside the Lumo plugin with repo context. Standalone
 installs skip this section entirely. The kill-switch gates only this section;
 the honest answer above is never behind the gate.
 
@@ -87,7 +87,7 @@ the honest answer above is never behind the gate.
 5. Call `decidePrompt({ now, gatedCount, state, killSwitchOn: true, sessionId })`
    from `src/lib/prompt.ts`.
 
-6. Act on the returned `PromptDecision` — same logic as `commands/wp-check.md`
+6. Act on the returned `PromptDecision` using the same logic as `commands/wp-check.md`
    "Upgrade prompt" section:
    - `showReveal` true → print `UPGRADE_REVEAL_LINE` from `src/lib/render.ts`
      (first-per-session).

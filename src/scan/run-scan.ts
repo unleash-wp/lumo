@@ -52,14 +52,14 @@ export interface RunScanResult {
 }
 
 const HELP_TEXT = [
-  'lumo-scan — proactive catch for your current git changes.',
+  'lumo-scan: proactive catch for your current git changes.',
   '',
   'Usage: lumo-scan [--ci] [--base <ref>]',
   '',
   'Scans `git diff HEAD` (staged + unstaged) for WordPress/WooCommerce',
   'patterns that broke in a real release, plus new PHP files missing the',
   'ABSPATH guard. Prints findings LOUD first, or the checked scope.',
-  'Without --ci the exit code is always 0 — findings inform, they do not block.',
+  'Without --ci the exit code is always 0. Findings inform, they do not block.',
   '',
   'CI mode (--ci) scans `git diff <base>...HEAD` instead. The base ref comes',
   'from --base, else $CI_MERGE_REQUEST_DIFF_BASE_SHA, else the working tree',
@@ -69,7 +69,7 @@ const HELP_TEXT = [
 ].join('\n');
 
 /** CI-mode fail-open marker. Every path that skips the scan must carry both parts. */
-const CI_DID_NOT_RUN = 'lumo scan: DID NOT RUN —';
+const CI_DID_NOT_RUN = 'lumo scan: DID NOT RUN:';
 const CI_NOT_CLEAN = 'This is not a clean result.';
 
 /**
@@ -95,8 +95,8 @@ const CI_REQUIRES_PRO =
  * otherwise reasonably mistake for their Pro coverage.
  */
 const CI_NO_PRO_URL =
-  'lumo scan: LUMO_PRO_URL is not set, so this gate ran on the free knowledge only — ' +
-  'no premium-plugin coverage. Point it at your Lumo Pro server for the licensed catch.';
+  'lumo scan: LUMO_PRO_URL is not set, so this gate ran on the free knowledge only. ' +
+  'No premium-plugin coverage. Point it at your Lumo Pro server for the licensed catch.';
 
 // ---------------------------------------------------------------------------
 // Git diff.
@@ -223,7 +223,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
     // line must say plainly that the merge request was NOT checked, not just
     // describe the fallback.
     lines.push(
-      'lumo scan: no base ref given — comparing your uncommitted working tree changes, not a merge request diff. ' +
+      'lumo scan: no base ref given. Comparing your uncommitted working tree changes, not a merge request diff. ' +
         'If this is a CI pipeline, the base ref was not resolved and the merge request was NOT checked.',
     );
   }
@@ -253,7 +253,7 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
       return { lines, exitCode: 0 };
     }
     lines.push(
-      'lumo scan: could not run git diff — not a git repository or git is not installed.\n' +
+      'lumo scan: could not run git diff. Not a git repository or git is not installed.\n' +
         'Run `lumo scan` from inside a git project.',
     );
     return { lines, exitCode: 0 };

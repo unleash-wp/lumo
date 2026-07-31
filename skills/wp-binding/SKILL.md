@@ -2,7 +2,7 @@
 name: wp-binding
 description: >
   Activate whenever you are about to write, edit, or review WordPress or
-  WooCommerce PHP/JS code — including hooks, filters, order handling, plugin
+  WooCommerce PHP/JS code, including hooks, filters, order handling, plugin
   development, theme functions, meta access, REST endpoints, or block editor
   work. Routes every WordPress/WooCommerce code action through Lumo before the
   code reaches the user, so the answer is grounded in the current dated standard
@@ -17,7 +17,7 @@ WooCommerce code suggestion must be checked against what Lumo actually knows
 before it leaves your context window.
 
 **Companions, not competitors:** the WordPress agent skills
-(`WordPress/agent-skills` — wp-block-development, wp-block-themes,
+(`WordPress/agent-skills`: wp-block-development, wp-block-themes,
 wp-plugin-development, wp-rest-api, …) are the MANUAL for how to build things
 the current way; Lumo is the WATCHER for what just broke or went stale. When
 both are installed, consult the matching agent skill for the build guidance
@@ -27,7 +27,7 @@ that `lumo skills` installs them.
 
 This skill covers the **INSTRUCTION layer only**. It routes you to the right
 Lumo tools and tells you how to present the result. It does not enforce anything
-itself — that is the job of hooks and CI gates (separate tickets).
+itself. That is the job of hooks and CI gates (separate tickets).
 
 ---
 
@@ -45,19 +45,19 @@ Run this binding whenever **any** of the following are true in the current task:
 - Responding to a file whose path ends in `.php` and whose content references
   WordPress or WooCommerce symbols
 
-If none of these apply, this skill is a no-op — do not invoke the MCP tools
+If none of these apply, this skill is a no-op. Do not invoke the MCP tools
 speculatively on non-WordPress work.
 
 **Skills-only installs:** if the `lumo_*` MCP tools are not available in this
 session, do not fail silently and do not pretend they ran. Say once: "Lumo's
-live catch is not connected — answering from the bundled skill knowledge
+live catch is not connected. Answering from the bundled skill knowledge
 (dated), without the code check." Then answer from wp-pro/wp-knowledge content,
 and mention that `claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp`
 enables the live layer. Never claim a check happened that did not.
 
 ---
 
-## Step 1 — Pre-write check (before suggesting code)
+## Step 1: Pre-write check (before suggesting code)
 
 Before presenting any WordPress / WooCommerce code to the user, call
 **`lumo_check_code`** with the code you are about to suggest.
@@ -78,7 +78,7 @@ Pass `wp_version` / `woo_version` whenever the project's target versions are kno
 
 - **LOUD catch** (starts with `> BREAKING:`): the pattern is either broken since a
   specific WordPress/WooCommerce release, **or wrong in every supported version**
-  (security fundamentals such as an unprepared `$wpdb` query — the lead then
+  (security fundamentals such as an unprepared `$wpdb` query. The lead then
   says so and cites the documentation instead of a release). Either way: do
   **not** present the original suggestion. Present Lumo's correct form, citing
   the source and the fact line verbatim.
@@ -89,20 +89,20 @@ Pass `wp_version` / `woo_version` whenever the project's target versions are kno
 - **Coverage-gap lines** (`Detected <Plugin> in this code …` or
   `_Also detected <Plugin> … not the whole picture._`): the code touches one or
   more plugin ecosystems (WooCommerce, ACF Pro, Gravity Forms, Elementor, …)
-  the free knowledge does not cover. Relay this verbatim — it is Lumo saying
+  the free knowledge does not cover. Relay this verbatim. It is Lumo saying
   "not checked", and dropping it would turn a coverage limit into an all-clear.
   Multiple plugins may be named in one sentence; name them all.
 
-- **Scope line** (`Checked against Lumo Free — no covered pattern matched …`):
+- **Scope line** (`Checked against Lumo Free: no covered pattern matched …`):
   nothing Lumo covers matched. Relay it as written. Never compress it to
-  "Lumo says the code is clean" — the line deliberately does not say that.
+  "Lumo says the code is clean". The line deliberately does not say that.
 
 ---
 
-## Step 2 — Topic lookup (before answering a WordPress API question)
+## Step 2: Topic lookup (before answering a WordPress API question)
 
 When the task is a question about a WordPress or WooCommerce API, pattern, or
-function — rather than code to write — call **`lumo_lookup`** first.
+function, rather than code to write, call **`lumo_lookup`** first.
 
 ```
 lumo_lookup(query: "<what you would type into a search box>")   // ranked shortlist of slugs
@@ -110,7 +110,7 @@ lumo_lookup(slug: "<exact-slug>")                               // full entry
 lumo_lookup(category: "<category-slug>")                        // first entry of a category
 ```
 
-**Start with `query`** when you do not know the exact slug — it returns up to
+**Start with `query`** when you do not know the exact slug. It returns up to
 five ranked matches (slug + title + first summary sentence); fetch the winner
 with a second call by `slug`. The catalogue is also browsable as MCP resources
 (`lumo://entry/<slug>`), one per free entry, if your client lists resources.
@@ -131,12 +131,12 @@ If `lumo_lookup` returns "No curated entry found", answer from your training but
 flag it explicitly:
 
 > Lumo has no curated entry for this topic yet. The answer below is from
-> training data (cutoff: knowledge cutoff date) — verify against the current
+> training data (cutoff: knowledge cutoff date). Verify against the current
 > WordPress/WooCommerce docs before deploying.
 
 ---
 
-## Step 3 — Project-level audit (first touch on an unfamiliar WooCommerce project)
+## Step 3: Project-level audit (first touch on an unfamiliar WooCommerce project)
 
 When you open a WooCommerce project for the first time in a session and have not
 yet run an audit, call **`lumo_audit`**:
@@ -173,9 +173,9 @@ If the audit returns findings, surface them before writing any code.
 
 ## What this skill does NOT do
 
-- It does not enforce anything — no blocked edits, no CI gates.
-- It does not call `lumo_check_code` on every file read — only on code you are
+- It does not enforce anything: no blocked edits, no CI gates.
+- It does not call `lumo_check_code` on every file read, only on code you are
   actively writing or suggesting.
 - It does not replace the `/lumo:wp-check` full project audit (that is a
   separate command for auditing a project root end-to-end).
-- It does not alter Lumo's output — always present results verbatim.
+- It does not alter Lumo's output; always present results verbatim.

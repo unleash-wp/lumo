@@ -1,2 +1,11 @@
 {"ts":"2026-07-31T21:49:41.324Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"missing-credentials","dur":1,"status":"warn","exit":0,"error":""}
 {"ts":"2026-07-31T21:49:41.669Z","hook":"usage-quota-cache-refresh","event":"SessionStart","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:49:57.046Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:49:59.022Z","hook":"usage-quota-cache-refresh","event":"PostToolUse","tool":"Agent","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:51:37.729Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:52:48.553Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:53:14.158Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:53:41.275Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:55:21.528Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:55:39.498Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-31T21:56:10.967Z","hook":"plan-format-kanban","event":"PostToolUse","tool":"Edit","target":"","note":"non-plan-file","dur":0,"status":"skip","exit":0,"error":""}

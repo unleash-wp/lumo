@@ -1,7 +1,7 @@
-# WordPress Hooks and Filters — Stable Reference
+# WordPress Hooks and Filters: Stable Reference
 
 The hook system is WordPress's entire extension surface. Understanding it at the
-implementation level — not just the API level — prevents a wide class of bugs
+implementation level, not just the API level, prevents a wide class of bugs
 that show up only under specific load conditions or plugin combinations.
 
 ---
@@ -34,7 +34,7 @@ Understanding this matters in two practical situations:
    property before registration.
 
 2. **Nested hook calls**: A callback firing inside `do_action()` can safely call
-   `add_action()` on the same hook — `WP_Hook` handles re-entrance without
+   `add_action()` on the same hook. `WP_Hook` handles re-entrance without
    infinite loops. It does not, however, retroactively add the new callback to
    the currently executing iteration.
 
@@ -44,12 +44,12 @@ Understanding this matters in two practical situations:
 
 Priorities are integers. Lower runs earlier. The default is `10`.
 
-- `1` — runs very early; useful for setup that must precede the main handler
-- `10` — the default; most callbacks land here
-- `20` — runs after the default bucket; useful for reactions that depend on the main handler having run
-- `PHP_INT_MAX` — last possible slot; used by WordPress core for cleanup and shutdown routines
+- `1`: runs very early; useful for setup that must precede the main handler
+- `10`: the default; most callbacks land here
+- `20`: runs after the default bucket; useful for reactions that depend on the main handler having run
+- `PHP_INT_MAX`: last possible slot; used by WordPress core for cleanup and shutdown routines
 
-Priority is not a global ordering across all hooks — it only sorts callbacks
+Priority is not a global ordering across all hooks. It only sorts callbacks
 registered on the same hook name.
 
 **Removing a callback added at a non-default priority:**
@@ -78,10 +78,10 @@ with `null`. This is one of the more common silent bugs in WordPress development
 
 ---
 
-## Request lifecycle — hooks by phase
+## Request lifecycle: hooks by phase
 
 A standard frontend request fires hooks roughly in this order. Times are
-relative, not absolute — plugin code can fire hooks out of this sequence.
+relative, not absolute. Plugin code can fire hooks out of this sequence.
 
 ### Very early (before `init`)
 
@@ -113,10 +113,10 @@ relative, not absolute — plugin code can fire hooks out of this sequence.
 
 | Hook | When | Common use |
 |------|------|-----------|
-| `wp_head` | Inside `<head>` | Output from `wp_print_scripts()`, meta tags — prefer enqueueing over direct output here |
+| `wp_head` | Inside `<head>` | Output from `wp_print_scripts()`, meta tags; prefer enqueueing over direct output here |
 | `wp_body_open` | Immediately after `<body>` opens (requires theme support) | Skip links, accessibility landmarks |
 | `loop_start` / `loop_end` | Around `the_loop` | Wrapping output around the post loop |
-| `the_content` | Filter applied to post content on output | Content modification — strip tags, add wrappers, append content |
+| `the_content` | Filter applied to post content on output | Content modification: strip tags, add wrappers, append content |
 | `wp_footer` | Before `</body>` | Scripts, tracking pixels (prefer `wp_enqueue_script` with `$in_footer = true`) |
 
 ### Admin request lifecycle (condensed)
@@ -127,7 +127,7 @@ relative, not absolute — plugin code can fire hooks out of this sequence.
 | `admin_menu` | Menus registered | Adding menu pages with `add_menu_page()`, `add_submenu_page()` |
 | `admin_enqueue_scripts` | Scripts and styles for admin | Enqueueing admin assets; check the `$hook_suffix` argument to target specific pages |
 | `admin_notices` | Above admin page content | Displaying dismissible admin notices |
-| `save_post` | After a post is saved via the editor | Saving custom meta, triggering side effects — always nonce-check and `current_user_can()` before acting |
+| `save_post` | After a post is saved via the editor | Saving custom meta, triggering side effects; always nonce-check and `current_user_can()` before acting |
 
 ---
 
@@ -171,7 +171,7 @@ add_action( 'admin_init', function() {
 ```
 
 `register_setting()` must be called on `admin_init`. The `sanitize_callback`
-runs on option save, not on read — sanitize on write, escape on output.
+runs on option save, not on read. Sanitize on write, escape on output.
 
 ---
 
@@ -194,7 +194,7 @@ writing):
 | `woocommerce_add_to_cart_validation` | filter | Return `false` to block add-to-cart; use for stock/availability checks |
 
 For order-data patterns (HPOS vs. legacy `get_post_meta`), always route through
-`lumo_check_code` — that is the fastest-moving area of WooCommerce and the one
+`lumo_check_code`. That is the fastest-moving area of WooCommerce and the one
 most likely to differ from what any static reference says.
 
 ---
@@ -226,7 +226,7 @@ add_action( 'init', [ $instance, 'register_post_types' ] );
 remove_action( 'init', [ $instance, 'register_post_types' ] );
 ```
 
-Static methods use `[ 'My_Plugin', 'static_method' ]` or `'My_Plugin::static_method'` — both forms work, but they are not interchangeable in `remove_action()`.
+Static methods use `[ 'My_Plugin', 'static_method' ]` or `'My_Plugin::static_method'`. Both forms work, but they are not interchangeable in `remove_action()`.
 
 **Conditional hook output for custom post types**
 

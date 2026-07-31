@@ -1,9 +1,9 @@
-# Grounding contract — how Lumo avoids hallucinated verdicts
+# Grounding contract: how Lumo avoids hallucinated verdicts
 
 Lumo's product value is trust in version facts. A single invented "this broke
 in 6.4" or a single false "looks clean" costs more than a hundred missed
 nitpicks. This contract states the anti-hallucination rules once, and maps
-each rule to the place in the product that enforces it — enforced meaning a
+each rule to the place in the product that enforces it, enforced meaning a
 test or a code path, not a request politely made in a prompt.
 
 ## The contract
@@ -17,7 +17,7 @@ test or a code path, not a request politely made in a prompt.
 3. **A claim needs a quote.** Model output that references code must quote
    the code it references; a point that cannot quote its evidence is dropped,
    not softened.
-4. **Failure announces itself.** A layer that did not run says so — it never
+4. **Failure announces itself.** A layer that did not run says so. It never
    returns something shaped like a clean verdict.
 5. **Silence in doubt.** When a surface cannot meet rules 1-4, it says less,
    not more.

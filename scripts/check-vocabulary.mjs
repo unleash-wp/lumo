@@ -54,7 +54,7 @@ try {
   // git grep exits 1 with no output when nothing matched. Any other failure is
   // a broken check, and a broken check must not read as a pass.
   if (err.status === 1 && !err.stdout?.trim()) {
-    console.log('[vocabulary] clean — no retired tool or argument names outside plans/ and CHANGELOG.md');
+    console.log('[vocabulary] clean: no retired tool or argument names outside plans/ and CHANGELOG.md');
     process.exit(0);
   }
   console.error(`[vocabulary] check could not run: ${err.message}`);
@@ -62,7 +62,7 @@ try {
 }
 
 if (!hits) {
-  console.log('[vocabulary] clean — no retired tool or argument names outside plans/ and CHANGELOG.md');
+  console.log('[vocabulary] clean: no retired tool or argument names outside plans/ and CHANGELOG.md');
   process.exit(0);
 }
 
