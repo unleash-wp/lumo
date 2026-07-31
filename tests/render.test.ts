@@ -141,16 +141,16 @@ describe('formatFreeMarkdown', () => {
   it('contains the wrong-vs-correct section headers', () => {
     const rendered = renderFree(freeEntry());
     const md = formatFreeMarkdown(rendered);
-    expect(md).toContain('### ❌ Wrong');
-    expect(md).toContain('### ✅ Correct');
+    expect(md).toContain('### Wrong');
+    expect(md).toContain('### Correct');
   });
 
   // WooCommerce branch of the renderer — Pro-only content, so it runs off the fixture.
   it('keeps the HPOS framing in the wrong-heading for a WooCommerce entry', () => {
     const rendered = renderFree(hposEntry());
     const md = formatFreeMarkdown(rendered);
-    expect(md).toContain('### ❌ Wrong (HPOS-unsafe)');
-    expect(md).toContain('### ✅ Correct');
+    expect(md).toContain('### Wrong (HPOS-unsafe)');
+    expect(md).toContain('### Correct');
   });
 
   it('contains the affected WooCommerce version line', () => {
@@ -199,7 +199,7 @@ describe('formatFreeMarkdown', () => {
       versions: [{ wp_version_min: '6.4.0', wp_version_max: null, woo_version_min: null, breaking_change: true }],
     });
     const md = formatFreeMarkdown(rendered);
-    expect(md).toContain('### ❌ Wrong');
+    expect(md).toContain('### Wrong');
     expect(md).not.toContain('HPOS-unsafe');
   });
 

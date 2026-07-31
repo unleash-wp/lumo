@@ -44,7 +44,7 @@ describe('the demo shows the catch actually working', () => {
 
   it('the SQL injection sample answers LOUD, which is the moment worth seeing', () => {
     expect(output()).toContain('$wpdb->prepare()');
-    expect(output()).toContain('⚠️');
+    expect(output()).toContain('BREAKING:');
   });
 });
 

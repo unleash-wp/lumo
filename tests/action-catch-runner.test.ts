@@ -93,8 +93,8 @@ describe('runCatch', () => {
     expect(loudFinding).toBeDefined();
     expect(loudFinding?.filename).toBe('src/blocks/validate.js');
 
-    // LOUD lead must include the ⚠️ alarm and a WordPress version reference.
-    expect(loudFinding?.body).toContain('⚠️');
+    // LOUD lead must include the BREAKING: alarm and a WordPress version reference.
+    expect(loudFinding?.body).toContain('BREAKING:');
     expect(loudFinding?.body).toMatch(/WooCommerce|WordPress/);
     // Rendered body includes the correct pattern from the snapshot entry.
     expect(loudFinding?.body).toMatch(/wp_img_tag_add_loading_optimization_attrs|deprecated/i);
@@ -110,8 +110,8 @@ describe('runCatch', () => {
 
     const softFinding = result.findings.find((f) => f.tier === 'SOFT');
     expect(softFinding).toBeDefined();
-    // SOFT lead uses 🔍 advisory prefix.
-    expect(softFinding?.body).toContain('🔍');
+    // SOFT lead uses ADVISORY: advisory prefix.
+    expect(softFinding?.body).toContain('ADVISORY:');
   });
 
   it('returns zero findings for delete-only diff (removed lines must not fire)', async () => {

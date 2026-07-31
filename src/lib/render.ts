@@ -101,9 +101,9 @@ export function renderFree(entry: SnapshotEntry): FreeRenderedEntry {
  * Fixed order:
  *   ## title
  *   summary
- *   ### ❌ Wrong (HPOS-unsafe)
+ *   ### Wrong (HPOS-unsafe)
  *   ```php bad_pattern ```
- *   ### ✅ Correct
+ *   ### Correct
  *   ```php code_example ```
  *   **Source:** source_url
  *   **Verify:** test_step
@@ -124,7 +124,7 @@ export function formatFreeMarkdown(r: FreeRenderedEntry): string {
 
   // "HPOS-unsafe" only applies to WooCommerce order-storage patterns; a generic
   // WordPress entry must not inherit WooCommerce framing.
-  const wrongHeading = isWoo ? '### ❌ Wrong (HPOS-unsafe)' : '### ❌ Wrong';
+  const wrongHeading = isWoo ? '### Wrong (HPOS-unsafe)' : '### Wrong';
 
   return [
     `## ${r.title}`,
@@ -137,7 +137,7 @@ export function formatFreeMarkdown(r: FreeRenderedEntry): string {
     r.bad_pattern,
     '```',
     '',
-    '### ✅ Correct',
+    '### Correct',
     '',
     '```php',
     r.code_example,
@@ -237,7 +237,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
     // and no relative-version line. The source IS the claim's license; it leads.
     const dateStr = alwaysWrongFact.date.slice(0, 10);
     lead = [
-      `> ⚠️ This pattern is wrong in every supported WordPress version — a defect, not a version issue.`,
+      `> BREAKING: this pattern is wrong in every supported WordPress version. A defect, not a version issue.`,
       `> Documented: ${alwaysWrongFact.sourceUrl} (knowledge verified ${dateStr}).`,
     ].join('\n');
   } else if (effectiveTier === 'LOUD' && versionFact != null) {
@@ -245,7 +245,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
     const action = versionFact.breaking ? 'broke' : 'changed';
     const dateStr = versionFact.date.slice(0, 10);
     const leadLines = [
-      `> ⚠️ Your AI suggested code that ${action} in ${ecosystem} ${versionFact.value}.`,
+      `> BREAKING: your AI suggested code that ${action} in ${ecosystem} ${versionFact.value}.`,
       `> This was ${versionFact.breaking ? 'deprecated or removed' : 'changed'} in ${ecosystem} ${versionFact.value} (${dateStr}).`,
       `> Your model's training likely predates this release.`,
     ];
@@ -261,7 +261,7 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
       condition != null
         ? `if ${condition},`
         : 'depending on your stack version,';
-    lead = `> 🔍 Worth reviewing: ${conditionText} this pattern may not work as expected.`;
+    lead = `> ADVISORY: ${conditionText} this pattern may not work as expected.`;
   }
 
   // Body from formatFreeMarkdown — same spine, same freshness line, same source.
