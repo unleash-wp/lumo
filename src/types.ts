@@ -62,8 +62,8 @@ export interface Snapshot {
 // lumo-pro (src/mcp/server.ts).
 //
 // Nothing in this repo consumes them, and they had drifted: they declared
-// `slug` and `plugin_slug` where the server has always taken `topic` and
-// `plugin`. A mirror with no consumer and no mechanism keeping it in step is a
+// argument names the server has never accepted, where it has always taken
+// `topic` and `plugin`. A mirror with no consumer and no mechanism keeping it in step is a
 // statement that goes stale unnoticed — the WordPress plugin believed the same
 // wrong names and could not talk to the server at all. Corrected here; if a
 // consumer never appears, delete them rather than maintain a second copy.

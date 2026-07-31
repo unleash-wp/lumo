@@ -38,7 +38,7 @@ als schlank **dupliziertes** File (kein privater Registry-Zwang im Open-Source-R
 
 ## Free-Agent-Bausteine (Milestone M3)
 
-- **Plugin-Erkennung:** `composer.json` → Verzeichnis-Scan → WP-CLI → Heuristik → `wp_plugin_advice`-Matching.
+- **Plugin-Erkennung:** `composer.json` → Verzeichnis-Scan → WP-CLI → Heuristik → `lumo_plugin_advice`-Matching.
 - **Onboarding erzwingt den HPOS-Aha** (Falsch-vs-Korrekt aktiv vorführen, < 10 min).
 - **Kontextueller Pro-Upgrade-Prompt:** Schwelle **3** gegated-Berührungen, **24h-Cooldown**, Loss-Aversion,
   Ein-Klick-Checkout, gedämpft nach Nicht-Klick. **Value-before-ask** — gegated wird *Tiefe*, nie die Antwort.

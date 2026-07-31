@@ -150,6 +150,9 @@ server.registerTool(
       computed: z
         .boolean()
         .describe('False = the structured layer did not run (fail-open). Decide NOTHING from the other fields; read the prose.'),
+      complete: z
+        .boolean()
+        .describe('False = the scan hit one of its own limits (input read only to the line cap, or report capped). The findings returned are still real; there may be more. The text names which limit bit.'),
       found: z
         .boolean()
         .describe('Whether anything was found — a finding OR a named coverage gap. Decide on this, not on the prose.'),
@@ -179,6 +182,7 @@ server.registerTool(
       content: [{ type: 'text', text: v.text }],
       structuredContent: {
         computed: v.computed,
+        complete: v.complete,
         found: v.found,
         loudCount: v.loudCount,
         softCount: v.softCount,
