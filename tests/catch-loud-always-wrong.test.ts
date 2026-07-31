@@ -111,7 +111,7 @@ describe('always-wrong route — rendering', () => {
 
   it('renders the loud lead anchored on the source, no version claim', () => {
     const out = formatCatch(loud());
-    expect(out).toContain('⚠️');
+    expect(out).toContain('BREAKING:');
     expect(out).toContain('wrong in every supported WordPress version');
     expect(out).toContain(entryFor(slug).source_url);
     // No fabricated release claim on this route.
@@ -122,8 +122,8 @@ describe('always-wrong route — rendering', () => {
     const entry = entryFor(slug);
     const signal = signalFor(slug, 'CERTAIN');
     const out = formatCatch({ tier: 'LOUD', entry, signal });
-    expect(out).not.toContain('⚠️');
-    expect(out).toContain('🔍');
+    expect(out).not.toContain('BREAKING:');
+    expect(out).toContain('ADVISORY:');
   });
 });
 
@@ -136,7 +136,7 @@ $rows = $wpdb->get_results( "SELECT * FROM wp_things WHERE user_id = $id" );
 
   it('lumo_check_code answers LOUD for an unprepared $wpdb query', async () => {
     const out = await handleCheckCode({ code: SQLI, language: 'php' }, snap);
-    expect(out).toContain('⚠️');
+    expect(out).toContain('BREAKING:');
     expect(out).toContain('wrong in every supported WordPress version');
   });
 
@@ -149,6 +149,6 @@ $rows = $wpdb->get_results( "SELECT * FROM wp_things WHERE user_id = $id" );
   it('SILENCE: the documented correct form stays quiet', async () => {
     const good = entryFor('wpdb-query-without-prepare-sql-injection').code_example!;
     const out = await handleCheckCode({ code: good, language: 'php' }, snap);
-    expect(out).not.toContain('⚠️');
+    expect(out).not.toContain('BREAKING:');
   });
 });

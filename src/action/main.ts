@@ -347,7 +347,7 @@ async function main(): Promise<void> {
   // Conversation tab without requiring exact diff-position arithmetic (which
   // breaks across rebases and force-pushes).
   for (const finding of findings) {
-    const tierBadge = finding.tier === 'LOUD' ? '🚨 LOUD' : '🔍 Advisory';
+    const tierBadge = finding.tier === 'LOUD' ? 'LOUD' : 'Advisory';
     const commentBody = [
       `**[Lumo] ${tierBadge} catch in \`${finding.filename}\`**`,
       '',

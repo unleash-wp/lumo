@@ -68,7 +68,7 @@ describe('scan --ci: exit-code gate', () => {
     expect(r.exitCode).toBe(1);
     const joined = r.lines.join('\n');
     expect(joined).toContain('LOUD');
-    expect(joined).toContain('⚠️');
+    expect(joined).toContain('BREAKING:');
   });
 
   it('SILENCE: a clean diff exits 0 and states scope, not a verdict', async () => {
@@ -91,7 +91,7 @@ describe('scan --ci: exit-code gate', () => {
     });
     expect(r.exitCode).toBe(0);
     const joined = r.lines.join('\n');
-    expect(joined).toContain('⚠️');
+    expect(joined).toContain('BREAKING:');
     expect(joined).toContain('LOUD');
   });
 
@@ -226,7 +226,7 @@ describe('scan without --ci stays advisory', () => {
   it('a LOUD diff still exits 0 — findings inform, they do not block', async () => {
     const r = await runScan({ argv: [], env: { LUMO_LICENSE_KEY: 'test-licence',}, getDiff: () => LOUD_DIFF });
     expect(r.exitCode).toBe(0);
-    expect(r.lines.join('\n')).toContain('⚠️');
+    expect(r.lines.join('\n')).toContain('BREAKING:');
   });
 
   it('LUMO_FAIL_ON_LOUD has no effect outside CI mode', async () => {

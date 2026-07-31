@@ -38,16 +38,16 @@ $ npx @unleashwp/lumo scan
 lumo scan: 1 LOUD finding in your current changes.
 
 --- images.php ---
-> ⚠️ Your AI suggested code that broke in WordPress 6.4.0.
+> BREAKING: your AI suggested code that broke in WordPress 6.4.0.
 > This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
 > Your model's training likely predates this release.
 
 ## wp_img_tag_add_decoding_attr() deprecated in WP 6.4 — use wp_img_tag_add_loading_optimization_attrs()
 
-### ❌ Wrong
+### Wrong
 $img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );
 
-### ✅ Correct
+### Correct
 $img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );
 
 **Source:** https://developer.wordpress.org/reference/functions/wp_img_tag_add_decoding_attr/

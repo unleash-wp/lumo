@@ -63,8 +63,8 @@ describe('proactive scan: LOUD pattern', () => {
     const loud = result.findings.find((f) => f.tier === 'LOUD');
     expect(loud).toBeDefined();
 
-    // LOUD lead must contain the ⚠️ alarm — verifies formatCatch path is used.
-    expect(loud?.body).toContain('⚠️');
+    // LOUD lead must contain the BREAKING: alarm — verifies formatCatch path is used.
+    expect(loud?.body).toContain('BREAKING:');
     // Must reference WooCommerce or WordPress in the output.
     expect(loud?.body).toMatch(/WooCommerce|WordPress/);
   });

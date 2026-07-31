@@ -52,7 +52,7 @@ describe('evals/free-mcp.xml stays true', () => {
   it('reports the deprecation as advisory, not as a break', async () => {
     const out = await handleCheckCode({ code: DEPRECATED_CALL, language: 'php' });
     expect(out).not.toMatch(/broke in WordPress/);
-    expect(out).toMatch(/Worth reviewing/);
+    expect(out).toMatch(/ADVISORY:/);
   });
 
   it('still reports a real removal as a break, with its version', async () => {
@@ -86,7 +86,7 @@ describe('evals/free-mcp.xml stays true', () => {
       code: `<?php if ( function_exists( 'wp_img_tag_add_decoding_attr' ) ) { $h = wp_img_tag_add_decoding_attr( $x, 'c' ); }`,
       language: 'php',
     });
-    expect(out).not.toContain('⚠️');
+    expect(out).not.toContain('BREAKING:');
   });
 
   it('names WooCommerce and ACF as Pro, and a genuine miss as a miss', async () => {
@@ -113,7 +113,7 @@ describe('feature-wave evals stay true', () => {
       code: `<?php $r = $wpdb->get_results( "SELECT * FROM t WHERE id = $id" );`,
       language: 'php',
     });
-    expect(out).toContain('⚠️');
+    expect(out).toContain('BREAKING:');
   });
 
   it('free-text query "nonce ajax" tops with the ajax-nonce slug', async () => {

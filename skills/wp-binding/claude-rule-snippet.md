@@ -15,10 +15,10 @@ WordPress or WooCommerce PHP/JS, use the Lumo MCP tools to check the current
 standard:
 
 **Before suggesting code:** call `lumo_check_code` with the code blob.
-- LOUD catch (starts `> ⚠️`): do not present the original; present Lumo's
+- LOUD catch (starts `> BREAKING:`): do not present the original; present Lumo's
   correct form, cite the fact line (version OR "wrong in every supported
   version" + documentation source) verbatim.
-- SOFT catch (starts `> 🔍`): surface the risk alongside the code, cite source.
+- SOFT catch (starts `> ADVISORY:`): surface the risk alongside the code, cite source.
 - Coverage-gap lines (`Detected <Plugin> …` / `_Also detected …_`): relay
   verbatim and name every plugin listed — that is Lumo saying "not checked".
 - Scope line ("Checked against Lumo Free … not an all-clear"): relay as
