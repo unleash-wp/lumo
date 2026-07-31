@@ -20,8 +20,8 @@
   </qa_pair>
 
   <qa_pair>
-    <question>Check this WordPress code with Lumo: `$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );`. In which WordPress version did this break, exactly as Lumo reports it?</question>
-    <answer>6.4.0</answer>
+    <question>Check this WordPress code with Lumo: `$html = wp_img_tag_add_decoding_attr( $img, 'the_content' );`. Lumo separates a hard alarm from an advisory. Does it answer LOUD or SOFT here?</question>
+    <answer>SOFT</answer>
   </qa_pair>
 
   <qa_pair>
@@ -40,8 +40,8 @@
   </qa_pair>
 
   <qa_pair>
-    <question>The same deprecated call, but guarded: `if ( function_exists( 'wp_img_tag_add_decoding_attr' ) ) { $h = wp_img_tag_add_decoding_attr( $x, 'c' ); }`. Lumo distinguishes a hard alarm from an advisory. Does it answer LOUD or SOFT here?</question>
-    <answer>SOFT</answer>
+    <question>Now a call to an API that was removed rather than deprecated: `const ok = isValidBlockContent( a, b, c, d );`. Does Lumo answer LOUD or SOFT here?</question>
+    <answer>LOUD</answer>
   </qa_pair>
 
   <qa_pair>

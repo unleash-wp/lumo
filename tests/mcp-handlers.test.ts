@@ -25,7 +25,9 @@ function makeFreeAuditProject(): string {
 }
 
 /** The Free-tier LOUD blob — the catch a real free user hits (WP 6.4, breaking). */
-const loudBlob = `<?php $html = wp_img_tag_add_decoding_attr( $img, 'the_content' );`;
+// A WP 5.9 removal, so LOUD rests on a break that really happened. This was
+// wp_img_tag_add_decoding_attr(), which is deprecated and not removed.
+const loudBlob = `const ok = isValidBlockContent( blockType, attrs, inner, html );`;
 
 // Gutenberg entries are Pro-MCP-only (freeSnapshot:false); WooCommerce knowledge is
 // Pro-only too. Neither ships in the redistributable Free snapshot. Tests that verify
@@ -320,7 +322,7 @@ describe('handleCheckCode — version-scoping', () => {
   it('project_root that does not exist → never throws, output is a string', async () => {
     await expect(
       handleCheckCode(
-        { code: loudBlob, language: 'php', project_root: '/tmp/__lumo_no_such_dir__' },
+        { code: loudBlob, language: 'js', project_root: '/tmp/__lumo_no_such_dir__' },
         catchSnap,
       ),
     ).resolves.toBeTypeOf('string');
@@ -328,7 +330,7 @@ describe('handleCheckCode — version-scoping', () => {
 
   it('project_root with no version detection falls back gracefully — still emits LOUD', async () => {
     const result = await handleCheckCode(
-      { code: loudBlob, language: 'php', project_root: join(fixturesDir, 'non-woo') },
+      { code: loudBlob, language: 'js', project_root: join(fixturesDir, 'non-woo') },
       catchSnap,
     );
     // LOUD still fires; no relative line because version unknown — but no throw
@@ -364,23 +366,25 @@ describe('handleCheckCode — upgrade prompt wiring', () => {
 
   it('no checkout URL configured → LOUD fires but no upgrade prompt (dead default never shown)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     expect(result).toContain('⚠️');
     expect(result).not.toContain('Get it:');
   });
 
   it('real checkout URL set → appends the prompt with the gated count, domain label, and attributed link', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
-    // Domain label for the wordpress-core slug is "WordPress Core"
-    expect(result).toContain('Lumo caught 1 stale-pattern risk in your WordPress Core code.');
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
+    // The label followed the fixture: it read "WordPress Core" while the LOUD
+    // came from the mis-stamped core deprecation. That entry is SOFT now, so
+    // the LOUD a free user can reach is the Block Editor removal.
+    expect(result).toContain('Lumo caught 1 stale-pattern risk in your Block Editor code.');
     expect(result).toContain('Get it: https://buy.example.com/pro?ref=catch&gated=1&v=block');
   });
 
   it('kill-switch off → no prompt even with a real URL set', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
     process.env['LUMO_UPGRADE_PROMPT'] = 'off';
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     expect(result).not.toContain('Get it:');
   });
 
@@ -430,14 +434,14 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
 
   it('reveal fires on a LOUD catch when no checkout URL is set (upgrade prompt suppressed)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     expect(result).toContain('verified as of');
   });
 
   it('names no Pro MCP endpoint while LUMO_PRO_MCP_URL is unset (no dead install command)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     delete process.env['LUMO_PRO_MCP_URL'];
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     expect(result).toContain('verified as of');
     expect(result).not.toContain('claude mcp add');
   });
@@ -445,13 +449,13 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
   it('appends the add-command only when LUMO_PRO_MCP_URL names a reachable server', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     process.env['LUMO_PRO_MCP_URL'] = 'https://mcp.example.test/mcp';
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     expect(result).toContain('claude mcp add lumo-pro --transport http https://mcp.example.test/mcp');
   });
 
   it('reveal does NOT fire when the upgrade prompt block already fired (no double-printing)', async () => {
     process.env['LUMO_CHECKOUT_URL'] = 'https://buy.example.com/pro';
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     // Upgrade prompt fires (Get it:) → reveal must not also appear
     expect(result).toContain('Get it:');
     expect(result).not.toContain('verified as of');
@@ -461,7 +465,7 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
   it('reveal is suppressed when kill-switch is off', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
     process.env['LUMO_UPGRADE_PROMPT'] = 'off';
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     expect(result).not.toContain('verified as of');
     expect(result).not.toContain('claude mcp add');
   });
@@ -476,14 +480,14 @@ describe('handleCheckCode — freshness-gap reveal (C4)', () => {
 
   it('reveal contains the snapshot generatedAt date (YYYY-MM-DD shape)', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     // The date from snapshot.generatedAt is substituted; catchSnap uses the real snapshot.
     expect(result).toMatch(/verified as of \d{4}-\d{2}-\d{2}/);
   });
 
   it('reveal says "verified as of" — never "out of date" or "stale"', async () => {
     delete process.env['LUMO_CHECKOUT_URL'];
-    const result = await handleCheckCode({ code: loudBlob, language: 'php' }, catchSnap);
+    const result = await handleCheckCode({ code: loudBlob, language: 'js' }, catchSnap);
     const lower = result.toLowerCase();
     expect(lower).not.toContain('out of date');
     expect(lower).not.toContain('is stale');

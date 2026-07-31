@@ -45,9 +45,22 @@ describe('evals/free-mcp.xml stays true', () => {
     expect(out).toContain('wp_img_tag_add_loading_optimization_attrs');
   });
 
-  it('reports the breaking version as 6.4.0', async () => {
+  // The corpus asked which version this "broke" in and answered 6.4.0. It never
+  // broke: the function still exists in core and emits a deprecation notice.
+  // Lumo said otherwise only while the entry carried a wrong breaking_change
+  // stamp, so the eval was pinning the defect as the expected answer.
+  it('reports the deprecation as advisory, not as a break', async () => {
     const out = await handleCheckCode({ code: DEPRECATED_CALL, language: 'php' });
-    expect(out).toMatch(/broke in WordPress 6\.4\.0/);
+    expect(out).not.toMatch(/broke in WordPress/);
+    expect(out).toMatch(/Worth reviewing/);
+  });
+
+  it('still reports a real removal as a break, with its version', async () => {
+    const out = await handleCheckCode({
+      code: 'const ok = isValidBlockContent( a, b, c, d );',
+      language: 'js',
+    });
+    expect(out).toMatch(/broke in WordPress 5\.9/);
   });
 
   it('names validateBlock for the removed block API', async () => {
