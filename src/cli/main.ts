@@ -45,7 +45,7 @@ async function main(): Promise<void> {
       await import('../mcp/server.js');
       return;
     case 'skills':
-      await (await import('./skills.js')).installOfficialSkills();
+      await (await import('./skills.js')).installWordPressAgentSkills();
       return;
     case 'action':
       await import('../action/main.js');

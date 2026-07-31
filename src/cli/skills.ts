@@ -16,7 +16,7 @@
 
 import { spawn } from 'node:child_process';
 
-export function installOfficialSkills(): Promise<void> {
+export function installWordPressAgentSkills(): Promise<void> {
   console.log(
     [
       'Installing the WordPress agent skills (WordPress/agent-skills).',

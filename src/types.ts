@@ -63,10 +63,10 @@ export interface Snapshot {
 //
 // Nothing in this repo consumes them, and they had drifted: they declared
 // argument names the server has never accepted, where it has always taken
-// `topic` and `plugin`. A mirror with no consumer and no mechanism keeping it in step is a
-// statement that goes stale unnoticed — the WordPress plugin believed the same
-// wrong names and could not talk to the server at all. Corrected here; if a
-// consumer never appears, delete them rather than maintain a second copy.
+// `topic` and `plugin`. A mirror with no consumer, and no mechanism keeping it
+// in step, is a statement that goes stale unnoticed. The WordPress plugin held
+// the same wrong names and could not talk to the server at all. Corrected here;
+// if a consumer never appears, delete them rather than maintain a second copy.
 // ---------------------------------------------------------------------------
 
 /** Input shape for the lumo_lookup tool. */
