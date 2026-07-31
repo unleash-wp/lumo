@@ -40,8 +40,12 @@ import {
 
 /**
  * Read enforce.mode from .claude/.lumo.json in the checked-out workspace.
- * Returns 'warn-only' when absent, malformed, or set to any unknown value.
- * Only an explicit "block" or "off" overrides the default advisory behaviour.
+ *
+ * Returns 'warn-only' when the file is absent, which is the documented default
+ * for the repositories that never write one. Returns 'unreadable' when a file
+ * exists but cannot be parsed or names a mode this version does not know: those
+ * two used to be indistinguishable, so a configured "block" fell back to
+ * advisory in silence. Only an explicit "block" or "off" overrides the default.
  *
  * Exported for unit testing; not part of the public action API surface.
  */
