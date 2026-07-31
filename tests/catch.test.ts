@@ -481,7 +481,7 @@ describe('formatCatch — render layer', () => {
     expect(loud).toBeDefined();
     const rendered = formatCatch(loud!);
     // The blockquote alarm
-    expect(rendered).toContain('⚠️');
+    expect(rendered).toContain('BREAKING:');
     // The version fact — "8.2" must appear in the dated lead
     expect(rendered).toContain('8.2');
     // The entry title appears in the body
@@ -520,10 +520,10 @@ describe('formatCatch — render layer', () => {
     expect(soft).toBeDefined();
     const rendered = formatCatch(soft!);
     // Quiet lead
-    expect(rendered).toContain('🔍');
-    expect(rendered).toContain('Worth reviewing');
+    expect(rendered).toContain('ADVISORY:');
+    expect(rendered).toContain('this pattern may not work as expected');
     // No alarm emoji
-    expect(rendered).not.toContain('⚠️');
+    expect(rendered).not.toContain('BREAKING:');
     // Condition is stated
     expect(rendered).toContain('$order_id is a WooCommerce order');
   });
@@ -547,7 +547,7 @@ describe('formatCatch — render layer', () => {
     if (results.length > 0 && results[0] != null) {
       const rendered = formatCatch(results[0]);
       // Must not contain alarm emoji
-      expect(rendered).not.toContain('⚠️');
+      expect(rendered).not.toContain('BREAKING:');
     }
     // If no results (SOFT filtered out at display level) that is also correct
   });
@@ -573,7 +573,7 @@ describe('handleCheckCode — handler integration', () => {
   it('HPOS bad pattern → LOUD output containing the dated version', async () => {
     const code = `$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     const result = await handleCheckCode({ code, language: 'php' }, catchSnap);
-    expect(result).toContain('⚠️');
+    expect(result).toContain('BREAKING:');
     expect(result).toContain('8.2');
     expect(result).toContain('wc_get_order');
   });
@@ -591,7 +591,7 @@ describe('handleCheckCode — handler integration', () => {
   it('auto language detection works for PHP blob', async () => {
     const code = `<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );`;
     const result = await handleCheckCode({ code }, catchSnap); // no language → auto
-    expect(result).toContain('⚠️');
+    expect(result).toContain('BREAKING:');
   });
 
   it('auto language detection works for JS blob', async () => {
@@ -866,10 +866,10 @@ wp_register_ability( 'my-plugin/get-data', [
     const { formatCatch } = await import('../src/lib/render.js');
     const rendered = formatCatch(match!);
     // Quiet SOFT lead
-    expect(rendered).toContain('🔍');
-    expect(rendered).toContain('Worth reviewing');
+    expect(rendered).toContain('ADVISORY:');
+    expect(rendered).toContain('this pattern may not work as expected');
     // No LOUD alarm
-    expect(rendered).not.toContain('⚠️');
+    expect(rendered).not.toContain('BREAKING:');
     // Condition from signal is stated
     expect(rendered).toContain('MCP clients');
     // Source URL from entry carries the SHA-pinned permalink
@@ -964,9 +964,9 @@ watch( () => { console.log( state.count ); } );
     expect(match).toBeDefined();
     const { formatCatch } = await import('../src/lib/render.js');
     const rendered = formatCatch(match!);
-    expect(rendered).toContain('🔍');
-    expect(rendered).toContain('Worth reviewing');
-    expect(rendered).not.toContain('⚠️');
+    expect(rendered).toContain('ADVISORY:');
+    expect(rendered).toContain('this pattern may not work as expected');
+    expect(rendered).not.toContain('BREAKING:');
     // The entry summary contains the dated "WP 7.0" / "May 2026" proof phrase
     expect(rendered).toMatch(/7\.0|May 2026/);
   });
@@ -985,7 +985,7 @@ describe('formatCatch — version-relative lines', () => {
     expect(loud).toBeDefined();
     const rendered = formatCatch(loud!, '7.0');
     // LOUD alarm still present
-    expect(rendered).toContain('⚠️');
+    expect(rendered).toContain('BREAKING:');
     // Relative line: already past the breaking version
     expect(rendered).toContain('fix now');
     expect(rendered).toContain('7.0');
@@ -998,7 +998,7 @@ describe('formatCatch — version-relative lines', () => {
     const loud = results.find((r) => r.tier === 'LOUD');
     expect(loud).toBeDefined();
     const rendered = formatCatch(loud!, '5.8');
-    expect(rendered).toContain('⚠️');
+    expect(rendered).toContain('BREAKING:');
     expect(rendered).toContain('soon-dead pattern');
     expect(rendered).toContain('5.8');
   });
@@ -1031,7 +1031,7 @@ describe('formatCatch — version-relative lines', () => {
     if (results.length > 0 && results[0] != null) {
       const rendered = formatCatch(results[0], '8.5');
       // Must remain SOFT — no alarm emoji
-      expect(rendered).not.toContain('⚠️');
+      expect(rendered).not.toContain('BREAKING:');
     }
   });
 });

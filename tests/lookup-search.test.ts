@@ -61,7 +61,7 @@ describe('check_code structured verdict', () => {
     expect(v.found).toBe(true);
     expect(v.loudCount).toBe(1);
     expect(v.gaps).toEqual([{ plugin: 'Meta Box', proCovers: true }]);
-    expect(v.text).toContain('⚠️');
+    expect(v.text).toContain('BREAKING:');
   });
 
   it('SILENCE: clean code is computed:true found:false — a real verdict, not a shrug', async () => {

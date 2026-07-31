@@ -44,14 +44,14 @@ has been deprecated since WordPress 6.4.
 npx @unleashwp/lumo scan
 ```
 
-**3. Expected output** (verbatim from a fresh install; the ✅ Correct block and
+**3. Expected output** (verbatim from a fresh install; the Correct block and
 test step are the full snapshot entry — trimmed here at the marked spot only):
 
 ```
 lumo scan: 1 LOUD finding in your current changes.
 
 --- images.php ---
-> ⚠️ Your AI suggested code that broke in WordPress 6.4.0.
+> BREAKING: your AI suggested code that broke in WordPress 6.4.0.
 > This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
 > Your model's training likely predates this release.
 
@@ -62,13 +62,13 @@ in favor of wp_img_tag_add_loading_optimization_attrs(), which consolidates
 image optimization (decoding, loading, fetchpriority). Themes and plugins still
 using the old function will trigger deprecation notices on WP 6.4+.
 
-### ❌ Wrong
+### Wrong
 
 // WRONG — deprecated since WP 6.4.0
 $img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );
 echo $img_html;
 
-### ✅ Correct
+### Correct
 
 // CORRECT — WP 6.4.0+
 $img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );
@@ -110,8 +110,8 @@ Record one terminal, default dark theme, ~90 columns. Total loop ≤ 30 s.
 |---|---|---|
 | 1 | 3 s | Editor shows `includes/checkout.php` with the `get_posts( … 'shop_order' … )` snippet. Caption: "Your AI wrote this. It looks fine." |
 | 2 | 2 s | Terminal: `npx @unleashwp/lumo scan` typed and entered. |
-| 3 | 4 s | Output appears — hold on the three ⚠️ lead lines: "broke in WordPress 6.4.0 … Your model's training likely predates this release." |
-| 4 | 5 s | Scroll to ❌ Wrong / ✅ Correct side of the block, ending on the **Source:** and **Affected: WooCommerce ≥ 8.2** lines. |
+| 3 | 4 s | Output appears — hold on the three BREAKING: lead lines: "broke in WordPress 6.4.0 … Your model's training likely predates this release." |
+| 4 | 5 s | Scroll to Wrong / Correct side of the block, ending on the **Source:** and **Affected: WooCommerce ≥ 8.2** lines. |
 | 5 | 4 s | Final line "Fix the LOUD finding above before committing." Caption: "The manual answers when asked. The watcher fires when it's wrong." |
 
 ---
