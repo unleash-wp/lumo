@@ -1,7 +1,7 @@
 # Lumo and the GitHub Copilot coding agent
 
 The coding agent opens pull requests on its own. Nobody is watching while it
-writes, and it uses its MCP tools **autonomously, without asking for approval** —
+writes, and it uses its MCP tools **autonomously, without asking for approval**, in
 GitHub's own wording. That makes it the surface where a stale WordPress pattern
 is most likely to reach a branch unnoticed, and the surface where a wrong answer
 from a checker is most expensive.
@@ -68,9 +68,12 @@ setting, not a file in the repo.
 }
 ```
 
-Store the key as an **Agents** secret named `LUMO_LICENSE_KEY`. Only secrets
-whose names start with `COPILOT_MCP_` are visible to the MCP configuration, which
-is why the reference above carries that prefix while the secret itself does not.
+Store the key as an **Agents** secret named `COPILOT_MCP_LUMO_LICENSE_KEY`. The
+prefix is part of the secret's own name, not something added when referencing it:
+GitHub exposes only secrets whose names begin with `COPILOT_MCP_` to the MCP
+configuration. Name it without the prefix and the reference resolves to nothing,
+the agent runs with no credentials, and every call is refused with no sign that a
+name was wrong.
 
 `tools` is required and we list the names rather than `"*"` on purpose: an
 allowlist that names its tools breaks loudly when a name changes, where `"*"`
@@ -80,7 +83,7 @@ would quietly hand the agent whatever the server happens to expose next.
 
 Configuration that is accepted is not configuration that works. The `tools`
 allowlist names tools by string, and a name that does not exist on the server is
-not an error anywhere — the agent simply never calls it, and the first sign is
+not an error anywhere. The agent simply never calls it, and the first sign is
 WordPress code arriving unchecked.
 
 Before you rely on it, confirm the names you pasted are the names the server
@@ -94,7 +97,7 @@ For Pro, ask the server directly with your key:
 
 ```bash
 curl -s https://mcp.unleash-wp.com/mcp \
-  -H "Authorization: Bearer $LUMO_LICENSE_KEY" \
+  -H "Authorization: Bearer $COPILOT_MCP_LUMO_LICENSE_KEY" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
