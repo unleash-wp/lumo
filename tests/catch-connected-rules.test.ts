@@ -201,6 +201,19 @@ describe('connected rules — superglobal used inline, not assigned', () => {
       'an escaped echo followed by an unescaped one',
       `<?php echo esc_html( $_GET['ok'] ); echo $_GET['bad'];`,
     ],
+    [
+      // Found in the Stufe-3 gap pass by probing the channel list: `\bprint\b`
+      // never reaches printf, because the word boundary fails on the trailing f.
+      'passed to printf',
+      `<?php printf( '<b>%s</b>', $_GET['q'] );`,
+    ],
+    ['passed to vprintf', `<?php vprintf( '<b>%s</b>', array( $_GET['q'] ) );`],
+    ['emitted through the short echo tag', `<?= $_GET['name'] ?>`],
+    [
+      // The span crosses newlines — only a semicolon stops it.
+      'concatenated across several lines',
+      `<?php echo '<div>'\n  . '<span>'\n  . $_GET['name']\n  . '</span>';`,
+    ],
   ])('BELL: a superglobal %s is caught', (_name, code) => {
     expect(fires(code)).toBe(true);
   });
@@ -216,6 +229,13 @@ describe('connected rules — superglobal used inline, not assigned', () => {
       // would be the noise this product exists to avoid.
       'compared against a literal',
       `<?php if ( isset( $_POST['action'] ) && 'save' === $_POST['action'] ) { echo 'saved'; }`,
+    ],
+    ['escaped inside printf', `<?php printf( '<b>%s</b>', esc_html( $_GET['q'] ) );`],
+    [
+      // sprintf returns a string rather than emitting one, so its result can
+      // still be escaped on the way out. Treating it as a sink would flag this.
+      'built with sprintf and escaped on output',
+      `<?php $s = sprintf( '<b>%s</b>', $_GET['q'] ); echo wp_kses_post( $s );`,
     ],
   ])('SILENCE: %s must not be flagged', (_name, code) => {
     expect(fires(code)).toBe(false);
