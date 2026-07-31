@@ -13,7 +13,6 @@
     "commands/",
     "skills/",
     "server.json",
-    "action.yml",
     ".cursor/"
   ],
   "main": "dist/mcp.mjs",

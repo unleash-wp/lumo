@@ -299,11 +299,23 @@ export const SCAN_NO_MATCH_TEMPLATE =
  * covers them, the automatic catch reaches only part of them, and this line is
  * read at exactly the moment someone decides whether silence means safety.
  */
+// Names what ran, not a tier. Both Action lines used to describe Lumo Free's
+// coverage, which was true while the Action was free. It is not any more: CI
+// enforcement is Pro, so the only readers of these lines hold a licence, and a
+// paid run described as a free one is an unfounded claim about what the machine
+// did — in the one place a customer looks to see what they got. It also
+// undersells the catch, which is the wrong error to leave in on purpose.
+//
+// "the catch that ran in this check" is deliberately vague about which catch:
+// when the Pro server is unreachable the run falls back to the free one, and
+// that case has its own notice (ACTION_PRO_DEGRADED_LINE) rather than being
+// papered over here.
 export const ACTION_NO_MATCH_LINE =
-  'No covered pattern matched in the added lines. ' +
-  'Lumo Free carries WordPress Core, block and theme APIs, and security ' +
-  'fundamentals as knowledge, and the catch fires on a subset of that; ' +
-  'this is not an all-clear.';
+  'No covered pattern matched in the added lines. Lumo read the lines this ' +
+  'pull request added and nothing else — not the surrounding file, not the ' +
+  'rest of the branch — and matched them against the catch that ran in this ' +
+  'check. That catch fires on a subset of what Lumo knows. ' +
+  'This is not an all-clear.';
 
 /**
  * Appended to the Action's review summary. Belongs there even when findings exist:
@@ -332,8 +344,8 @@ export const KNOWLEDGE_WIDER_THAN_CATCH =
   'the knowledge the catch does not reach.';
 
 export const ACTION_SCOPE_LINE =
-  '_Scope: the added lines of this diff, checked against what Lumo Free covers. ' +
-  'Unchanged lines and anything outside that coverage were not checked. ' +
+  '_Scope: the added lines of this diff, checked against the catch that ran in ' +
+  'this check. Unchanged lines and anything outside that catch were not checked. ' +
   'The catch also reaches only part of what Lumo documents, so a fixed run is ' +
   'not a cleared one — the rest of the knowledge is in the snapshot, reachable ' +
   'from an editor with the Lumo MCP server connected._';
@@ -361,6 +373,22 @@ export const ACTION_REQUIRES_PRO_LINE =
   'Set lumo_pro_url and lumo_license_key to run the gate. ' +
   'Without a subscription, `lumo scan` still checks your working tree locally, ' +
   'and the MCP server and skills stay free.';
+
+/**
+ * Posted when .claude/.lumo.json exists but cannot be honoured — unparseable,
+ * or naming an enforce.mode this version does not know.
+ *
+ * The run still falls open to advisory, because a broken config file is not a
+ * reason to block a team's merges. What changed is that it says so: a repo that
+ * asked for a blocking gate and lost it to a typo would otherwise keep reading
+ * green checks as enforced ones, which is the same silence-as-verdict the rest
+ * of this file exists to prevent.
+ */
+export const ENFORCE_CONFIG_UNREADABLE_LINE =
+  'Your .claude/.lumo.json could not be read, or it names an enforce.mode this ' +
+  'version does not recognise, so Lumo fell back to advisory for this run. ' +
+  'If that file asked for "block", the gate you configured is not running — ' +
+  'fix the file rather than reading this run as enforced.';
 
 export const ACTION_PRO_DEGRADED_LINE =
   '**The Lumo Pro check did not run** — the Pro server was unreachable, so the ' +
