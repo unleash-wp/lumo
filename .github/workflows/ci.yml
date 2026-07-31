@@ -24,6 +24,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Vocabulary check
+        run: npm run check:vocabulary
+
       - name: Test
         run: npm test
 

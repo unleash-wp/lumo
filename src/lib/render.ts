@@ -390,11 +390,49 @@ export const ENFORCE_CONFIG_UNREADABLE_LINE =
   'If that file asked for "block", the gate you configured is not running — ' +
   'fix the file rather than reading this run as enforced.';
 
+// "did not deliver a check", not "was unreachable": a server that answers and
+// then reports it could not scan lands here too, and naming the wrong cause
+// sends the reader to look at the network instead of the server.
 export const ACTION_PRO_DEGRADED_LINE =
-  '**The Lumo Pro check did not run** — the Pro server was unreachable, so the ' +
-  'results in this run come from the free catch only. This is not a Pro ' +
-  'verdict. Check the server URL, the license key, and the server status, ' +
-  'then re-run the check.';
+  '**The Lumo Pro check did not run** — the Pro server did not deliver a ' +
+  'check, so the results in this run come from the free catch only. This is ' +
+  'not a Pro verdict. Check the server URL, the license key, and the server ' +
+  'status, then re-run the check.';
+
+/**
+ * One notice per run for the scanner's own limits, never one per file.
+ *
+ * These sentences describe how far the scanner read, not what the contributor
+ * wrote. Repeating that under twenty files in one pull request is the noise
+ * that gets a reviewer muted, and it wears out the same notice that has to be
+ * believed when a real outage happens. The filenames stay in it so the summary
+ * is still checkable: a reader who cannot tell which file was cut short has
+ * been told something they cannot act on.
+ */
+export function buildScanLimitsNotice(
+  limits: ReadonlyArray<{ filename: string; note: string }>,
+): string {
+  const byNote = new Map<string, string[]>();
+  for (const { filename, note } of limits) {
+    const files = byNote.get(note);
+    if (files) {
+      if (!files.includes(filename)) files.push(filename);
+    } else {
+      byNote.set(note, [filename]);
+    }
+  }
+
+  const lines = [
+    '**Lumo did not read everything in this run.** The findings above are real, ' +
+      'but they are not the whole picture:',
+    '',
+  ];
+  for (const [note, files] of byNote) {
+    lines.push(`- ${note}`);
+    for (const file of files) lines.push(`  - \`${file}\``);
+  }
+  return lines.join('\n');
+}
 
 // Neutral line when checkCode finds nothing to flag.
 //
@@ -407,6 +445,20 @@ export const CATCH_NEUTRAL_LINE =
   'Free carries WordPress Core, block and theme APIs, and security fundamentals ' +
   'as knowledge, and the catch reaches only part of that; anything outside what ' +
   'it reaches was not checked, so this is not an all-clear.';
+
+// The two scan limits, said out loud. Both are deliberate and both used to be
+// invisible, which turned them into coverage limits presented as results: a
+// blob longer than the scanner reads produced the same neutral line as a clean
+// one, and a blob with more matches than the report holds showed a subset with
+// nothing to say a subset is what it was. CATCH_NEUTRAL_LINE discloses what
+// Lumo knows, not how much of the input it actually read.
+export const catchInputTruncatedLine = (lineCap: number): string =>
+  `Only the first ${lineCap} lines of the submitted code were scanned. ` +
+  'Everything after that was not checked, so this answer says nothing about it.';
+
+export const catchHitsOmittedLine = (omitted: number): string =>
+  `${omitted} further ${omitted === 1 ? 'match is' : 'matches are'} not listed: ` +
+  'the report is capped, and the lowest-severity matches were dropped first.';
 
 /** "A", "A and B", "A, B and C" — one grammar for every gap surface. */
 export function joinPluginNames(names: string[]): string {

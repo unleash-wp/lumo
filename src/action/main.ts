@@ -29,6 +29,7 @@ import {
   ACTION_NO_MATCH_LINE,
   ACTION_SCOPE_LINE,
   ACTION_PRO_DEGRADED_LINE,
+  buildScanLimitsNotice,
   ACTION_REQUIRES_PRO_LINE,
   ENFORCE_CONFIG_UNREADABLE_LINE,
 } from '../lib/render.js';
@@ -186,7 +187,7 @@ async function main(): Promise<void> {
   // The diff comes back as the raw response body when mediaType.format='diff'.
   const diff = diffResponse.data as unknown as string;
 
-  const { loudCount, softCount, findings, proDegraded } = await runCatch({
+  const { loudCount, softCount, findings, proDegraded, scanLimits } = await runCatch({
     diff,
     proUrl: proUrl || undefined,
     licenseKey: licenseKey || undefined,
@@ -202,6 +203,19 @@ async function main(): Promise<void> {
       body: `**[Lumo]** ${ACTION_PRO_DEGRADED_LINE}`,
     });
     core.info('[lumo] Pro check degraded to the free catch — posted the degradation notice');
+  }
+
+  // One comment for the whole run, naming the files. Per-file would repeat the
+  // same sentence under every changed file and wear out the notice that has to
+  // be believed when a real outage happens.
+  if (scanLimits.length > 0) {
+    await octokit.rest.issues.createComment({
+      owner: ctx.repo.owner,
+      repo: ctx.repo.repo,
+      issue_number: pullNumber,
+      body: `**[Lumo]** ${buildScanLimitsNotice(scanLimits)}`,
+    });
+    core.info(`[lumo] Scan limits hit on ${scanLimits.length} file(s) — posted one summary`);
   }
 
   // Optional autonomous review stage — advisory, fenced, fail-open. Defined

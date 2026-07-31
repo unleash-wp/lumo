@@ -13,9 +13,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classify, checkCode, applyCatchOverrides } from '../src/detection/catch.js';
+import {
+  classify,
+  checkCode,
+  checkCodeWithGaps,
+  applyCatchOverrides,
+  INPUT_LINE_CAP,
+} from '../src/detection/catch.js';
 import { formatCatch, CATCH_NEUTRAL_LINE } from '../src/lib/render.js';
-import { handleCheckCode } from '../src/mcp/handlers.js';
+import { handleCheckCode, handleCheckCodeFull } from '../src/mcp/handlers.js';
 import { loadSnapshot, findEntry } from '../src/lib/snapshot.js';
 import type { CatchSignal } from '../src/detection/registry.js';
 import type { SnapshotEntry } from '../src/types.js';
@@ -1045,5 +1051,46 @@ describe('lumo_audit and sourceSignals unchanged', () => {
     expect(woo?.sourceSignals).toContain('Automattic\\WooCommerce');
     const core = PATTERNS.find((p) => p.pattern === 'wordpress-core');
     expect(core?.sourceSignals).toContain('wp_img_tag_add_decoding_attr(');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The two scan limits. Both are deliberate and both used to be invisible, which
+// made them coverage limits presented as results: a blob longer than the
+// scanner reads produced the same neutral line as a clean one, and a blob with
+// more matches than the report holds showed a subset with nothing to say so.
+//
+// This matters most on the Action's degraded path, where the free catch is what
+// actually reviews a paying customer's pull request.
+// ---------------------------------------------------------------------------
+
+describe('the free catch names its own limits', () => {
+  const CLEAN_LINE = '$post = get_post( $id );';
+
+  it('BELL: a blob longer than the scanner reads says the tail went unread', async () => {
+    const code = [
+      ...Array<string>(INPUT_LINE_CAP + 5).fill(CLEAN_LINE),
+      'wp_img_tag_add_decoding_attr( $img, "the_content" );',
+    ].join('\n');
+
+    const verdict = await handleCheckCodeFull({ code, language: 'php' });
+
+    expect(verdict.text).toContain(CATCH_NEUTRAL_LINE);
+    expect(verdict.text).toContain(`first ${INPUT_LINE_CAP} lines`);
+    expect(verdict.text).toContain('not checked');
+  });
+
+  it('SILENCE: a blob within the cap says nothing about truncation', async () => {
+    const verdict = await handleCheckCodeFull({ code: CLEAN_LINE, language: 'php' });
+
+    expect(verdict.text).toBe(CATCH_NEUTRAL_LINE);
+    expect(verdict.text).not.toContain('lines of the submitted code');
+  });
+
+  it('reports the truncation as a fact of the scan, not only as prose', () => {
+    const long = Array<string>(INPUT_LINE_CAP + 5).fill(CLEAN_LINE).join('\n');
+
+    expect(checkCodeWithGaps(long, 'php').inputTruncated).toBe(true);
+    expect(checkCodeWithGaps(CLEAN_LINE, 'php').inputTruncated).toBe(false);
   });
 });
