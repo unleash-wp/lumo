@@ -6,8 +6,8 @@
 // through `uwp mcp` alongside changelog/contributors.
 //
 // Two tools, honest split:
-//   forge_wp_lookup     — pure data: query the bundled snapshot (always works).
-//   forge_wp_check_code — the live catch, delegated to the REAL Lumo engine by
+//   lumo_lookup     — pure data: query the bundled snapshot (always works).
+//   lumo_check_code — the live catch, delegated to the REAL Lumo engine by
 //                         spawning the installed `lumo-mcp` binary (npm package
 //                         @unleashwp/lumo). The precision engine is never
 //                         reimplemented here; without the binary the tool
@@ -95,7 +95,7 @@ function lookup(topic, top) {
 const INSTALL_HINT =
   'The live catch needs the Lumo engine: `npm install -g @unleashwp/lumo` ' +
   '(or set LUMO_MCP_BIN to the lumo-mcp binary). The bundled knowledge lookup ' +
-  '(forge_wp_lookup) works without it.';
+  '(lumo_lookup) works without it.';
 
 function checkCodeViaEngine(code, language) {
   return new Promise((resolve) => {
@@ -150,7 +150,7 @@ function checkCodeViaEngine(code, language) {
 
 export const mcpTools = [
   {
-    name: 'forge_wp_lookup',
+    name: 'lumo_lookup',
     description:
       'Look up curated, source-verified WordPress knowledge from the Lumo snapshot: Core API deprecations, block.json/theme.json currency, security patterns, WooCommerce/HPOS. Pass a topic or function name (e.g. "HPOS", "apiVersion", "get_page_by_title"). Returns the wrong-vs-correct pattern with source and a verification step.',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -165,7 +165,7 @@ export const mcpTools = [
     run: async (a) => lookup(a.topic, Math.min(10, Math.max(1, Number(a.top) || 5))).text,
   },
   {
-    name: 'forge_wp_check_code',
+    name: 'lumo_check_code',
     description:
       'Run the Lumo live catch on a WordPress PHP/JS snippet or diff: flags patterns that broke in a real Core/Gutenberg/WooCommerce release, with the dated source and the fix. Delegates to the installed @unleashwp/lumo engine (precision-first, never guesses); without it, returns the install hint.',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
