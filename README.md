@@ -95,15 +95,17 @@ cd lumo && npm install && npm run build
 # MCP config: "command": "node", "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
 ```
 
-### GitHub Action (PR review)
+Cursor setup, the `wp-binding` skill, and the edit-time enforcement hook: [docs/install.md](docs/install.md)
 
-```yaml
-- uses: unleash-wp/lumo@v1
-  with:
-    fail_on_loud: 'true'   # LOUD findings fail the check; SOFT stays advisory
-```
+### CI (pull request review) — Lumo Pro
 
-Full options, Cursor setup, the `wp-binding` skill, and the edit-time enforcement hook: [docs/install.md](docs/install.md)
+The GitHub Action is part of Lumo Pro and lives in its own repository:
+[unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action). It needs a
+licence key; without one it checks nothing and says so rather than reporting a
+pass. The runner ships in this package as `lumo action`, so the free install
+carries it, but running the gate is the paid part.
+
+Locally, `lumo scan` checks your working tree with no licence at all.
 
 ---
 

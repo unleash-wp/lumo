@@ -30,6 +30,7 @@ import {
   ACTION_SCOPE_LINE,
   ACTION_PRO_DEGRADED_LINE,
   ACTION_REQUIRES_PRO_LINE,
+  ENFORCE_CONFIG_UNREADABLE_LINE,
 } from '../lib/render.js';
 
 // ---------------------------------------------------------------------------
@@ -43,18 +44,72 @@ import {
  *
  * Exported for unit testing; not part of the public action API surface.
  */
-export function resolveActionEnforceMode(workspaceDir: string): 'block' | 'warn-only' | 'off' {
+export function resolveActionEnforceMode(
+  workspaceDir: string,
+): 'block' | 'warn-only' | 'off' | 'unreadable' {
+  const cfgPath = path.join(workspaceDir, '.claude', '.lumo.json');
+  let cfg: Record<string, unknown>;
   try {
-    const cfgPath = path.join(workspaceDir, '.claude', '.lumo.json');
+    // No file is not a broken file. Most repositories never write one, and the
+    // documented default for them is advisory — nothing to report.
     if (!fs.existsSync(cfgPath)) return 'warn-only';
-    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8')) as Record<string, unknown>;
-    const mode = (cfg?.enforce as Record<string, unknown> | undefined)?.mode;
-    if (mode === 'block') return 'block';
-    if (mode === 'off') return 'off';
+    cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8')) as Record<string, unknown>;
   } catch {
-    // Fail-open: malformed config → advisory
+    return 'unreadable';
   }
-  return 'warn-only';
+
+  const enforce = cfg?.enforce as Record<string, unknown> | undefined;
+  const mode = enforce?.['mode'];
+  if (mode === undefined) return 'warn-only';
+  if (mode === 'block') return 'block';
+  if (mode === 'off') return 'off';
+  if (mode === 'warn-only') return 'warn-only';
+
+  // A file that exists and names a mode this version does not know is a repo
+  // asking for something and not getting it. Answering 'warn-only' here would
+  // have been correct behaviour reported as a lie: a team that wrote "block"
+  // with a typo would keep merging on LOUD findings, told nothing, and read
+  // every green check as an enforced one. 'unreadable' exists so the caller can
+  // say what happened; the behaviour still falls open to advisory.
+  return 'unreadable';
+}
+
+/**
+ * Put a line where a reader will actually meet it.
+ *
+ * `core.info` writes to the step log, and nobody opens the log of a green
+ * check — which is precisely when these lines matter, because every one of them
+ * exists to say the green tick is not a verdict. The job summary is rendered on
+ * the run page; a warning becomes an annotation on the checks page next to the
+ * tick itself. Neither blocks a merge.
+ *
+ * A pull request comment would be louder still and is deliberately not used for
+ * these: both repeat on every pull request in a repository that is simply
+ * unconfigured, or that has a quiet diff. A comment each time is the Cobra
+ * effect — noise that teaches people to filter Lumo out. Comments stay reserved
+ * for the case where something a customer is paying for stopped working
+ * mid-run.
+ */
+export async function announce(heading: string, line: string, annotate: boolean): Promise<void> {
+  if (annotate) {
+    core.warning(line);
+  } else {
+    core.info(`[lumo] ${line}`);
+  }
+  // Absent outside a real Actions run — a local invocation must not die here.
+  if (process.env['GITHUB_STEP_SUMMARY']) {
+    try {
+      await core.summary.addHeading(heading, 3).addRaw(line).write();
+    } catch {
+      // Losing the summary must not lose the sentence. Where the summary was
+      // the only channel, escalate to an annotation rather than let a reporting
+      // hiccup either fail someone's build or quietly drop the one line saying
+      // this run is not a verdict.
+      if (!annotate) {
+        core.warning(line);
+      }
+    }
+  }
 }
 
 async function main(): Promise<void> {
@@ -69,8 +124,16 @@ async function main(): Promise<void> {
   // Enforcement ladder: read enforce.mode from workspace .lumo.json.
   // Default-safe: absent config → 'warn-only' (advisory only, never blocks).
   // Only enforce.mode:"block" enables non-zero exit on LOUD catches.
+  //
+  // A file that is present but broken still falls open to advisory, and now
+  // says so. Falling open quietly meant a repository could ask for a blocking
+  // gate, lose it to a typo, and go on reading its green checks as enforced.
   const workspaceDir = process.env['GITHUB_WORKSPACE'] ?? process.cwd();
-  const enforceMode = resolveActionEnforceMode(workspaceDir);
+  const resolvedMode = resolveActionEnforceMode(workspaceDir);
+  if (resolvedMode === 'unreadable') {
+    await announce('Lumo: configuration ignored', ENFORCE_CONFIG_UNREADABLE_LINE, true);
+  }
+  const enforceMode = resolvedMode === 'unreadable' ? 'warn-only' : resolvedMode;
   const blockOnLoud = failOnLoud || enforceMode === 'block';
 
   // When enforce.mode is "off", skip comments entirely.
@@ -81,10 +144,13 @@ async function main(): Promise<void> {
 
   // CI enforcement is licensed. Without a licence there is no gate: the check
   // stays green — a missing subscription must never block someone's merge —
-  // but it says plainly that nothing was checked, so a green tick can never be
-  // mistaken for a passed review.
+  // but it has to say that nothing was checked somewhere the reader will meet
+  // it. This used to be a core.info, which put the sentence in a log nobody
+  // opens beside a green tick, and a green tick that nothing contradicts reads
+  // as a passed review. It is the first thing anyone evaluating Lumo sees, so
+  // it is annotated as well as summarised.
   if (!licenseKey) {
-    core.info(`[lumo] ${ACTION_REQUIRES_PRO_LINE}`);
+    await announce('Lumo: DID NOT RUN', ACTION_REQUIRES_PRO_LINE, true);
     return;
   }
 
@@ -171,10 +237,15 @@ async function main(): Promise<void> {
   };
 
   if (findings.length === 0) {
-    // Reports the scope that was checked, never a verdict on the PR. Lumo saw the
-    // added lines only, and only against what Lumo Free covers — calling that a
-    // clean PR turns a coverage limit into an approval.
-    core.info(`[lumo] ${ACTION_NO_MATCH_LINE}`);
+    // Reports the scope that was checked, never a verdict on the PR. Lumo saw
+    // the added lines only, and only against the catch that ran — calling that
+    // a clean PR turns a coverage limit into an approval.
+    //
+    // Summarised, not annotated: the engine did run here, and a yellow warning
+    // on every quiet pull request is the cost that gets a tool muted. The
+    // caveat still has to leave the log, because a green tick with nothing
+    // beside it is the coverage limit reading as an approval.
+    await announce('Lumo: nothing matched', ACTION_NO_MATCH_LINE, false);
     await maybeClaudeReview();
     return;
   }

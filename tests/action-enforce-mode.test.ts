@@ -46,19 +46,33 @@ describe('resolveActionEnforceMode — default-safe', () => {
     expect(resolveActionEnforceMode(tmpDir)).toBe('warn-only');
   });
 
-  it('returns warn-only on malformed JSON (fail-open)', () => {
-    mkdirSync(join(tmpDir, '.claude'), { recursive: true });
-    writeFileSync(join(tmpDir, '.claude', '.lumo.json'), '{ not valid json }');
-    expect(resolveActionEnforceMode(tmpDir)).toBe('warn-only');
-  });
-
   it('returns warn-only when enforce key is absent', () => {
     writeConfig({ catch: { disable: [] } });
     expect(resolveActionEnforceMode(tmpDir)).toBe('warn-only');
   });
 
-  it('returns warn-only when enforce.mode is unknown value', () => {
+  // A file that is present and broken used to be indistinguishable from no file
+  // at all: both answered 'warn-only'. Falling open is right — a typo must not
+  // block a team's merges — but answering it silently let a repository ask for
+  // a blocking gate, lose it, and go on reading its green checks as enforced.
+  // 'unreadable' still falls open at the call site; it exists so the run can
+  // say what happened.
+  it('separates a broken config from an absent one', () => {
+    mkdirSync(join(tmpDir, '.claude'), { recursive: true });
+    writeFileSync(join(tmpDir, '.claude', '.lumo.json'), '{ not valid json }');
+    expect(resolveActionEnforceMode(tmpDir)).toBe('unreadable');
+  });
+
+  it('treats a mode it does not recognise as unreadable, not as advisory', () => {
+    // The dangerous shape: someone meant "block" and wrote something else.
     writeConfig({ enforce: { mode: 'strict' } });
+    expect(resolveActionEnforceMode(tmpDir)).toBe('unreadable');
+  });
+
+  it('never answers unreadable for a config that simply says nothing', () => {
+    // Guards the fall-open direction: the common cases must stay quiet, or the
+    // annotation becomes noise on repositories that did nothing wrong.
+    writeConfig({ enforce: {} });
     expect(resolveActionEnforceMode(tmpDir)).toBe('warn-only');
   });
 
