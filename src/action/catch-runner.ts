@@ -65,21 +65,70 @@ interface ProRenderedFinding {
   loudCount: number;
 }
 
+// ---------------------------------------------------------------------------
+// Response framing.
+//
+// The Pro server's StreamableHTTPServerTransport runs the SDK default, which
+// answers as an SSE stream (`event: message\ndata: {...}\n\n`) unless the
+// server was built with enableJsonResponse. Sending the Streamable HTTP
+// Accept header (`application/json, text/event-stream`) is necessary to get
+// a 200 at all, but it is not sufficient: the body itself must still be
+// de-framed. A client that only tries `JSON.parse` on the whole response body
+// throws on every real Pro answer and only ever worked against a JSON-only
+// test stub. Handle both shapes so a bare-JSON server (enableJsonResponse, or
+// a future default change) keeps working too.
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse an MCP Streamable HTTP response body, whether the transport answered
+ * with a bare JSON object or an SSE-framed stream.
+ *
+ * A stateless `tools/call` produces exactly one message, but a stream can in
+ * principle carry more than one `data:` line; the JSON-RPC reply for this
+ * request is the last one, so that is what we decode.
+ */
+export function parseMcpHttpResponseBody(rawBody: string): unknown {
+  const trimmed = rawBody.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    return JSON.parse(trimmed);
+  }
+
+  const dataLines = trimmed
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line) => line.startsWith('data:'))
+    .map((line) => line.slice('data:'.length).trim())
+    .filter((line) => line.length > 0);
+
+  if (dataLines.length === 0) {
+    throw new Error('response body was neither JSON nor a recognisable SSE frame');
+  }
+
+  return JSON.parse(dataLines[dataLines.length - 1]!);
+}
+
 async function fetchProResults(
   proUrl: string,
   licenseKey: string,
   code: string,
   language: 'php' | 'js',
+  instanceId?: string,
 ): Promise<{ results: Array<CatchResult | ProRenderedFinding>; complete: boolean; text: string }> {
   const url = `${proUrl.replace(/\/$/, '')}/mcp`;
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json, text/event-stream',
+    Authorization: `Bearer ${licenseKey}`,
+  };
+  // #159: Pro requires this to enforce the seat. Without it, the server
+  // validates the key but cannot check its activation, and resolves free.
+  // Omitted only when the caller could not derive one (see deriveActionInstanceId).
+  if (instanceId) headers['X-Lumo-Instance'] = instanceId;
+
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json, text/event-stream',
-      Authorization: `Bearer ${licenseKey}`,
-    },
+    headers,
     body: JSON.stringify({
       jsonrpc: '2.0',
       id: 1,
@@ -96,7 +145,8 @@ async function fetchProResults(
     throw new Error(`Pro MCP responded ${res.status}: ${await res.text()}`);
   }
 
-  const json = (await res.json()) as {
+  const rawBody = await res.text();
+  let json: {
     result?: {
       content?: Array<{ type: string; text?: string }>;
       structuredContent?: {
@@ -108,6 +158,15 @@ async function fetchProResults(
       };
     };
   };
+  try {
+    json = parseMcpHttpResponseBody(rawBody) as typeof json;
+  } catch (err) {
+    // Same failure shape as an HTTP error: caught by catchFile() below, which
+    // falls back to the free catch and marks the run degraded. A response we
+    // cannot decode is not a "Pro said nothing", it is "Pro did not deliver".
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Pro MCP response could not be parsed (${msg})`);
+  }
 
   const text = json?.result?.content?.[0]?.text ?? '';
 
@@ -175,6 +234,7 @@ async function catchFile(
   file: FileDiff,
   proUrl?: string,
   licenseKey?: string,
+  instanceId?: string,
 ): Promise<{ findings: Finding[]; proDegraded: boolean; scanLimits: string[] }> {
   let results: Array<CatchResult | ProRenderedFinding>;
   // Set only on the free path: Pro has the knowledge, so it reports no gap.
@@ -192,7 +252,7 @@ async function catchFile(
 
   if (proUrl && licenseKey) {
     try {
-      const pro = await fetchProResults(proUrl, licenseKey, file.blob, file.language);
+      const pro = await fetchProResults(proUrl, licenseKey, file.blob, file.language, instanceId);
       results = pro.results;
       // The Pro server names the limit in its own prose, but that prose only
       // reaches the pull request when it also reported a finding. When it did
@@ -266,6 +326,13 @@ export interface RunCatchOptions {
   diff: string;
   proUrl?: string;
   licenseKey?: string;
+  /**
+   * Stable fingerprint for this installation, sent as X-Lumo-Instance
+   * (#159). Required for Pro to enforce its seat limit; a Pro server that
+   * receives none cannot check activation and resolves the request free,
+   * even with a valid licenseKey. See deriveActionInstanceId() in main.ts.
+   */
+  instanceId?: string;
 }
 
 export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
@@ -275,7 +342,7 @@ export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   let proDegraded = false;
 
   for (const file of files) {
-    const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey);
+    const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey, opts.instanceId);
     findings.push(...fileResult.findings);
     proDegraded = proDegraded || fileResult.proDegraded;
     for (const note of fileResult.scanLimits) {

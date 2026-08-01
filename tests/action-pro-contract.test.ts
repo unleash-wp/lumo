@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { runCatch } from '../src/action/catch-runner.js';
+import { runCatch, parseMcpHttpResponseBody } from '../src/action/catch-runner.js';
 import { buildScanLimitsNotice } from '../src/lib/render.js';
 
 const DIFF = [
@@ -19,13 +19,27 @@ const DIFF = [
   "+echo esc_html__( 'Hello', 'my-plugin' );",
 ].join('\n');
 
+// Bare JSON, as a server built with enableJsonResponse would answer.
 function stubProResponse(body: unknown): void {
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => ({
       ok: true,
-      json: async () => body,
-      text: async () => '',
+      text: async () => JSON.stringify(body),
+    })),
+  );
+}
+
+// SSE-framed, the SDK's actual default for WebStandardStreamableHTTPServerTransport
+// (StreamableHTTPServerTransport without enableJsonResponse). This is the shape the
+// live Pro server sends, so it is the shape the contract tests must exercise, not
+// just the convenience one.
+function stubProResponseSSE(body: unknown): void {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({
+      ok: true,
+      text: async () => `event: message\ndata: ${JSON.stringify(body)}\n\n`,
     })),
   );
 }
@@ -299,5 +313,109 @@ describe('the run summary loses nothing on the way', () => {
     expect(res.scanLimits).toHaveLength(1);
     expect(res.scanLimits[0]!.note.trim()).not.toBe('');
     expect(res.scanLimits[0]!.note).toContain('did not say which');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SSE response framing (issue #109). WebStandardStreamableHTTPServerTransport
+// runs the SDK default (SSE) unless the server sets enableJsonResponse, which
+// the live Pro server does not. A client that only ever tested against a bare
+// `json: async () => body` stub never exercised the shape the real server
+// sends, so every one of the contract tests above is repeated here against
+// the SSE frame to prove the parser, not just the tier logic, is correct.
+// ---------------------------------------------------------------------------
+
+describe('SSE-framed responses (the live Pro server default)', () => {
+  it('BELL: a LOUD finding survives SSE framing intact', async () => {
+    stubProResponseSSE({
+      result: {
+        content: [{ type: 'text', text: '## Real LOUD finding with source' }],
+        structuredContent: { found: true, loudCount: 1, softCount: 0 },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.findings).toHaveLength(1);
+    expect(res.findings[0]!.tier).toBe('LOUD');
+    expect(res.loudCount).toBe(1);
+    expect(res.proDegraded).toBe(false);
+  });
+
+  it('SILENCE: found:false over SSE yields zero findings, not a degraded run', async () => {
+    stubProResponseSSE({
+      result: {
+        content: [{ type: 'text', text: 'prose' }],
+        structuredContent: { found: false },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.findings).toEqual([]);
+    expect(res.proDegraded).toBe(false);
+  });
+
+  it('BELL: computed:false over SSE still degrades the run (the flag survives de-framing)', async () => {
+    stubProResponseSSE({
+      result: {
+        content: [{ type: 'text', text: 'No known issues detected in the submitted code.' }],
+        structuredContent: { computed: false, found: false, loudCount: 0, softCount: 0 },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+
+  it('an SSE stream with preceding comment/event lines and CRLF still parses', async () => {
+    const payload = JSON.stringify({
+      result: {
+        content: [{ type: 'text', text: '## Real LOUD finding with source' }],
+        structuredContent: { found: true, loudCount: 1, softCount: 0 },
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => `: keep-alive\r\nevent: message\r\ndata: ${payload}\r\n\r\n`,
+      })),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.findings).toHaveLength(1);
+    expect(res.loudCount).toBe(1);
+  });
+
+  it('degrades to the free catch, rather than throwing, on an unparseable body', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => 'not json and not an SSE frame',
+      })),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+});
+
+describe('parseMcpHttpResponseBody: the de-framing unit', () => {
+  it('parses a bare JSON object unchanged', () => {
+    expect(parseMcpHttpResponseBody('{"a":1}')).toEqual({ a: 1 });
+  });
+
+  it('parses a single SSE data: line', () => {
+    expect(parseMcpHttpResponseBody('event: message\ndata: {"a":1}\n\n')).toEqual({ a: 1 });
+  });
+
+  it('takes the LAST data: line when a stream carries more than one message', () => {
+    const body = ['event: message', 'data: {"a":1}', '', 'event: message', 'data: {"a":2}', ''].join(
+      '\n',
+    );
+    expect(parseMcpHttpResponseBody(body)).toEqual({ a: 2 });
+  });
+
+  it('throws on a body with neither shape', () => {
+    expect(() => parseMcpHttpResponseBody('plain text, no braces, no data: line')).toThrow();
+  });
+
+  it('throws on an empty body', () => {
+    expect(() => parseMcpHttpResponseBody('')).toThrow();
   });
 });
