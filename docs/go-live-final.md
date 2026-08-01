@@ -15,6 +15,8 @@ English. Locked 2026-08-01. Founder gate for Lemon Squeezy + deploy.
 
 ## 1. Product lock
 
+**USP:** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot. Pro = live curated knowledge that tracks Core.
+
 One global EUR price. No PPP. Quiet ≠ clean. Not AppSec.
 
 ### Name glossary (canonical)
@@ -52,7 +54,7 @@ Same block on [website-pricing-table.md](./website-pricing-table.md) §1 and `GE
 5. Freelancer + Pro + Agency ids **in** `LUMO_LS_PRODUCT_IDS`.
 6. Vol.1 living edition = **69 reference-lane** `book-`* **entries** in Pro MCP via `lumo_lookup` only — **never Catch**. Not the 345-page PDF.
 7. **AI Forge Hosted** is included on **Freelancer (Solo Hosted), Pro, and Agency (Team 20)** — not Free / Core / Pack. Customer line: **Included entitlement. Hosted Forge install not yet available.** Never sell as live-installable while `ai-forge` is blocked.
-8. **Do not claim Ready for WP 7.1.** Catalogue has WP 7.0 + a **growing 7.1 wave** (Free Catch slice + Pro depth). Full 7.1 pack still open.
+8. **Do not claim Ready for WP 7.1.** Catalogue has WP 7.0 + a **growing 7.1 wave** (Free Catch slice + Pro depth). Full 7.1 pack still open. **Loud fact (shipped):** From WordPress 7.1 the Post Editor canvas runs inside an iframe; blocks that touch `document`/`window` or inject admin-scoped CSS break; Lumo watches for those patterns.
 9. **Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599).
 10. Solo Hosted is the only starred solo card. Agent Team stays secondary (files only, no hosted MCP).
 

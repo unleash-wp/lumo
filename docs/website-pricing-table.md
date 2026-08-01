@@ -3,11 +3,15 @@
 English. Canonical for www /connect / checkout. Locked 2026-08-01.
 Feature rows are **measured from code**, not marketing guesswork.
 
+**USP (lead sales signal):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot. Pro = live curated knowledge that tracks Core. Quiet ≠ clean.
+
 **Psychology:** three hero cards for solos; **middle = Best Value**. Agent Team 99 stays visible but secondary. Team 20 = separate Teams block.
 
 **Founder lock:** **AI Forge Hosted** is included on **Solo Hosted, Pro, and Team 20** (all hosted paid tiers), not Agency-only.
 
 **Forge Hosted (customer line):** Included entitlement. Hosted Forge install not yet available. Self-host Forge remains available to everyone. Do not sell Hosted Forge as live-installable until `ai-forge` unblocks.
+
+**WordPress 7.1 Post Editor iframe (USP in action):** Core landed the always-iframe Post Editor. Lumo curated that change into Catch/reference (wrong→correct + source + version). Blocks that touch `document`/`window` or inject admin-scoped CSS break. Free Catch slice + Pro depth watch it. Coverage expanding; not a full “Ready for WP 7.1” claim.
 
 **WordPress 7.1 readiness:** **Coverage expanding, not complete.** Catalogue has WordPress **7.0** catch/reference entries plus a **growing 7.1 wave** (Free high-signal Catch slice + Pro depth). A full WordPress **7.1** pack and founder briefing remain **open**. Do **not** claim “Ready for WP 7.1.” See §9 and `docs/knowledge-import-agent-skills.md`.
 
@@ -31,6 +35,8 @@ Invoice may show the LS name. Marketing and `/connect` use the website name.
 ---
 
 ## 2. Page layout (above the fold)
+
+**Hero one-liner (paste above cards):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs.
 
 ### Block A — Solo (hero, 3 cards)
 
@@ -102,7 +108,7 @@ What the watcher and agents look for when you write plugin or theme PHP:
 
 | Topic | What it means in practice | Where it lives |
 | --- | --- | --- |
-| `block.json` `apiVersion: 3` | AI default `apiVersion: 2` (deprecated WP 6.9; WP 7.0 iframe rule) | Currency Guard + WP 7.0 |
+| `block.json` `apiVersion: 3` | AI default `apiVersion: 2` (deprecated WP 6.9; WP 7.0 conditional iframe; **WP 7.1 always iframed**) | Currency Guard + WP 7.0 / 7.1 |
 | `render` field | Prefer `"render": "file:./render.php"` over PHP `render_callback` when metadata-driven | Currency Guard |
 | `viewScriptModule` vs `viewScript` | Interactivity blocks need ES modules; classic `viewScript` breaks `import` | Currency Guard |
 | `__experimental*` supports | Prefixed supports promoted to stable keys (WP 6.5) | Currency Guard |
@@ -123,6 +129,8 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | Audit / verify rollouts | Produce audit docs; adversarial readonly-but-writes checks | **Gap** (`wp-abilities-audit`, `wp-abilities-verify` skills → Pro reference / tooling, not Free) |
 
 ### 3.6 WordPress 7.0 (in catalogue) vs 7.1 (coverage expanding)
+
+> **From WordPress 7.1 the Post Editor canvas runs inside an iframe.** Blocks that touch `document`/`window` or inject admin-scoped CSS break. Lumo watches for those patterns. This is a shipped Catch/reference fact, not a “Ready for WP 7.1” claim.
 
 **WordPress 7.0 — present today (examples):**
 
@@ -145,7 +153,7 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | Ability validation filters vs REST schema callbacks | **Catch (Free):** `wp-7-1-ability-rest-schema-callbacks-ignored` |
 | `background.gradient` vs `color.gradient` | **Catch (Free):** `wp-7-1-background-gradient-support` |
 | Form-control `__next40pxDefaultSize` ignored | **Catch (Free):** `wp-7-1-next40px-default-size-ignored` |
-| Post Editor always iframed — global `document`/`window` vs `ownerDocument` | **Catch (Free):** `wp-7-1-post-editor-iframe-owner-document` |
+| **Post Editor always iframed** (global `document`/`window` vs `ownerDocument`) | **Catch (Free):** `wp-7-1-post-editor-iframe-owner-document` |
 | Always-iframe migration map (GB 23.6 / WP 7.1) | **Reference (Pro):** `wp-7-1-post-editor-always-iframe` |
 | Canvas CSS via `editorStyle` (not `enqueue_block_editor_assets`) | **Catch (Pro):** `wp-7-1-iframe-editor-style-enqueue` |
 | Admin-scoped editor CSS (`.wp-admin` / `body.block-editor-page`) | **Catch (Pro):** `wp-7-1-iframe-admin-scoped-editor-css` |
@@ -158,7 +166,7 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | `dimensions.minWidth` | **Reference (Pro):** `wp-7-1-dimensions-min-width` |
 | Knowledge CPT / DataViews / Design System / jQuery UI 1.14.2 / founder briefing | **Still open** |
 
-Website / sales line: **“Covers WordPress 7.0 breakages we have sourced, plus a growing WordPress 7.1 wave (Free Catch slice + Pro depth). Full 7.1 pack is still open — not Ready.”**
+Website / sales line: **“From WP 7.1 the Post Editor is always iframed; Lumo watches document/window and admin-scoped CSS breaks. Covers WordPress 7.0 breakages we have sourced, plus a growing WordPress 7.1 wave (Free Catch slice + Pro depth). Full 7.1 pack is still open, not Ready.”**
 
 ### 3.7 Plugins (hosted MCP depth)
 
@@ -275,7 +283,8 @@ Lead with **jobs and topics**. Commands and skills are how you invoke them.
 
 Catches stale or version-wrong AI output for blocks, themes, and Interactivity:
 
-- `block.json` `apiVersion` (must be 3 for modern WP; iframe behaviour in WP 7.0)
+- `block.json` `apiVersion` (must be 3 for modern WP; WP 7.0 conditional iframe; **WP 7.1 Post Editor always iframed**)
+- **WP 7.1 iframe breakage:** global `document`/`window` against the canvas; admin-scoped editor CSS; canvas styles via `enqueue_block_editor_assets` instead of `editorStyle`
 - `viewScriptModule` vs classic `viewScript` for Interactivity
 - Removal of `__experimental*` block supports prefixes
 - Block Bindings stable registration (no experimental guard needed on WP 6.5+)
@@ -355,7 +364,8 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 ### Starter — 39 €/yr
 
 **Two WordPress specialist agents on disk. Start small.**  
-- **Currency Guard:** stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency patterns before they ship  
+- **Currency Guard:** stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency, plus **WP 7.1 always-iframe** breaks (`document`/`window`, admin-scoped CSS)  
+
 - **Code Reviewer:** escaping, REST auth, capability checks, HPOS basics, Cron / HTTP / options traps  
 - Plus matching scaffold skills and a `/wp-review` command (Claude / Cursor / Codex)  
 - **No hosted MCP:** no live ACF / Woo / GF / Elementor catalogue (that unlocks at Solo Hosted 149+)  
@@ -367,7 +377,7 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 - Hosted MCP · plugin advice for ACF, WooCommerce, Gravity Forms, Elementor, and more  
 - Full 6-agent kit included · Vol.1 living lookups · 1 seat  
 - **Forge Hosted:** included entitlement. Hosted Forge install not yet available.  
-- WordPress **7.0** depth in the live catalogue; **7.1 coverage expanding** (no Ready claim)  
+- WordPress **7.0** depth in the live catalogue; **from 7.1 the Post Editor is always iframed** (Lumo watches); **7.1 coverage expanding** (no Ready claim)  
 - No CI (upgrade to Pro for merge gate)  
 **CTA:** Get Solo Hosted
 

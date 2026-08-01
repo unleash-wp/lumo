@@ -3,6 +3,8 @@
 English. Use with [go-live-final.md](./go-live-final.md) §9 and [website-pricing-table.md](./website-pricing-table.md).
 Do **not** invent Lemon Squeezy product ids. Create products first, then paste real ids.
 
+**USP (say this first):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot; Pro = live curated from Core. Quiet ≠ clean. Forge Hosted = entitlement only (install not yet available). Do not claim Ready for WP 7.1.
+
 **Money-back:** Paid SKUs claim **30-day money-back** once Lemon Squeezy checkout is live
 (already stated on pricing matrix footnotes and kit docs). Restate on LS product pages.
 
@@ -23,7 +25,7 @@ Do **not** invent Lemon Squeezy product ids. Create products first, then paste r
 
 **Forge Hosted (Solo / Pro / Team 20):** Included entitlement. Hosted Forge install not yet available.
 
-**WP 7.1:** Coverage expanding. Do not claim Ready.
+**WP 7.1:** From WordPress 7.1 the Post Editor is always iframed; Lumo watches `document`/`window` and admin-scoped CSS breaks. Coverage expanding. Do not claim Ready.
 
 ---
 
