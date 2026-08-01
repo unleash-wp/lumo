@@ -228,7 +228,7 @@ Run in order after deploy + LS products live.
 ## 6b. Buyer verification (per tier)
 
 Honest ICP smoke path. **Free is the trial** (no hosted trial keys, no sandbox seats).
-Money-back **30 days** is claimed on paid SKUs after LS checkout exists; it is not a
+Money-back **14 days** is claimed on paid SKUs after LS checkout exists; it is not a
 pre-purchase hosted demo. Quiet ≠ clean on every path below.
 
 
@@ -323,7 +323,7 @@ Pre-tag commands: see [RELEASE.md](./RELEASE.md).
 **Sales path only.** Short checklist: [sales-ready-checklist.md](./sales-ready-checklist.md).
 Do these in order. Do **not** invent Lemon Squeezy product ids — create products first, then paste real ids.
 
-**Money-back:** Paid SKUs claim **30-day money-back** on LS product pages once checkout is live (already in the pricing matrix).
+**Money-back:** Paid SKUs claim **14-day money-back** on LS product pages once checkout is live (already in the pricing matrix).
 
 ### A. Lemon Squeezy — create exactly 5 products
 

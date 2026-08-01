@@ -36,7 +36,7 @@ Namen **exakt** so (Invoice = LS-Name; Website = andere Spalte):
 | 4 | **Lumo Pro** | Pro | **199 EUR / seat / year** | **1** pro Seat-Key | Pack-Zip (included) |
 | 5 | **Lumo Agency** | Team 20 | **599 EUR / year** | **20** | Pack-Zip (included) |
 
-**Money-back:** auf jeder Paid-Produktseite **30-day money-back** schreiben.
+**Money-back:** auf jeder Paid-Produktseite **14-day money-back** schreiben.
 
 **Zips anhängen (absolute Pfade):**
 
@@ -158,7 +158,7 @@ Checks auf der live Page:
 - Solo Hosted ★ = Best Value; Agent Team **nicht** starred  
 - Forge: **Included entitlement. Hosted Forge install not yet available.**  
 - Kein „Ready for WP 7.1“  
-- 30-day money-back bei Paid  
+- 14-day money-back bei Paid  
 
 Checkout-Links → die 5 LS-Produkte (§9 derselben Datei).
 
@@ -206,15 +206,15 @@ Details: `docs/website-pricing-table.md` §11.
 | --- | --- | --- |
 | Entwickler | Solo Hosted 149 **oder** Agent Team 99 | Nach Free-Aha: live Katalog vs Files; Free friert ein |
 | Freelancer | **Solo Hosted 149 ★** | Agent Team = Files-Sackgasse; Solo inkl. Pack |
-| Abteilungsleiter | **Pro 199/Seat** | CI Pflicht; Close = Free-LOUD + 30-Tage-Geld-zurück **oder** Dogfood-Key |
+| Abteilungsleiter | **Pro 199/Seat** | CI Pflicht; Close = Free-LOUD + 14-Tage-Geld-zurück **oder** Dogfood-Key |
 | Agentur-Chef | **Team 20 · 599** | Default Agency; Seat-Math ab ~4 |
 
 **Deine Close-Tools (nicht Code):**
 
-1. [ ] 30-day money-back auf allen 5 LS Paid-Seiten  
+1. [ ] 14-day money-back auf allen 5 LS Paid-Seiten  
 2. [ ] 1–2 temporäre Dogfood-Keys für Abteilungsleiter-Demo (nicht öffentlich listen)  
 3. [ ] Optional: 60-s Free-Demo + Solo-LOUD-Screenshot für Finance  
-4. [ ] **FOUNDERS-DECIDE:** 14-Tage-Badge statt 30? Prefer 30 behalten; Preis nicht senken  
+4. [x] **FOUNDERS-LOCKED:** Refund = **14 Tage** only (nicht 30); Preis nicht senken  
 
 ---
 
@@ -226,7 +226,7 @@ Auf älteren Commits am Branch steht noch `Co-authored-by: Cursor <cursoragent@c
 
 ## Ein-Sitzung-Checkliste
 
-1. [ ] 5 LS-Produkte + Zips + 30-day money-back  
+1. [ ] 5 LS-Produkte + Zips + 14-day money-back  
 2. [ ] Mittwald `LUMO_LS_PRODUCT_IDS` (nur 3 Hosted) + Secrets  
 3. [ ] Webhook URL + Secret  
 4. [ ] Merge PRs (Reihenfolge oben) → Deploy / `job restart`  

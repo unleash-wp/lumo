@@ -15,7 +15,7 @@ English. Files only. No hosted Pro MCP.
 | `/wp-review` command (runs the Code Reviewer) | Live `lumo_plugin_advice` (ACF, Woo, GF, Elementor, …) |
 | Scaffold skills: `wp-block-scaffold`, `wp-project-scaffold` | Full 9-skill + 5-command set |
 | Annual update entitlement (LS, 1 activation) | GitHub Action CI |
-| Money-back 30 days | AI Forge Hosted |
+| Money-back 14 days | AI Forge Hosted |
 
 **Naming rule:** say **Core**, never “Team”. Team = Agent Pack (99 €).
 
