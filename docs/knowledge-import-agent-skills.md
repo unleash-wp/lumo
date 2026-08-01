@@ -107,15 +107,18 @@ From `lumo-pro/AGENTS.md`:
 
 1. Every Catch rule needs **two tests**: one must fire, one near-miss must stay silent.
 2. Evidence chain: source URL, affected versions, wrong pattern, correct pattern, verification step.
-3. No speculative “will break in 7.1” without a sourced sentence (`no-speculation-check`).
-4. Counts and claims on the website must match measured catalogue, not this plan’s drafts.
-5. Fail open on availability; never invent a clean bill of health.
+3. **Absorb into entry fields.** The curator (or seed author) paraphrases Make/Core/Trac into
+   `summary`, `body`, `bad_pattern`, and `code_example`. `source_url` is the citation only.
+   Forbidden deliverable: "re-read Make", a bare URL, or a slug as the migration path.
+4. No speculative “will break in 7.1” without a sourced sentence (`no-speculation-check`).
+5. Counts and claims on the website must match measured catalogue, not this plan’s drafts.
+6. Fail open on availability; never invent a clean bill of health.
 
 **Import method (recommended):**
 
 1. Read skill `references/*.md` as **topic leads**, not as copy-paste truth.
 2. For each candidate, find a primary source (Make Core, handbook, Trac, plugin docs).
-3. Write entry in `src/knowledge/*-content.ts` with catch signal only when the bad pattern is machine-precise.
+3. Write entry in `src/knowledge/*-content.ts` with catch signal only when the bad pattern is machine-precise. **Absorb** the source into `body` and the wrong/correct fields; put the permalink in `source_url` only.
 4. Prefer **reference lane** (`lumo_lookup`) when the skill teaches a workflow without a stable wrong regex.
 5. Run `npx vitest run`, `npx tsc --noEmit`, `npm run verify:knowledge` before publish.
 6. Free snapshot: only after Pro seed, and only patterns that survive the three-guard precision model.

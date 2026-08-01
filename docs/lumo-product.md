@@ -25,7 +25,7 @@ Lumo watches AI-written WordPress code and stops stale patterns before they ship
 
 ## Why it wins
 
-1. **Core-sourced knowledge:** curated from Core release notes, Make/Core, Trac, handbooks, and the contributor pipeline; evidence is wrong→correct + source + version (not “cited blog post” alone).
+1. **Core-sourced knowledge:** curated from Core release notes, Make/Core, Trac, handbooks, and the contributor pipeline; evidence is wrong→correct + source + version absorbed in the answer (not a cited blog post or slug alone). Agents and MCP callers must relay the patterns, not defer with "read the dev note".
 2. **Honesty first:** quiet ≠ clean; DID NOT RUN ≠ pass; Free snapshot ≠ Pro live catalogue.
 3. **Proof in 30 seconds:** `lumo demo` uses the real engine on samples.
 4. **Whips the AI:** three layers (see below), not a polite suggestion.
