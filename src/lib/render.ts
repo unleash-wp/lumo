@@ -522,8 +522,8 @@ export function joinPluginNames(names: string[]): string {
 export function buildCodeProTeaser(pluginName: string): string {
   return (
     `Detected ${pluginName} in this code, and Lumo Free has no entry for it. ` +
-    `This is not an all-clear. ${pluginName} is not covered by any free or official ` +
-    `WordPress skill set. Lumo Pro covers ${pluginName}.`
+    `This is not an all-clear. ${pluginName} is not covered by the free WordPress ` +
+    `agent skills Lumo ships. Lumo Pro covers ${pluginName}.`
   );
 }
 
