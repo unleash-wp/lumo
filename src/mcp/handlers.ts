@@ -25,8 +25,10 @@ import type { CatchResult } from '../detection/catch.js';
 import { INPUT_LINE_CAP } from '../detection/catch.js';
 import { proTopicFor, buildProTopicTeaser } from '../lib/pro-topics.js';
 
-const NOT_FOUND_AUDIT =
-  'No known WordPress risk patterns detected in this project. Nothing to check here.';
+/** Audit threw before producing a result. Not a clean project. */
+const AUDIT_DID_NOT_RUN =
+  'Lumo could not finish the project audit. Nothing was checked, so this says ' +
+  'nothing about the code. Retry, or pass an explicit project_root.';
 
 const NOT_FOUND_LOOKUP = (query: string) => {
   // A miss on a Pro-covered topic is not a miss. It is the paywall. Saying
@@ -66,9 +68,14 @@ export async function handleAudit(input: AuditHandlerInput): Promise<string> {
     if (result.detected && result.detectionNote) {
       return result.detectionNote;
     }
-    return result.message ?? NOT_FOUND_AUDIT;
+    return (
+      result.message ??
+      // auditProject always sets message on the no-match path; this is a
+      // last-resort line if a future change drops it. Still not an all-clear.
+      AUDIT_DID_NOT_RUN
+    );
   } catch {
-    return NOT_FOUND_AUDIT;
+    return AUDIT_DID_NOT_RUN;
   }
 }
 

@@ -53,13 +53,16 @@ export interface RunResult {
 
 // ---------------------------------------------------------------------------
 // Pro path, MCP JSON-RPC call against the licensed Pro server.
-// Returns raw results; each pre-rendered finding comes back as a single SOFT
-// sentinel (the Pro server enforces its own tier; we never re-classify here).
+// Returns pre-rendered Markdown plus the Pro loudCount so the Action can fail
+// on LOUD. Pro owns the tier counts in structuredContent; this client must not
+// invent a softer tier than Pro reported.
 // ---------------------------------------------------------------------------
 
 interface ProRenderedFinding {
   _proRendered: true;
   body: string;
+  /** From Pro structuredContent.loudCount. >= 1 → LOUD for fail_on_loud. */
+  loudCount: number;
 }
 
 async function fetchProResults(
@@ -74,6 +77,7 @@ async function fetchProResults(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Accept: 'application/json, text/event-stream',
       Authorization: `Bearer ${licenseKey}`,
     },
     body: JSON.stringify({
@@ -95,7 +99,13 @@ async function fetchProResults(
   const json = (await res.json()) as {
     result?: {
       content?: Array<{ type: string; text?: string }>;
-      structuredContent?: { computed?: boolean; complete?: boolean; found?: boolean };
+      structuredContent?: {
+        computed?: boolean;
+        complete?: boolean;
+        found?: boolean;
+        loudCount?: number;
+        softCount?: number;
+      };
     };
   };
 
@@ -136,8 +146,21 @@ async function fetchProResults(
   }
   if (!text.trim()) return { results: [], complete, text };
 
+  // loudCount is the only signal that may fail the check. Servers predating the
+  // field send undefined; treat that as 0 so we never invent a LOUD fail, but
+  // still surface the prose as advisory. A positive loudCount from Pro must
+  // never be coerced to SOFT — that was the paid-gate defect.
+  const loudCount =
+    typeof json?.result?.structuredContent?.loudCount === 'number'
+      ? json.result.structuredContent.loudCount
+      : 0;
+
   // Pro result is already rendered Markdown from the Pro server.
-  return { results: [{ _proRendered: true as const, body: text }], complete, text };
+  return {
+    results: [{ _proRendered: true as const, body: text, loudCount }],
+    complete,
+    text,
+  };
 }
 
 function isProRendered(r: CatchResult | ProRenderedFinding): r is ProRenderedFinding {
@@ -204,9 +227,11 @@ async function catchFile(
 
   const findings: Finding[] = results.map((r) => {
     if (isProRendered(r)) {
-      // Pro server pre-renders; surface as SOFT so it never triggers fail_on_loud
-      // (the Pro server itself controls blocking via its own tier model).
-      return { filename: file.filename, tier: 'SOFT' as CatchTier, body: r.body };
+      // Pro owns the loud/soft counts in structuredContent. A positive loudCount
+      // must fail the check when fail_on_loud is on; coercing everything to SOFT
+      // made the paid gate inert.
+      const tier: CatchTier = r.loudCount > 0 ? 'LOUD' : 'SOFT';
+      return { filename: file.filename, tier, body: r.body };
     }
     return {
       filename: file.filename,

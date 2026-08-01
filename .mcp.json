@@ -2,7 +2,7 @@
   "mcpServers": {
     "lumo-pro": {
       "type": "http",
-      "url": "https://mcp.unleashwp.de/mcp"
+      "url": "https://mcp.unleash-wp.com/mcp"
     }
   }
 }

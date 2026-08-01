@@ -33,7 +33,7 @@ ist der **Distributionsmotor** der ganzen Strategie und **bewirbt aktiv das Pro-
 ## Tech-Stack
 
 **TypeScript / Node 22.** Claude-Code-Plugin, **Ein-Zeilen-Install**, vorkonfigurierte `.mcp.json` →
-`https://mcp.unleashwp.de/mcp`. Lokaler Free-Snapshot. `/wp-check`-Command. Geteilte Tool-Signatur/Slug-**Typen**
+`https://mcp.unleash-wp.com/mcp`. Lokaler Free-Snapshot. `/wp-check`-Command. Geteilte Tool-Signatur/Slug-**Typen**
 als schlank **dupliziertes** File (kein privater Registry-Zwang im Open-Source-Repo).
 
 ## Free-Agent-Bausteine (Milestone M3)

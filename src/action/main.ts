@@ -268,7 +268,7 @@ async function main(): Promise<void> {
     const review = await runClaudeReview(anthropicKey, {
       diff,
       findings,
-      model: core.getInput('claude_model').trim() || 'claude-sonnet-5',
+      model: core.getInput('claude_model').trim() || 'claude-sonnet-4-20250514',
     });
     if (review) {
       await octokit.rest.issues.createComment({

@@ -15,7 +15,7 @@ const INPUT = {
   findings: [
     { filename: 'x.php', tier: 'SOFT', body: '## Superglobal without sanitisation' },
   ],
-  model: 'claude-sonnet-5',
+  model: 'claude-sonnet-4-20250514',
 };
 
 afterEach(() => vi.unstubAllGlobals());

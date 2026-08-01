@@ -44,7 +44,34 @@ describe('action ↔ pro contract', () => {
     expect(res.findings).toEqual([]);
   });
 
-  it('BELL: found:true yields the pre-rendered finding as advisory', async () => {
+  it('BELL: found:true with loudCount yields a LOUD finding that can fail the check', async () => {
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: '## Real LOUD finding with source' }],
+        structuredContent: { found: true, loudCount: 1, softCount: 0 },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.findings).toHaveLength(1);
+    expect(res.findings[0]!.tier).toBe('LOUD');
+    expect(res.loudCount).toBe(1);
+    expect(res.findings[0]!.body).toContain('Real LOUD finding');
+  });
+
+  it('BELL: found:true with loudCount 0 yields advisory SOFT', async () => {
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: '## Real finding with source' }],
+        structuredContent: { found: true, loudCount: 0, softCount: 1 },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.findings).toHaveLength(1);
+    expect(res.findings[0]!.tier).toBe('SOFT');
+    expect(res.findings[0]!.body).toContain('Real finding');
+  });
+
+  it('legacy found:true without loudCount stays advisory (never invent a LOUD fail)', async () => {
     stubProResponse({
       result: {
         content: [{ type: 'text', text: '## Real finding with source' }],
@@ -54,7 +81,6 @@ describe('action ↔ pro contract', () => {
     const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
     expect(res.findings).toHaveLength(1);
     expect(res.findings[0]!.tier).toBe('SOFT');
-    expect(res.findings[0]!.body).toContain('Real finding');
   });
 
   it('legacy server without the flag: the ACTUAL neutral wording yields zero findings', async () => {
