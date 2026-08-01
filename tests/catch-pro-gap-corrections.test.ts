@@ -217,6 +217,10 @@ describe('law 3: the teaser names only what was detected', () => {
     expect(buildCodeProTeaser('WooCommerce')).toContain('Lumo Pro covers WooCommerce');
   });
 
+  it('does not award Official rank to third-party skill sets', () => {
+    expect(buildCodeProTeaser('WooCommerce').toLowerCase()).not.toContain('official');
+  });
+
   it.each(['ACF Pro', 'Gravity Forms', 'Elementor Pro', 'Meta Box', 'Carbon Fields'])(
     'does not advertise %s next to an unrelated finding',
     (other) => {

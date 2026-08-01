@@ -52,10 +52,10 @@ npx -y -p @unleashwp/lumo lumo-mcp
 # + AI Forge self-host for the tool shelf
 ```
 
-**Paid (hosted)** — Solo Hosted / Pro / Team 20 license:
+**Paid (hosted):** Solo Hosted / Pro / Team 20 license:
 
 1. Buy / open Lemon Squeezy portal.
-2. Open https://mcp.unleash-wp.com/connect — paste MCP JSON + download `lumo.mdc`.
+2. Open https://mcp.unleash-wp.com/connect: paste MCP JSON + download `lumo.mdc`.
 3. Whole files: `lumo check path/to/file.php` (scan is **diff-only**).
 
 ```json
@@ -118,7 +118,7 @@ Full matrix: [docs/install.md](docs/install.md).
 
 ### CI (pull request review): Lumo Pro
 
-[unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action) — licence
+[unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action): licence
 required; without one it checks nothing and says so rather than reporting a
 pass. Same UnleashWP account / key as hosted Pro.
 
@@ -145,7 +145,7 @@ detects one of those rather than reporting a clean bill of health it cannot vouc
 
 - Cursor / Claude after sign-in: hosted MCP + project rules → `lumo_check_code` /
   `lumo_audit` / `lumo_lookup` while you code
-- Same account unlocks Pro depth and the CI Action — no second login
+- Same account unlocks Pro depth and the CI Action; no second login
 - Optional air-gap: `npx @unleashwp/lumo scan`, local `lumo-mcp`, Claude plugin
 - Claude Code `PreToolUse` hook / `/lumo:wp-check` when using the plugin path
 
@@ -178,7 +178,7 @@ Free self-hosts AI Forge locally.
 | Tier | Price | For |
 | --- | --- | --- |
 | Free | 0 € | **Local** CLI + local MCP + Forge self-host (**no** hosted MCP) |
-| **Starter** (Agent Core) | **39 €/yr** | 2 agents (Currency Guard + Reviewer) — entry under Agent Team |
+| **Starter** (Agent Core) | **39 €/yr** | 2 agents (Currency Guard + Reviewer); entry under Agent Team |
 | **Agent Team** (Agent Pack) | **99 €/yr** | 6 agents + skills + commands · **files only** (included free in Solo Hosted / Pro / Team 20) |
 | **Solo Hosted** ★ (Freelancer) | **149 €/yr** · 1 seat | **Hosted** Pro MCP + **Vol.1 living lookups** + Forge Hosted entitlement (install not yet available) · **no CI** · Agent Team included |
 | **Pro** | **199 €/yr** per seat | **Hosted only** + **CI Action** + **Vol.1 lookups** + Forge Hosted entitlement (install not yet available) · Pack included - no self-hosted Pro |
