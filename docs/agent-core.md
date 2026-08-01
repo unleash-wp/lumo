@@ -8,12 +8,19 @@ English. Files only. No hosted Pro MCP.
 
 ## What’s in
 
+Public agent IDs use the `uwp-` prefix (UnleashWP). Never `wp-`.
+
+### Specialized agents for the WordPress build lifecycle (Starter)
+
+**uwp-currency-guard** — Catches stale block/theme AI code before it ships  
+**uwp-code-reviewer** — Escaping, REST auth, caps, HPOS basics  
+
 | Included | Not included |
 | --- | --- |
-| **Currency Guard** (`currency-guard`): stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion 3, viewScriptModule, experimental supports, Block Bindings, `watch()`, router nav deprecation, render field, theme.json v3 opt-outs, html5 script / PHP 7.4 floor) + **WP 7.1 always-iframe** breaks (`document`/`window`, admin-scoped CSS, `editorStyle`) | Hosted Pro MCP |
-| **Code Reviewer** (`code-reviewer`): escaping, REST `permission_callback` + sanitize/validate, caps vs roles, `is_admin()` auth mistake, nonces, `$wpdb->prepare`, HPOS query basics, HTTP API, options/transients, WP-Cron, open redirects, prefix / ABSPATH / i18n basics | Woo / Plugin / Security / Release agents |
-| `/wp-review` command (runs the Code Reviewer) | Live `lumo_plugin_advice` (ACF, Woo, GF, Elementor, …) |
-| Scaffold skills: `wp-block-scaffold`, `wp-project-scaffold` | Full 9-skill + 5-command set |
+| **Currency Guard** (`uwp-currency-guard`): stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion 3, viewScriptModule, experimental supports, Block Bindings, `watch()`, router nav deprecation, render field, theme.json v3 opt-outs, html5 script / PHP 7.4 floor) + **WP 7.1 always-iframe** breaks (`document`/`window`, admin-scoped CSS, `editorStyle`) | Hosted Pro MCP |
+| **Code Reviewer** (`uwp-code-reviewer`): escaping, REST `permission_callback` + sanitize/validate, caps vs roles, `is_admin()` auth mistake, nonces, `$wpdb->prepare`, HPOS query basics, HTTP API, options/transients, WP-Cron, open redirects, prefix / ABSPATH / i18n basics | Woo / Plugin / Security / Release agents |
+| `/wp-review` command (runs `uwp-code-reviewer`) | Live `lumo_plugin_advice` (ACF, Woo, GF, Elementor, …) |
+| Scaffold skills: `wp-block-scaffold`, `wp-project-scaffold` | Full **9**-skill + **5**-command set (see Agent Pack) |
 | Annual update entitlement (LS, 1 activation) | GitHub Action CI |
 | Money-back 14 days | AI Forge Hosted |
 

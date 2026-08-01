@@ -23,14 +23,37 @@ Public topic matrix: [website-pricing-table.md](./website-pricing-table.md) §5.
 
 ### Agent jobs (topic lists, not slash-command marketing)
 
+Public agent IDs use the `uwp-` prefix (UnleashWP). Never `wp-`.
+
+### Specialized agents for the WordPress build lifecycle
+
+**uwp-currency-guard** — Catches stale block/theme AI code before it ships  
+**uwp-code-reviewer** — Escaping, REST auth, caps, HPOS basics  
+**uwp-woo-specialist** — WooCommerce HPOS and Subscriptions that survive 8.2+  
+**uwp-plugin-specialist** — ACF, Gravity Forms, Elementor, Meta Box, Carbon Fields, CF7  
+**uwp-security-auditor** — OWASP surfaces plus a secrets sweep  
+**uwp-release-engineer** — Testing, CI/CD, infra, and release hygiene  
+
 | Agent | Watches / advises on |
 | --- | --- |
-| **Currency Guard** | Stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion, viewScriptModule, experimental supports, Bindings, `watch()`, router nav, render field, preset opt-outs) + **WP 7.1 always-iframe** breaks |
-| **Code Reviewer** | Escaping, REST auth, caps vs roles, nonces, SQL prepare, HPOS basics, HTTP / options / Cron, redirects, plugin hygiene basics |
-| **Woo Specialist** | HPOS order CRUD, status hooks, Analytics SQL, compat declaration; Subscriptions meta / invented helpers / `update_dates` |
-| **Plugin Specialist** | ACF, Gravity Forms, Elementor, Meta Box, Carbon Fields, CF7 integration mistakes (bundled patterns; live catalogue = hosted) |
-| **Security Auditor** | XSS / SQLi / CSRF / caps / REST / uploads / unserialize / open redirects / debug display; secrets and `.env` |
-| **Release Engineer** | Tests, CI/CD, atomic deploy, staging, caching/cron/logging/backups, Composer lock, plugin standards, project layout (advisory) |
+| **Currency Guard** (`uwp-currency-guard`) | Stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion, viewScriptModule, experimental supports, Bindings, `watch()`, router nav, render field, preset opt-outs) + **WP 7.1 always-iframe** breaks |
+| **Code Reviewer** (`uwp-code-reviewer`) | Escaping, REST auth, caps vs roles, nonces, SQL prepare, HPOS basics, HTTP / options / Cron, redirects, plugin hygiene basics |
+| **Woo Specialist** (`uwp-woo-specialist`) | HPOS order CRUD, status hooks, Analytics SQL, compat declaration; Subscriptions meta / invented helpers / `update_dates` |
+| **Plugin Specialist** (`uwp-plugin-specialist`) | ACF, Gravity Forms, Elementor, Meta Box, Carbon Fields, CF7 integration mistakes (bundled patterns; live catalogue = hosted) |
+| **Security Auditor** (`uwp-security-auditor`) | XSS / SQLi / CSRF / caps / REST / uploads / unserialize / open redirects / debug display; secrets and `.env` |
+| **Release Engineer** (`uwp-release-engineer`) | Tests, CI/CD, atomic deploy, staging, caching/cron/logging/backups, Composer lock, plugin standards, project layout (advisory) |
+
+### Skills (9) — domain IDs stay `wp-*`
+
+Honest count: **9** skills (not inflated catalogue numbers).
+
+**Scaffold & project structure:** `wp-project-scaffold`, `wp-composer-bedrock`, `wp-mu-plugin`, `wp-block-scaffold`  
+**CI, test & deploy:** `wp-ci-pipeline`, `wp-playwright-e2e`, `wp-atomic-deploy`, `wp-release`  
+**Secrets & hygiene:** `wp-secrets-env`
+
+### Commands (5)
+
+`/wp-scaffold` · `/wp-review` · `/wp-audit` · `/wp-deploy-check` · `/wp-test-setup`
 
 ### Included free higher up the ladder
 
