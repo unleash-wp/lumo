@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-01T20:00:00Z",
+  "generatedAt": "2026-08-01T22:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -948,15 +948,15 @@
     },
     {
       "slug": "wp-7-1-post-editor-iframe-owner-document",
-      "title": "WordPress 7.1: Post Editor canvas is always iframed — use ownerDocument/defaultView, not global document/window",
+      "title": "From WordPress 7.1 the Post Editor is always iframed: use ownerDocument, not global document/window",
       "category_slug": "wordpress-7-1",
-      "summary": "In Gutenberg 23.6 and WordPress 7.1 the Post Editor canvas always runs inside an iframe, regardless of block apiVersion (Site Editor was already iframed). Editor scripts still load in the admin parent window, so global document and window refer to the admin page, not the canvas. Block edit code that calls window.addEventListener, document.addEventListener, window.innerWidth, or document.querySelector(\".editor-styles-wrapper\") against those globals breaks or silently no-ops. Derive the canvas document from the block element (element.ownerDocument) and its window (ownerDocument.defaultView), preferably with useRefEffect from @wordpress/compose. Set apiVersion to 3 and test in an iframed editor; see also Pro entries for editorStyle enqueue and admin-scoped CSS.",
+      "summary": "From WordPress 7.1 (Gutenberg 23.6) the Post Editor canvas always runs inside an iframe, regardless of block apiVersion. Blocks that touch global document or window break: editor scripts still load in the admin parent, so those globals are the wrong document. Use element.ownerDocument and ownerDocument.defaultView (prefer useRefEffect from @wordpress/compose). Set apiVersion to 3. Related Pro Catch: canvas CSS via editorStyle, not enqueue_block_editor_assets; drop .wp-admin / body.block-editor-page scopes.",
       "code_example": "import { useBlockProps } from '@wordpress/block-editor';\nimport { useRefEffect } from '@wordpress/compose';\nimport { useState } from '@wordpress/element';\n\n// CORRECT: canvas window from the block element (works iframed or not).\nexport default function Edit() {\n  const [ width, setWidth ] = useState( 0 );\n  const ref = useRefEffect( ( element ) => {\n    const { ownerDocument } = element;\n    const { defaultView } = ownerDocument;\n    if ( ! defaultView ) {\n      return;\n    }\n    const update = () => setWidth( defaultView.innerWidth );\n    update();\n    defaultView.addEventListener( 'resize', update );\n    return () => defaultView.removeEventListener( 'resize', update );\n  }, [] );\n  return <div { ...useBlockProps( { ref } ) }>{ width }</div>;\n}",
       "bad_pattern": "import { useBlockProps } from '@wordpress/block-editor';\nimport { useEffect, useState } from '@wordpress/element';\n\n// WRONG in the iframed Post Editor: window is the admin window.\nexport default function Edit() {\n  const [ width, setWidth ] = useState( 0 );\n  useEffect( () => {\n    const update = () => setWidth( window.innerWidth );\n    update();\n    window.addEventListener( 'resize', update );\n    return () => window.removeEventListener( 'resize', update );\n  }, [] );\n  return <div { ...useBlockProps() }>{ width }</div>;\n}\n\n// Also WRONG: outside-click on the admin document (canvas clicks never arrive).\ndocument.addEventListener( 'click', closeOnOutsideClick );\n\n// Also WRONG: querying the canvas from the admin document.\ndocument.querySelector( '.editor-styles-wrapper' );",
       "source_url": "https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/block-migration-for-iframe-editor-compatibility/",
       "test_step": "1. Grep edit components for window.addEventListener / document.addEventListener / document.querySelector(\".editor-styles-wrapper\") next to useBlockProps.\n2. Replace with element.ownerDocument / defaultView via useRefEffect.\n3. On Gutenberg 23.6+ or WordPress 7.1, open the Post Editor, confirm iframe[name=\"editor-canvas\"], and verify resize / outside-click / width behaviour against the canvas.",
       "tier": "free",
-      "updatedAt": "2026-08-01T20:00:00Z",
+      "updatedAt": "2026-08-01T22:00:00Z",
       "versions": [
         {
           "wp_version_min": "7.1",

@@ -63,8 +63,10 @@ near-term rules; live truth stays on hosted MCP for paying seats.
 | Topic | Status 2026-08-01 |
 | --- | --- |
 | WP **7.0** iframe / apiVersion 3, Interactivity `watch`, router nav deprecation, PHP 7.4 floor, html5 script support, script module deps | **In catalogue** (see `wp-7-0-*.ts`) |
-| WP **7.1** Free high-signal slice | **Shipped** in Free snapshot: Classic inserter reversal; prepare-schema mutation; ability REST callbacks ignored; background.gradient vs color.gradient; `__next40pxDefaultSize` on form controls; **Post Editor iframe `ownerDocument` / global `document`/`window`** |
+| WP **7.1** Free high-signal slice | **Shipped** in Free snapshot: Classic inserter reversal; prepare-schema mutation; ability REST callbacks ignored; background.gradient vs color.gradient; `__next40pxDefaultSize` on form controls; **Post Editor always iframed** (global `document`/`window` vs `ownerDocument`) |
 | WP **7.1** Pro depth | **Shipped (partial):** abilities lifecycle / typed REST / get-user-info reference; Icon API; Navigation→Navigator; theme.json textShadow; client-side media; React 19 punted; dimensions.minWidth; **always-iframe Post Editor migration map**; **editorStyle vs enqueue_block_editor_assets**; **admin-scoped editor CSS** |
+
+**Loud product fact (not a Ready claim):** From WordPress 7.1 the Post Editor canvas runs inside an iframe. Blocks that touch `document`/`window` or inject admin-scoped CSS break. Lumo watches for those patterns.
 | WP **7.1** full pack | **Not done** — Knowledge CPT, DataViews filters, Design System theming, jQuery UI 1.14.2 removals, Custom HTML editable, founder briefing still open |
 | Pre-release briefing entry | Template only (`core-briefing-content.ts`) |
 | Website claim “Ready for WP 7.1” | **Forbidden** until full curated pack + `verify:knowledge` |
