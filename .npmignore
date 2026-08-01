@@ -8,7 +8,10 @@ tests/
 scripts/
 plans/
 docs/
+docs/internal/
 .claude/
+.tmp-check/
+.tmp-prodev-bait/
 tsup.config.ts
 tsconfig.json
 vitest.config.ts
