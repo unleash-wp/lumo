@@ -282,7 +282,7 @@ Lead with **jobs and topics**. Commands and skills are how you invoke them.
 
 ### Starter (39 €) — two agents on disk
 
-#### Currency Guard (`wp-currency-guard`)
+#### Currency Guard (`currency-guard`)
 
 Catches stale or version-wrong AI output for blocks, themes, and Interactivity:
 
@@ -299,7 +299,7 @@ Catches stale or version-wrong AI output for blocks, themes, and Interactivity:
 
 With hosted MCP connected: live `lumo_check_code`. Without: bundled patterns at kit release.
 
-#### Code Reviewer (`wp-code-reviewer`)
+#### Code Reviewer (`code-reviewer`)
 
 Senior PR pass on PHP / `block.json` / `theme.json`:
 
