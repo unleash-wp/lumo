@@ -617,7 +617,8 @@ describe('batch lumo_check_code (PERF-P0-1)', () => {
 
     const res = await runCatch({ diff, proUrl: 'https://pro.example', licenseKey: 'k' });
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const callBody = JSON.parse(String(fetchMock.mock.calls[0]![1]!.body)) as {
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const callBody = JSON.parse(String(init.body)) as {
       params: { arguments: { files?: unknown[] } };
     };
     expect(callBody.params.arguments.files).toHaveLength(2);
