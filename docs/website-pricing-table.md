@@ -9,7 +9,7 @@ Feature rows are **measured from code**, not marketing guesswork.
 
 **Shipping honesty:** Forge Hosted is a **packaging entitlement / founder lock** for those tiers. The separate `ai-forge` install path is still blocked (see lumo-pro `docs/capability-inventory.md`). Do not claim Hosted Forge is live-shipped until that ships. Self-host Forge remains available to everyone.
 
-**WordPress 7.1 readiness:** **Not claimed as complete.** Catalogue has WordPress **7.0** catch/reference entries plus a **first 7.1 wave** (`wp-7-1-classic-block-inserter-reversal`). A full WordPress **7.1** published catch set and briefing entry are **still open**. See §9 and `docs/knowledge-import-agent-skills.md`.
+**WordPress 7.1 readiness:** **Coverage expanding, not complete.** Catalogue has WordPress **7.0** catch/reference entries plus a **growing 7.1 wave** (Free high-signal Catch slice + Pro depth). A full WordPress **7.1** pack and founder briefing remain **open**. Do **not** claim “Ready for WP 7.1.” See §9 and `docs/knowledge-import-agent-skills.md`.
 
 ---
 
@@ -116,7 +116,7 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | Domain vs projection (REST / MCP / Command Palette) | Registration shape ≠ exposure shape | **In catalogue** (reference: `wp-abilities-domain-vs-projection`) |
 | Audit / verify rollouts | Produce audit docs; adversarial readonly-but-writes checks | **Gap** (`wp-abilities-audit`, `wp-abilities-verify` skills → Pro reference / tooling, not Free) |
 
-### 3.6 WordPress 7.0 (in catalogue) vs 7.1 (first wave only)
+### 3.6 WordPress 7.0 (in catalogue) vs 7.1 (coverage expanding)
 
 **WordPress 7.0 — present today (examples):**
 
@@ -130,17 +130,25 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | `wp-7-0-wp-register-script-module-dependencies` | Catch / depth |
 | Related deprecations in Pro depth (`addslashes_gpc`, script attributes, …) | Catch / lookup |
 
-**WordPress 7.1 — first wave shipped; do not claim full “Ready for WP 7.1.”**
+**WordPress 7.1 — coverage expanding; do not claim full “Ready for WP 7.1.”**
 
 | Topic | Catalogue today |
 | --- | --- |
-| Classic block stays in inserter (June hide plan **reverted** 7 July 2026) | **Catch:** `wp-7-1-classic-block-inserter-reversal` — flags stale `wp_classic_block_supports_inserter` workarounds |
-| Knowledge CPT / `/wp/v2/knowledge` route + caps collision risk | **Missing** (curation ticket) |
-| DataViews server-side registration shift | **Missing** (API may still move; evidence required) |
-| Official replacement for `state.navigation` tracking | **Missing** (7.0 entry only warns) |
-| Founder pre-release briefing (`wp-7-1-breaking-changes`) | **Template only** in `core-briefing-content.ts` |
+| Classic block stays in inserter (June hide plan **reverted** 7 July 2026) | **Catch (Free):** `wp-7-1-classic-block-inserter-reversal` |
+| `wp_prepare_json_schema_for_client` — do not mutate stored ability schemas | **Catch (Free):** `wp-7-1-prepare-json-schema-for-client` |
+| Ability validation filters vs REST schema callbacks | **Catch (Free):** `wp-7-1-ability-rest-schema-callbacks-ignored` |
+| `background.gradient` vs `color.gradient` | **Catch (Free):** `wp-7-1-background-gradient-support` |
+| Form-control `__next40pxDefaultSize` ignored | **Catch (Free):** `wp-7-1-next40px-default-size-ignored` |
+| Abilities lifecycle / typed REST / get-user-info | **Reference (Pro):** `wp-7-1-abilities-api-improvements` |
+| Icon API (`collection/name`) | **Catch (Pro):** `wp-7-1-icon-api` |
+| Navigation → Navigator | **Catch (Pro):** `wp-7-1-editor-navigation-removed` |
+| theme.json `textShadow` | **Reference (Pro):** `wp-7-1-theme-json-text-shadow` |
+| Client-side media processing | **Reference (Pro):** `wp-7-1-client-side-media-processing` |
+| React 19 punted beyond 7.1 | **Reference (Pro):** `wp-7-1-react-19-punted` |
+| `dimensions.minWidth` | **Reference (Pro):** `wp-7-1-dimensions-min-width` |
+| Knowledge CPT / DataViews / Design System / jQuery UI 1.14.2 / founder briefing | **Still open** |
 
-Website / sales line until a full 7.1 pack lands: **“Covers WordPress 7.0 breakages we have sourced, plus a first WordPress 7.1 wave (Classic block inserter reversal). Full 7.1 pack is still open.”**
+Website / sales line: **“Covers WordPress 7.0 breakages we have sourced, plus a growing WordPress 7.1 wave (Free Catch slice + Pro depth). Full 7.1 pack is still open — not Ready.”**
 
 ### 3.7 Plugins (hosted MCP depth)
 
@@ -175,7 +183,7 @@ Legend: ● included · ○ not included · ~ local / Free snapshot only
 | `lumo check` (whole-file) | ● | ● | ● | ● | ● | ● |
 | `lumo scan` (git diff) | ● | ● | ● | ● | ● | ● |
 | Local MCP (`lumo-mcp`) | ● | ● | ● | ● | ● | ● |
-| Free snapshot (~**42** catch entries) | ● | ● | ● | ● | ● | ● |
+| Free snapshot (~**47** catch entries) | ● | ● | ● | ● | ● | ● |
 | Local tools: `lumo_check_code`, `lumo_lookup`, `lumo_audit` | ● | ● | ● | ● | ● | ● |
 | Honest caps (`computed` / `complete` / line limits) | ● | ● | ● | ● | ● | ● |
 | Quiet ≠ clean (never false all-clear) | ● | ● | ● | ● | ● | ● |
