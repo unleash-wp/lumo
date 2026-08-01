@@ -72,7 +72,21 @@ describe('runCatch forwards the fingerprint as X-Lumo-Instance', () => {
             JSON.stringify({
               result: {
                 content: [{ type: 'text', text: '' }],
-                structuredContent: { found: false },
+                structuredContent: {
+                  batch: true,
+                  results: [
+                    {
+                      path: 'inc/x.php',
+                      computed: true,
+                      complete: true,
+                      found: false,
+                      loudCount: 0,
+                      softCount: 0,
+                    },
+                  ],
+                  licenseNotice: 'none',
+                  servedTier: 'pro',
+                },
               },
             }),
         };
@@ -103,7 +117,21 @@ describe('runCatch forwards the fingerprint as X-Lumo-Instance', () => {
             JSON.stringify({
               result: {
                 content: [{ type: 'text', text: '' }],
-                structuredContent: { found: false },
+                structuredContent: {
+                  batch: true,
+                  results: [
+                    {
+                      path: 'inc/x.php',
+                      computed: true,
+                      complete: true,
+                      found: false,
+                      loudCount: 0,
+                      softCount: 0,
+                    },
+                  ],
+                  licenseNotice: 'none',
+                  servedTier: 'pro',
+                },
               },
             }),
         };
