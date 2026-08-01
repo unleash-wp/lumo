@@ -10,8 +10,8 @@ English. Files only. No hosted Pro MCP.
 
 | Included | Not included |
 | --- | --- |
-| **Currency Guard** (`wp-currency-guard`): stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion 3, viewScriptModule, experimental supports, Block Bindings, `watch()`, router nav deprecation, render field, theme.json v3 opt-outs, html5 script / PHP 7.4 floor) + **WP 7.1 always-iframe** breaks (`document`/`window`, admin-scoped CSS, `editorStyle`) | Hosted Pro MCP |
-| **Code Reviewer** (`wp-code-reviewer`): escaping, REST `permission_callback` + sanitize/validate, caps vs roles, `is_admin()` auth mistake, nonces, `$wpdb->prepare`, HPOS query basics, HTTP API, options/transients, WP-Cron, open redirects, prefix / ABSPATH / i18n basics | Woo / Plugin / Security / Release agents |
+| **Currency Guard** (`currency-guard`): stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion 3, viewScriptModule, experimental supports, Block Bindings, `watch()`, router nav deprecation, render field, theme.json v3 opt-outs, html5 script / PHP 7.4 floor) + **WP 7.1 always-iframe** breaks (`document`/`window`, admin-scoped CSS, `editorStyle`) | Hosted Pro MCP |
+| **Code Reviewer** (`code-reviewer`): escaping, REST `permission_callback` + sanitize/validate, caps vs roles, `is_admin()` auth mistake, nonces, `$wpdb->prepare`, HPOS query basics, HTTP API, options/transients, WP-Cron, open redirects, prefix / ABSPATH / i18n basics | Woo / Plugin / Security / Release agents |
 | `/wp-review` command (runs the Code Reviewer) | Live `lumo_plugin_advice` (ACF, Woo, GF, Elementor, …) |
 | Scaffold skills: `wp-block-scaffold`, `wp-project-scaffold` | Full 9-skill + 5-command set |
 | Annual update entitlement (LS, 1 activation) | GitHub Action CI |
