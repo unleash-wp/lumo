@@ -247,9 +247,9 @@ describe('snapshot artifact, actual data/snapshot.json', () => {
     expect(snap.generatedAt).toBe(maxUpdated);
   });
 
-  it('generatedAt is 2026-08-01T20:00:00Z', () => {
+  it('generatedAt is 2026-08-01T22:00:00Z', () => {
     const snap = loadSnapshot();
-    expect(snap.generatedAt).toBe('2026-08-01T20:00:00Z');
+    expect(snap.generatedAt).toBe('2026-08-01T22:00:00Z');
   });
 
   it('env-file-committed-to-git entry is present with slug and correct category', () => {

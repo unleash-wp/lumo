@@ -25,7 +25,7 @@ Public topic matrix: [website-pricing-table.md](./website-pricing-table.md) §5.
 
 | Agent | Watches / advises on |
 | --- | --- |
-| **Currency Guard** | Stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion, viewScriptModule, experimental supports, Bindings, `watch()`, router nav, render field, preset opt-outs) |
+| **Currency Guard** | Stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency (apiVersion, viewScriptModule, experimental supports, Bindings, `watch()`, router nav, render field, preset opt-outs) + **WP 7.1 always-iframe** breaks |
 | **Code Reviewer** | Escaping, REST auth, caps vs roles, nonces, SQL prepare, HPOS basics, HTTP / options / Cron, redirects, plugin hygiene basics |
 | **Woo Specialist** | HPOS order CRUD, status hooks, Analytics SQL, compat declaration; Subscriptions meta / invented helpers / `update_dates` |
 | **Plugin Specialist** | ACF, Gravity Forms, Elementor, Meta Box, Carbon Fields, CF7 integration mistakes (bundled patterns; live catalogue = hosted) |

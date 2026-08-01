@@ -365,7 +365,6 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 
 **Two WordPress specialist agents on disk. Start small.**  
 - **Currency Guard:** stale `block.json` / `theme.json` / Interactivity / WP 7.0 currency, plus **WP 7.1 always-iframe** breaks (`document`/`window`, admin-scoped CSS)  
-
 - **Code Reviewer:** escaping, REST auth, capability checks, HPOS basics, Cron / HTTP / options traps  
 - Plus matching scaffold skills and a `/wp-review` command (Claude / Cursor / Codex)  
 - **No hosted MCP:** no live ACF / Woo / GF / Elementor catalogue (that unlocks at Solo Hosted 149+)  
