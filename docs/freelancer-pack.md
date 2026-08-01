@@ -40,7 +40,9 @@ Why CI is out: CI is the team/merge job. Freelancers win in the editor first.
 
 **Seat helper:** Pro for 1–3 CI seats; Agency / Team 20 from ~4 seats (3×199 ≈ 599).
 
-**Website names:** Freelancer = **Solo Hosted** ★ · Agency = **Team 20** · Agent Pack = **Agent Team** (files only — need live MCP? buy Solo Hosted).
+**Website names:** Freelancer = **Solo Hosted** ★ · Agency = **Team 20** · Agent Pack = **Agent Team** (files only — dead end for live Cursor catalogue; need live MCP? buy Solo Hosted; Pack already included).
+
+**Everyone buys:** Freelancer persona closes on **Solo Hosted 149**. See `website-pricing-table.md` §11.
 
 ## Ladder
 

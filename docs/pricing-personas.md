@@ -46,17 +46,21 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € (h
 
 **Hosted MCP = paid only.** Free / Starter / Agent Team never use `mcp.unleash-wp.com`.
 
-## Persona → offer
+## Persona → offer (everyone buys)
 
-| Persona | Happy path | Do not |
-| --- | --- | --- |
-| Agency chef | **Team 20** (20 seats) · Pack already in | Upsell Starter/Agent Team twice |
-| Senior Dev | Free → **Solo Hosted** or **Pro** | Hide Cursor rule |
-| DevOps | **Pro** / **Team 20** for Action | Sell Starter as “has CI” |
-| Security lead | Non-goals in writing | AppSec SKU |
-| Freelancer (budget) | **Starter 39** then Agent Team 99 | Jump to 199 before proof |
-| Freelancer (Cursor live) | **Solo Hosted 149** ★ | Stop at Agent Team 99 when they need live MCP |
-| Kit buyer | **Agent Team 99** (files only) | Call Starter “the team” |
+**Definition:** each buying persona has one primary paid SKU (or a clear Free→paid fork). CEO = founder, not a buyer. Full map: [website-pricing-table.md §11](./website-pricing-table.md#11-everyone-buys-persona-close-map).
+
+| Persona | Primary close | Trigger | Secondary | Do not |
+| --- | --- | --- | --- | --- |
+| **Entwickler** | Free → **Solo Hosted 149** or **Agent Team 99** | After `demo`: live catalogue vs files-only fork; Free snapshot freezes | Starter 39 tiny entry | Stay Free without stating freeze; npm vs go-live branch confusion |
+| **Freelancer** | **Solo Hosted 149 ★** | Pack 99 = files dead end for live Cursor; Solo includes Pack + Vol.1 + Forge Hosted entitlement | Starter 39 budget | Stop at Agent Team when they need live MCP |
+| **Abteilungsleiter** | **Pro 199/seat** | CI gate non-negotiable for merge; 1–3 seats; no hosted trial — Free LOUD + 30-day money-back / founder dogfood key | Solo if no CI | Fake trial product |
+| **Agentur-Chef** | **Team 20 · 599** | Default agency close; seat math from ~4 | Pro × 1–3 tiny shop | Double-sell Starter/Agent Team |
+| Agency chef (alias) | **Team 20** | Same | — | Upsell Pack twice |
+| Senior Dev | Free → **Solo Hosted** or **Pro** | Same as Entwickler / Abteilungsleiter | — | Hide Cursor rule |
+| DevOps | **Pro** / **Team 20** for Action | CI | — | Sell Starter as “has CI” |
+| Security lead | Non-goals in writing | — | — | AppSec SKU |
+| Kit buyer | **Agent Team 99** (files only) | Disk roster only | — | Call Starter “the team” |
 
 ## Server cost
 

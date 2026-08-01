@@ -52,6 +52,7 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € �
     for those patterns.
 12. Website feature detail (domains + agent topics): [website-pricing-table.md](./website-pricing-table.md).
 13. Sales Day-0: [sales-ready-checklist.md](./sales-ready-checklist.md).
+14. **Everyone buys (persona close map):** [website-pricing-table.md §11](./website-pricing-table.md#11-everyone-buys-persona-close-map) — Entwickler → Solo/Pack fork; Freelancer → Solo Hosted 149; Abteilungsleiter → Pro 199; Agentur-Chef → Team 20. CEO is not a buyer.
 
 ### Name glossary
 

@@ -17,6 +17,8 @@ Feature rows are **measured from code**, not marketing guesswork.
 
 **Money-back:** 30 days on paid SKUs once Lemon Squeezy checkout is live.
 
+**Everyone buys (definition):** Each buying persona has one primary SKU they would pay for, with a clear trigger. CEO is the founder, not a buyer. See §11.
+
 ---
 
 ## 1. Name glossary (canonical — paste on www + connect)
@@ -42,21 +44,22 @@ Invoice may show the LS name. Marketing and `/connect` use the website name.
 
 | Starter 39 | **Solo Hosted 149 ★ Best Value** | Pro 199/seat |
 | --- | --- | --- |
-| 2 WP specialist agents · files | Live MCP (ACF, Woo, GF, …) + full kit + Forge Hosted entitlement (install not yet available) | Same + **CI gate** |
+| 2 WP specialist agents · files | Live MCP (ACF, Woo, GF, …) + full kit + Forge Hosted entitlement (install not yet available) | Same + **CI gate** (non-negotiable if WordPress PRs merge without a human re-check) |
 
 Under the three cards (one line):
 
-> **Files only?** [Agent Team - 99 €/yr](#agent-team) · full 6-agent roster on disk, no hosted MCP. Need live ACF/Woo/GF? Choose **Solo Hosted 149**, not Agent Team.
+> **Files only?** [Agent Team - 99 €/yr](#agent-team) · full 6-agent roster on disk, **no hosted MCP** (402 on this server). Buying Agent Team when you need live ACF/Woo/GF in Cursor is a dead end: you still need **Solo Hosted 149** (Pack already included — do not buy twice).
 
 ### Block B — Free strip
 
 > **Free - 0 €.** Local watcher. `npx @unleashwp/lumo demo`. No hosted MCP. Quiet ≠ clean.
 > Until npm catches this release: go-live candidate = `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live` (demo / check / scan).
+> **After the Aha:** stay Free only while the local snapshot is enough. Need live plugin catalogue → **Solo Hosted 149**. Need six agents on disk, no live MCP → **Agent Team 99**. Staying Free forever means frozen coverage while Core and plugins move.
 
 ### Block C — Teams
 
-> **Team 20 - 599 €/yr.** Up to 20 hosted seats · Agent Team included · Vol.1 lookups · Forge Hosted entitlement (install not yet available).
-> **Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599).
+> **Team 20 - 599 €/yr · default agency close.** Up to 20 hosted seats · Agent Team included · Vol.1 lookups · CI · Forge Hosted entitlement (install not yet available).
+> **Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599). Past ~3 Pro seats, Team 20 wins on math.
 
 ---
 
@@ -374,9 +377,10 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 
 **Live Pro knowledge in Cursor + full Agent Team included.**  
 - Hosted MCP · plugin advice for ACF, WooCommerce, Gravity Forms, Elementor, and more  
-- Full 6-agent kit included · Vol.1 living lookups · 1 seat  
+- Full 6-agent kit included (same files as Agent Team 99 — already inside) · Vol.1 living lookups · 1 seat  
 - **Forge Hosted:** included entitlement. Hosted Forge install not yet available.  
 - WordPress **7.0** depth in the live catalogue; **from 7.1 the Post Editor is always iframed** (Lumo watches); **7.1 coverage expanding** (no Ready claim)  
+- **Why not Agent Team 99?** Pack is files only. Solo Hosted is the live catalogue. +50 € buys hosted MCP + Pack + Vol.1 + Forge Hosted entitlement — Best Value for Cursor solos.  
 - No CI (upgrade to Pro for merge gate)  
 **CTA:** Get Solo Hosted
 
@@ -384,31 +388,36 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 
 **Solo Hosted + CI merge gate.**  
 - Everything in Solo Hosted (hosted plugin knowledge + Forge Hosted entitlement; install not yet available)  
-- GitHub Action can fail LOUD PRs  
+- GitHub Action can fail LOUD PRs — **required if WordPress merges need a gate that cannot be skipped**  
+- Unlicensed Action stays green and says the gate **did not run** (never a silent pass)  
 - Prefer Pro for **1–3** seats with CI; Team 20 from ~4 seats  
+- **No hosted trial.** Proof path: Free `demo` LOUD first, then 30-day money-back once checkout is live (or a founder-shared dogfood key for finance review)  
 **CTA:** Get Pro
 
 ### Agent Team — 99 €/yr (secondary · not starred)
 
-**Full WordPress agent roster. Files only · no hosted MCP.**  
+**Full WordPress agent roster. Files only · no hosted MCP · dead end for live Cursor catalogue.**  
 - 6 specialists on disk: Currency Guard, Code Reviewer, Woo, Plugin (ACF/GF/… patterns), Security, Release  
 - Topic coverage in §5 · 9 skills + 5 commands · self-install  
-- Need live plugin catalogue in Cursor? Buy **Solo Hosted 149**, not this SKU  
+- Patterns frozen at kit release until you connect hosted MCP  
+- Need live plugin catalogue in Cursor? Buy **Solo Hosted 149** (Pack included — do not buy this SKU first)  
 **CTA:** Get Agent Team
 
 ### Team 20 — 599 €/yr
 
-**One license for the shop.**  
+**One license for the shop · default agency close.**  
 - 20 hosted seats · full kit · live plugin knowledge · Vol.1 · CI  
 - **Forge Hosted:** included entitlement. Hosted Forge install not yet available.  
 - Choose Team 20 from ~4 seats (3× Pro ≈ 599); Pro if you only need 1–3 CI seats  
+- Do not buy Starter or Agent Team separately — both included  
 **CTA:** Get Team 20
 
 ### Free — 0 €
 
 **Prove it on your machine.** `npx @unleashwp/lumo demo`  
 Local snapshot + CLI + local MCP. No hosted Pro catalogue. Quiet ≠ clean.  
-Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live`
+Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live`  
+**Fork after the Aha:** live ACF/Woo/GF → Solo Hosted 149 · files-only six agents → Agent Team 99 · tiny entry → Starter 39. Free coverage freezes; Core does not.
 
 ---
 
@@ -416,12 +425,14 @@ Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1
 
 1. **Solo Hosted** is the only starred solo card.
 2. Never star Agent Team 99 on the main grid.
-3. Never hide Agent Team completely.
+3. Never hide Agent Team completely — label it **files only / dead end for live catalogue**.
 4. Never put Team 20 in the three-card solo row.
 5. Forge Hosted shown on **Solo Hosted, Pro, Team 20** as **entitlement** (install not yet available) — not Free/Starter/Agent Team.
 6. Primary CTA colour only on Solo Hosted. Never star Agent Team.
 7. Never claim WP 7.1 readiness until the curated pack exists.
 8. Always show glossary (website ↔ LS name) near pricing or checkout.
+9. **Everyone buys** = each of the four buying personas has one primary close SKU (§11). CEO is not a buyer.
+10. Loss aversion only with honest facts (frozen Free snapshot, 402 on hosted without paid key, Pack included so 99 then 149 is double-pay).
 
 ---
 
@@ -453,3 +464,30 @@ Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1
 Canonical product rules: [go-live-final.md](./go-live-final.md) · [packages.md](./packages.md).
 
 **Buyer smoke paths (per tier, honest):** [go-live-final.md §6b](./go-live-final.md#6b-buyer-verification-per-tier). Free is the trial; no hosted trial keys.
+
+---
+
+## 11. Everyone buys (persona close map)
+
+**Definition (honest):** “Alle kaufen” means each **buying** persona has one primary SKU they would pay for, with a clear trigger and a secondary only when the job differs. **CEO is the founder, not a buyer.** Prices stay locked; framing carries conversion. No fake hosted trial.
+
+| Persona | Primary SKU | Close trigger | Secondary | Do not |
+| --- | --- | --- | --- | --- |
+| **Entwickler** | Free → **Solo Hosted 149** (live) or **Agent Team 99** (files) | After `demo` Aha: local snapshot freezes; live ACF/Woo/GF needs hosted (402 without key). One-line npm vs go-live branch everywhere Free is sold. | Starter 39 if tiny entry | Stay Free forever without stating the freeze; confuse npm `0.4.x` with go-live `check` |
+| **Freelancer** | **Solo Hosted 149 ★** | Best Value: +50 € over Agent Team buys hosted MCP + Pack included + Vol.1 + Forge Hosted entitlement. Agent Team alone = files dead end for live Cursor. | Starter 39 budget / files-curious | Stop at Agent Team 99 when they need live MCP |
+| **Abteilungsleiter** | **Pro 199/seat** | CI merge gate is non-negotiable when WordPress PRs merge without a human re-check. Unlicensed Action never silent-passes. Seat math: 1–3 Pro; Team 20 from ~4. | Solo Hosted if no CI | Invent live trial infra. Close with Free LOUD proof + **30-day money-back** and/or **founder dogfood key** for finance |
+| **Agentur-Chef** | **Team 20 · 599** | Default agency close. ~30 €/seat/year vs Pro 199. Pack + CI + Vol.1 + Forge Hosted entitlement included. | Pro × 1–3 only if tiny shop | Upsell Starter/Agent Team twice; weaken Team 20 |
+
+**Founder close tools (not product infra):**
+
+| Tool | Who | Status |
+| --- | --- | --- |
+| Free `demo` / go-live branch `check` | All | Live |
+| 30-day money-back on LS paid pages | All paid | Restate on checkout (already locked) |
+| Founder-shared dogfood / demo keys | Abteilungsleiter finance | **FOUNDER-ONLY** — temporary keys, not a public trial product |
+| 60 s Free + Solo LOUD screenshot | Abteilungsleiter / Freelancer | Open (founder media) |
+| Shorter refund window (e.g. 14-day badge) | Optional louder close | **FOUNDERS-DECIDE** — prefer keep 30-day; do not cut price |
+
+**No price change in this pass.** Any price tweak = **FOUNDERS-DECIDE**.
+
+Also mirrored: [sales-ready-checklist.md](./sales-ready-checklist.md) · [pricing-personas.md](./pricing-personas.md) · `/connect`.
