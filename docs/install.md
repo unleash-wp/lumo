@@ -10,8 +10,6 @@ hosted MCP bytes from `mcp.unleash-wp.com`. Starter / Agent Team are file zips o
 
 Brand: Lumo owl (`assets/lumo-owl-*.png`).
 
-Dogfood checklist: [customer-dogfood-test.md](./customer-dogfood-test.md).
-
 ---
 
 ## (0) Hosted MCP — Solo Hosted / Pro / Team 20 (Cursor, Claude, Codex)

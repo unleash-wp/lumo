@@ -8,7 +8,6 @@ tests/
 scripts/
 plans/
 docs/
-docs/internal/
 .claude/
 .tmp-check/
 .tmp-prodev-bait/
