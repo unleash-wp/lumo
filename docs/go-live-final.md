@@ -17,15 +17,28 @@ English. Locked 2026-08-01. Founder gate for Lemon Squeezy + deploy.
 
 One global EUR price. No PPP. Quiet ≠ clean. Not AppSec.
 
+### Name glossary (canonical)
+
+| Website name | LS / internal name | Price |
+| --- | --- | --- |
+| **Free** | Lumo Free | 0 € |
+| **Starter** | Lumo Agent Core | 39 €/yr |
+| **Agent Team** | Lumo Agent Pack | 99 €/yr |
+| **Solo Hosted** ★ | Lumo Freelancer | 149 €/yr |
+| **Pro** | Lumo Pro | 199 €/seat/yr |
+| **Team 20** | Lumo Agency | 599 €/yr |
+
+Same block on [website-pricing-table.md](./website-pricing-table.md) §1 and `GET /connect`. Day-0 clicks: [sales-ready-checklist.md](./sales-ready-checklist.md).
+
 
 | Package (LS / internal) | Website name      | Price             | Hosted MCP         | Vol.1 living knowledge               | Agent files        | CI gate | Forge Hosted       |
 | ----------------------- | ----------------- | ----------------- | ------------------ | ------------------------------------ | ------------------ | ------- | ------------------ |
 | **Lumo Free**           | Free              | 0 €               | **Never**          | Teaser copy only                     | —                  | —       | ○ (self-host only) |
 | **Agent Core**          | **Starter**       | **39 €/yr**       | **Never**          | No                                   | 2 agents           | —       | ○ (self-host only) |
 | **Agent Pack**          | **Agent Team**    | **99 €/yr**       | **Never**          | No (files only; optional PDF week-1) | 6 agents + skills  | —       | ○ (self-host only) |
-| **Freelancer**          | **Solo Hosted** ★ | **149 €/yr**      | Yes · **1 seat**   | **Yes** · 69 `lumo_lookup` entries   | Full Pack included | —       | **●**              |
-| **Lumo Pro**            | **Pro**           | **199 €/seat/yr** | Yes · hosted only  | **Yes**                              | Full Pack included | Yes     | **●**              |
-| **Agency**              | **Team 20**       | **599 €/yr**      | Yes · **20 seats** | **Yes**                              | Full Pack included | Yes     | **●**              |
+| **Freelancer**          | **Solo Hosted** ★ | **149 €/yr**      | Yes · **1 seat**   | **Yes** · 69 `lumo_lookup` entries   | Full Pack included | —       | **● entitlement**  |
+| **Lumo Pro**            | **Pro**           | **199 €/seat/yr** | Yes · hosted only  | **Yes**                              | Full Pack included | Yes     | **● entitlement**  |
+| **Agency**              | **Team 20**       | **599 €/yr**      | Yes · **20 seats** | **Yes**                              | Full Pack included | Yes     | **● entitlement**  |
 
 
 
@@ -38,8 +51,10 @@ One global EUR price. No PPP. Quiet ≠ clean. Not AppSec.
 4. Core + Pack Lemon Squeezy product ids **out** of `LUMO_LS_PRODUCT_IDS`.
 5. Freelancer + Pro + Agency ids **in** `LUMO_LS_PRODUCT_IDS`.
 6. Vol.1 living edition = **69 reference-lane** `book-`* **entries** in Pro MCP via `lumo_lookup` only — **never Catch**. Not the 345-page PDF.
-7. **AI Forge Hosted** is included on **Freelancer (Solo Hosted), Pro, and Agency (Team 20)** — not Free / Core / Pack. Packaging entitlement / founder lock (not claimed live-shipped while `ai-forge` install is blocked).
+7. **AI Forge Hosted** is included on **Freelancer (Solo Hosted), Pro, and Agency (Team 20)** — not Free / Core / Pack. Customer line: **Included entitlement. Hosted Forge install not yet available.** Never sell as live-installable while `ai-forge` is blocked.
 8. **Do not claim Ready for WP 7.1.** Catalogue has WP 7.0 + a **growing 7.1 wave** (Free Catch slice + Pro depth). Full 7.1 pack still open.
+9. **Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599).
+10. Solo Hosted is the only starred solo card. Agent Team stays secondary (files only, no hosted MCP).
 
 
 
@@ -52,6 +67,7 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € �
 Internal LS names: Agent Core · Agent Pack · Freelancer · Agency.
 
 **Website display names + 3-card psychology:** [website-pricing-table.md](./website-pricing-table.md)
+**Founder Day-0 sales clicks:** [sales-ready-checklist.md](./sales-ready-checklist.md)
 
 ---
 
@@ -70,7 +86,7 @@ Legend: **DONE** = verified in this pass · **CODE-DONE** = in repo, needs deplo
 - [x] **DONE** Connect page + Cursor rule: public names + Forge Hosted on Solo/Pro/Team 20 + Vol.1 honesty (English only)
 - [x] **DONE** Auth/copy: retired “Skills Pack 19” / “Freelancer Pack 39” language removed from shop-architecture, server-load, require-auth
 - [x] **DONE** 69 `book-`* reference entries in Pro DB (reference lane, no Catch)
-- [x] **DONE** WP 7.1 growing wave: Free Catch slice (5) + Pro depth (7) + catch tests; not Ready claim
+- [x] **DONE** WP 7.1 growing wave: Free Catch slice (6) + Pro depth (10) + catch tests; not Ready claim
 - [x] **DONE** Abilities reference: `wp-abilities-domain-vs-projection` (lookup only)
 - [x] **DONE** Agent Core + Pack zip scripts + COMMERCIAL public names + dated zips in `lumo-agent-kit/dist/`
 - [x] **DONE** Free CLI help matches public ladder
@@ -133,10 +149,10 @@ Legend: **DONE** = verified in this pass · **CODE-DONE** = in repo, needs deplo
 | Persona                  | Pitch                                                                                                   | SKU                         |
 | ------------------------ | ------------------------------------------------------------------------------------------------------- | --------------------------- |
 | **Price-sensitive solo** | Two specialists that catch stale block/theme code — 39 €/year. Upgrade when you need the full team.     | Starter 39                  |
-| **Kit buyer**            | Your WordPress agent team — 6 specialists + skills + commands, 99 €/year. Install once.                 | Agent Team 99               |
-| **Freelancer in Cursor** | Live Pro depth in the editor + full Agent Pack + Forge Hosted — 149 €/year, one seat, no CI tax.        | Solo Hosted 149             |
-| **Senior / DevOps**      | Hosted MCP + merge gate + Vol.1 engineering lookups + Forge Hosted — 199 €/seat.                        | Pro 199                     |
-| **Agency chef**          | Twenty hosted seats + Forge Hosted + full Pack + CI — 599 €/year.                                       | Team 20 · 599               |
+| **Kit buyer**            | Your WordPress agent team - 6 specialists + skills + commands, 99 €/year. Files only; no hosted MCP. Need live catalogue? Solo Hosted 149. | Agent Team 99               |
+| **Freelancer in Cursor** | Live Pro depth in the editor + full Agent Pack. Forge Hosted entitlement (install not yet available). 149 €/year, one seat, no CI tax. | Solo Hosted 149             |
+| **Senior / DevOps**      | Hosted MCP + merge gate + Vol.1 engineering lookups. Forge Hosted entitlement. 199 €/seat. Prefer Pro for 1–3 CI seats. | Pro 199                     |
+| **Agency chef**          | Twenty hosted seats + full Pack + CI. Forge Hosted entitlement. 599 €/year. From ~4 seats choose Team 20 (3×199 ≈ 599). | Team 20 · 599               |
 | **Security lead**        | Lumo catches known-bad engineering patterns with sources. It is **not** AppSec, pentest, or compliance. | Any tier (set expectations) |
 
 
@@ -146,7 +162,7 @@ Legend: **DONE** = verified in this pass · **CODE-DONE** = in repo, needs deplo
 
 - WordPress agent-skills = the manual (how to build).
 - Lumo = the watcher (what breaks on your stack).
-- AI Forge = the tool shelf (local Free; **Hosted** on Solo Hosted / Pro / Team 20).
+- AI Forge = the tool shelf (local Free; **Hosted entitlement** on Solo Hosted / Pro / Team 20 — install not yet available).
 - Bookstore PDF = optional static anchor; living Vol.1 = paid MCP lookups.
 
 ---
@@ -302,28 +318,32 @@ Pre-tag commands: see [RELEASE.md](./RELEASE.md).
 
 ## 9. Day 0 execute (founder copy-paste)
 
+**Sales path only.** Short checklist: [sales-ready-checklist.md](./sales-ready-checklist.md).
 Do these in order. Do **not** invent Lemon Squeezy product ids — create products first, then paste real ids.
 
-### A. Lemon Squeezy — create 5 products
+**Money-back:** Paid SKUs claim **30-day money-back** on LS product pages once checkout is live (already in the pricing matrix).
+
+### A. Lemon Squeezy — create exactly 5 products
 
 
-| #   | LS product name (exact) | Price                 | License activations | Notes                                             |
-| --- | ----------------------- | --------------------- | ------------------- | ------------------------------------------------- |
-| 1   | **Lumo Agent Core**     | 39 EUR / year         | 1                   | Files only. Zip: `lumo-agent-core-YYYY-MM-DD.zip` |
-| 2   | **Lumo Agent Pack**     | 99 EUR / year         | 1                   | Files only. Zip: `lumo-agent-pack-YYYY-MM-DD.zip` |
-| 3   | **Lumo Freelancer**     | 149 EUR / year        | **1**               | Hosted MCP. Website: Solo Hosted                  |
-| 4   | **Lumo Pro**            | 199 EUR / seat / year | **1** per seat key  | Hosted MCP + CI                                   |
-| 5   | **Lumo Agency**         | 599 EUR / year        | **20**              | Hosted MCP + CI. Website: Team 20                 |
+| #   | LS product name (exact) | Website name | Price                 | License activations | Portal file |
+| --- | ----------------------- | ------------ | --------------------- | ------------------- | ----------- |
+| 1   | **Lumo Agent Core**     | Starter      | 39 EUR / year         | 1                   | `lumo-agent-core-YYYY-MM-DD.zip` |
+| 2   | **Lumo Agent Pack**     | Agent Team   | 99 EUR / year         | 1                   | `lumo-agent-pack-YYYY-MM-DD.zip` |
+| 3   | **Lumo Freelancer**     | Solo Hosted ★ | 149 EUR / year       | **1**               | Pack zip included (no second charge) |
+| 4   | **Lumo Pro**            | Pro          | 199 EUR / seat / year | **1** per seat key  | Pack zip included |
+| 5   | **Lumo Agency**         | Team 20      | 599 EUR / year        | **20**              | Pack zip included |
 
 
-Portal files: attach Core zip to product 1, Pack zip to product 2. On products 3–5, attach the **same Pack zip** as a free download (included, no second charge).
+Portal: attach Core zip to product 1, Pack zip to product 2. On products 3–5, attach the **same Pack zip** as a free download (included, no second charge).
 
-### B. Mittwald env (exact names)
+### B. Mittwald env — only three ids in `LUMO_LS_PRODUCT_IDS`
 
-After you have the three hosted product ids from LS:
+After you have the three **hosted** product ids from LS (Freelancer, Pro, Agency):
 
 ```bash
-# Replace <…> with real Lemon Squeezy product ids. Do NOT put Core or Pack ids here.
+# Replace <…> with real Lemon Squeezy product ids.
+# ONLY Freelancer + Pro + Agency. Do NOT put Core or Pack ids here.
 LUMO_LS_PRODUCT_IDS=<freelancer_id>,<pro_id>,<agency_id>
 
 LEMON_SQUEEZY_API_KEY=<ls_api_key>
@@ -336,6 +356,14 @@ LUMO_TRUSTED_PROXY=1
 LUMO_DB_PATH=<path_to_knowledge.db>
 ```
 
+| LS product | In `LUMO_LS_PRODUCT_IDS`? |
+| --- | --- |
+| Lumo Agent Core | **No** |
+| Lumo Agent Pack | **No** |
+| Lumo Freelancer | **Yes** |
+| Lumo Pro | **Yes** |
+| Lumo Agency | **Yes** |
+
 Webhook URL in LS dashboard:
 
 ```
@@ -347,7 +375,9 @@ Then: deploy / `job restart` per lumo-pro `docs/deployment-runbook.md`. Seed kno
 ### C. Smoke curls (after deploy)
 
 ```bash
-# 1) Free proof (local, no account)
+# 1) Free proof (local, no account) — published npm for demo;
+#    go-live candidate until npm publish:
+#    npx -y github:unleash-wp/lumo#release/v1.0.0-go-live demo
 npx @unleashwp/lumo demo
 
 # 2) Anonymous hosted → 401
@@ -358,8 +388,8 @@ curl -sS -o /tmp/lumo-401.txt -w '%{http_code}\n' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}'
 # expect: 401 ; body mentions /connect
 
-# 3) Connect page public names
-curl -sS 'https://mcp.unleash-wp.com/connect' | grep -E 'Starter|Agent Team|Solo Hosted|Team 20|Forge Hosted|Vol\.1|149|199|599|39|99'
+# 3) Connect page public names + Forge honesty
+curl -sS 'https://mcp.unleash-wp.com/connect' | grep -E 'Starter|Agent Team|Solo Hosted|Team 20|Forge Hosted|install not yet|Vol\.1|149|199|599|39|99|Name glossary'
 
 # 4) Cursor rule
 curl -sS 'https://mcp.unleash-wp.com/cursor/lumo.mdc' | head -40
@@ -378,7 +408,8 @@ Then run the full Day-0 table in §6 (lookup `book-test-philosophy`, check HPOS-
 
 ### D. www
 
-Paste [website-pricing-table.md](./website-pricing-table.md) §2 + §7 into the pricing page. Hero: §4 of this file.
+Paste [website-pricing-table.md](./website-pricing-table.md) **§1 glossary + §2 layout + §7 cards** into the pricing page. Hero: §4 of this file.
+Confirm Forge line reads **included entitlement / Hosted Forge install not yet available**. Confirm Solo Hosted ★ is Best Value; Agent Team not starred.
 
 ### E. Tags (only after smoke green)
 
@@ -396,10 +427,10 @@ lumo-action    → keep @v1 pin
 
 | Item                               | Status                                                                                |
 | ---------------------------------- | ------------------------------------------------------------------------------------- |
-| **AI Forge Hosted** live install   | **BLOCKED** — `ai-forge` install path; entitlement packaging only on Solo/Pro/Team 20 |
+| **AI Forge Hosted** live install   | **BLOCKED** — entitlement packaging only on Solo/Pro/Team 20; customer line: install not yet available |
 | Full WP **7.1** curated pack       | Open curation (first wave shipped; do not claim ready)                                |
 | Automated LS → zip entitlement API | Week-1 P1                                                                             |
 | Hosted trial / sandbox keys        | Not offered; Free local is the trial                                                  |
 
 
-Canonical ladder doc: [packages.md](./packages.md). Ops mirror: lumo-pro `docs/packages.md`. Licensing: lumo-pro `docs/licensing-runbook.md`.
+Canonical ladder doc: [packages.md](./packages.md). Ops mirror: lumo-pro `docs/packages.md`. Licensing: lumo-pro `docs/licensing-runbook.md`. Sales checklist: [sales-ready-checklist.md](./sales-ready-checklist.md).

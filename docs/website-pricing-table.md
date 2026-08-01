@@ -5,24 +5,28 @@ Feature rows are **measured from code**, not marketing guesswork.
 
 **Psychology:** three hero cards for solos; **middle = Best Value**. Agent Team 99 stays visible but secondary. Team 20 = separate Teams block.
 
-**Founder lock:** **AI Forge Hosted** is included on **Solo Hosted, Pro, and Team 20** (all hosted paid tiers) — not Agency-only.
+**Founder lock:** **AI Forge Hosted** is included on **Solo Hosted, Pro, and Team 20** (all hosted paid tiers), not Agency-only.
 
-**Shipping honesty:** Forge Hosted is a **packaging entitlement / founder lock** for those tiers. The separate `ai-forge` install path is still blocked (see lumo-pro `docs/capability-inventory.md`). Do not claim Hosted Forge is live-shipped until that ships. Self-host Forge remains available to everyone.
+**Forge Hosted (customer line):** Included entitlement. Hosted Forge install not yet available. Self-host Forge remains available to everyone. Do not sell Hosted Forge as live-installable until `ai-forge` unblocks.
 
 **WordPress 7.1 readiness:** **Coverage expanding, not complete.** Catalogue has WordPress **7.0** catch/reference entries plus a **growing 7.1 wave** (Free high-signal Catch slice + Pro depth). A full WordPress **7.1** pack and founder briefing remain **open**. Do **not** claim “Ready for WP 7.1.” See §9 and `docs/knowledge-import-agent-skills.md`.
 
+**Money-back:** 30 days on paid SKUs once Lemon Squeezy checkout is live.
+
 ---
 
-## 1. Display names (public)
+## 1. Name glossary (canonical — paste on www + connect)
 
-| Internal / LS | **Website name** | Price |
+| Website name | LS / internal name | Price |
 | --- | --- | --- |
-| Lumo Free | **Free** | 0 € |
-| Agent Core | **Starter** | 39 €/yr |
-| Agent Pack | **Agent Team** | 99 €/yr |
-| Freelancer | **Solo Hosted** ★ | 149 €/yr |
-| Lumo Pro | **Pro** | 199 €/seat/yr |
-| Agency | **Team 20** | 599 €/yr |
+| **Free** | Lumo Free | 0 € |
+| **Starter** | Lumo Agent Core | 39 €/yr |
+| **Agent Team** | Lumo Agent Pack | 99 €/yr |
+| **Solo Hosted** ★ | Lumo Freelancer | 149 €/yr |
+| **Pro** | Lumo Pro | 199 €/seat/yr |
+| **Team 20** | Lumo Agency | 599 €/yr |
+
+Invoice may show the LS name. Marketing and `/connect` use the website name.
 
 ---
 
@@ -32,25 +36,27 @@ Feature rows are **measured from code**, not marketing guesswork.
 
 | Starter 39 | **Solo Hosted 149 ★ Best Value** | Pro 199/seat |
 | --- | --- | --- |
-| 2 WP specialist agents · files | Live MCP (ACF, Woo, GF, …) + full kit + Forge Hosted | Same + **CI gate** |
+| 2 WP specialist agents · files | Live MCP (ACF, Woo, GF, …) + full kit + Forge Hosted entitlement (install not yet available) | Same + **CI gate** |
 
 Under the three cards (one line):
 
-> **Files only?** [Agent Team — 99 €/yr](#agent-team) · full 6-agent roster on disk, no hosted MCP.
+> **Files only?** [Agent Team - 99 €/yr](#agent-team) · full 6-agent roster on disk, no hosted MCP. Need live ACF/Woo/GF? Choose **Solo Hosted 149**, not Agent Team.
 
 ### Block B — Free strip
 
-> **Free — 0 €.** Local watcher. `npx @unleashwp/lumo demo`. No hosted MCP. Quiet ≠ clean.
+> **Free - 0 €.** Local watcher. `npx @unleashwp/lumo demo`. No hosted MCP. Quiet ≠ clean.
+> Until npm catches this release: go-live candidate = `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live` (demo / check / scan).
 
 ### Block C — Teams
 
-> **Team 20 — 599 €/yr.** Up to 20 hosted seats · Agent Team included · Vol.1 lookups · **Forge Hosted**.
+> **Team 20 - 599 €/yr.** Up to 20 hosted seats · Agent Team included · Vol.1 lookups · Forge Hosted entitlement (install not yet available).
+> **Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599).
 
 ---
 
 ## 3. What Lumo actually watches (coverage domains)
 
-Plain English for a WordPress developer. Numbers from lumo-pro `docs/capability-inventory.md` (2026-08-01): published catalogue **~177**, Free snapshot **~42**, catch-capable **~95**.
+Plain English for a WordPress developer. Numbers from lumo-pro `docs/capability-inventory.md` (2026-08-01): published catalogue **~177**, Free snapshot **~47**, catch-capable **~95**.
 
 ### 3.1 WordPress Core (everyday PHP / admin surface)
 
@@ -139,6 +145,10 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | Ability validation filters vs REST schema callbacks | **Catch (Free):** `wp-7-1-ability-rest-schema-callbacks-ignored` |
 | `background.gradient` vs `color.gradient` | **Catch (Free):** `wp-7-1-background-gradient-support` |
 | Form-control `__next40pxDefaultSize` ignored | **Catch (Free):** `wp-7-1-next40px-default-size-ignored` |
+| Post Editor always iframed — global `document`/`window` vs `ownerDocument` | **Catch (Free):** `wp-7-1-post-editor-iframe-owner-document` |
+| Always-iframe migration map (GB 23.6 / WP 7.1) | **Reference (Pro):** `wp-7-1-post-editor-always-iframe` |
+| Canvas CSS via `editorStyle` (not `enqueue_block_editor_assets`) | **Catch (Pro):** `wp-7-1-iframe-editor-style-enqueue` |
+| Admin-scoped editor CSS (`.wp-admin` / `body.block-editor-page`) | **Catch (Pro):** `wp-7-1-iframe-admin-scoped-editor-css` |
 | Abilities lifecycle / typed REST / get-user-info | **Reference (Pro):** `wp-7-1-abilities-api-improvements` |
 | Icon API (`collection/name`) | **Catch (Pro):** `wp-7-1-icon-api` |
 | Navigation → Navigator | **Catch (Pro):** `wp-7-1-editor-navigation-removed` |
@@ -229,7 +239,7 @@ Pack Plugin / Woo agents ship **bundled patterns** on disk. Live ACF / Woo / GF 
 | Feature | Free | Starter | Agent Team | **Solo Hosted ★** | Pro | Team 20 |
 | --- | --- | --- | --- | --- | --- | --- |
 | AI Forge **self-host** | ● | ● | ● | ● | ● | ● |
-| AI Forge **Hosted** | ○ | ○ | ○ | **●** | **●** | **●** |
+| AI Forge **Hosted** (entitlement; install not yet available) | ○ | ○ | ○ | **●** | **●** | **●** |
 
 Local Forge UI may offer German (DE). Lumo product language stays English.
 
@@ -251,6 +261,7 @@ Local Forge UI may offer German (DE). Lumo product language stays English.
 4. Unlicensed CI runs stay green and say the gate **did not run** (never a silent pass).
 5. Do **not** claim “Ready for WP 7.1” until §3.6 gap is closed with sourced entries.
 6. Lumo is **not** the `WordPress/agent-skills` project. That repository is a separate public skill set; Lumo may curate overlapping topics into its own evidence-backed catalogue.
+7. **Forge Hosted** on Solo Hosted / Pro / Team 20 = included entitlement. Hosted Forge install not yet available.
 
 ---
 
@@ -312,9 +323,11 @@ Same full agent kit, plus:
 - Live Pro catalogue (~177) and catch depth (~95)
 - Plugin advice for ACF, WooCommerce, Gravity Forms, Elementor, Meta Box, Carbon Fields, CF7, …
 - Vol.1 living lookups (69)
-- **AI Forge Hosted** on all three
+- **AI Forge Hosted** entitlement on all three (Hosted Forge install not yet available)
 - Pro / Team 20 only: GitHub Action CI gate
 - Team 20: 20 hosted seats
+
+**Seat helper (Teams):** Pro for 1–3 seats with CI; Team 20 from about 4 seats or the whole shop (3×199 ≈ 599).
 
 ---
 
@@ -329,7 +342,7 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 | Hosted Pro MCP + live catch | ○ | ○ | ○ | ● | ● | ● |
 | Vol.1 living lookups (69) | ○ | ○ | ○ | ● | ● | ● |
 | AI Forge self-host | ● | ● | ● | ● | ● | ● |
-| **AI Forge Hosted** | ○ | ○ | ○ | **●** | **●** | **●** |
+| **AI Forge Hosted** (entitlement; install not yet available) | ○ | ○ | ○ | **●** | **●** | **●** |
 | CI merge gate | ○ | ○ | ○ | ○ | ● | ● |
 | WP 7.0 sourced coverage | ~ Free slice | bundled | bundled | ● hosted | ● | ● |
 | WP 7.1 curated pack | ○ | ○ | ○ | ○ gap | ○ gap | ○ gap |
@@ -350,38 +363,43 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 
 ### Solo Hosted ★ — 149 €/yr · Best Value
 
-**Live Pro knowledge in Cursor + full Agent Team + Forge Hosted.**  
+**Live Pro knowledge in Cursor + full Agent Team included.**  
 - Hosted MCP · plugin advice for ACF, WooCommerce, Gravity Forms, Elementor, and more  
-- Full 6-agent kit included · Vol.1 living lookups · AI Forge Hosted · 1 seat  
-- WordPress **7.0** depth in the live catalogue; **7.1 pack still shipping next** (no false ready claim)  
+- Full 6-agent kit included · Vol.1 living lookups · 1 seat  
+- **Forge Hosted:** included entitlement. Hosted Forge install not yet available.  
+- WordPress **7.0** depth in the live catalogue; **7.1 coverage expanding** (no Ready claim)  
 - No CI (upgrade to Pro for merge gate)  
 **CTA:** Get Solo Hosted
 
 ### Pro — 199 €/seat/yr
 
 **Solo Hosted + CI merge gate.**  
-- Everything in Solo Hosted (hosted plugin knowledge + Forge Hosted)  
+- Everything in Solo Hosted (hosted plugin knowledge + Forge Hosted entitlement; install not yet available)  
 - GitHub Action can fail LOUD PRs  
+- Prefer Pro for **1–3** seats with CI; Team 20 from ~4 seats  
 **CTA:** Get Pro
 
-### Agent Team — 99 €/yr (secondary)
+### Agent Team — 99 €/yr (secondary · not starred)
 
-**Full WordPress agent roster. Files only.**  
+**Full WordPress agent roster. Files only · no hosted MCP.**  
 - 6 specialists on disk: Currency Guard, Code Reviewer, Woo, Plugin (ACF/GF/… patterns), Security, Release  
-- Topic coverage in §5 · 9 skills + 5 commands · self-install · no hosted MCP  
-- Add Solo Hosted for live plugin catalogue + Forge Hosted  
+- Topic coverage in §5 · 9 skills + 5 commands · self-install  
+- Need live plugin catalogue in Cursor? Buy **Solo Hosted 149**, not this SKU  
 **CTA:** Get Agent Team
 
 ### Team 20 — 599 €/yr
 
 **One license for the shop.**  
-- 20 hosted seats · full kit · live plugin knowledge · Vol.1 · Forge Hosted · CI  
+- 20 hosted seats · full kit · live plugin knowledge · Vol.1 · CI  
+- **Forge Hosted:** included entitlement. Hosted Forge install not yet available.  
+- Choose Team 20 from ~4 seats (3× Pro ≈ 599); Pro if you only need 1–3 CI seats  
 **CTA:** Get Team 20
 
 ### Free — 0 €
 
-**Prove it on your machine.** `lumo demo`  
-Local snapshot + CLI + local MCP. No hosted Pro catalogue. Quiet ≠ clean.
+**Prove it on your machine.** `npx @unleashwp/lumo demo`  
+Local snapshot + CLI + local MCP. No hosted Pro catalogue. Quiet ≠ clean.  
+Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live`
 
 ---
 
@@ -391,9 +409,10 @@ Local snapshot + CLI + local MCP. No hosted Pro catalogue. Quiet ≠ clean.
 2. Never star Agent Team 99 on the main grid.
 3. Never hide Agent Team completely.
 4. Never put Team 20 in the three-card solo row.
-5. Forge Hosted shown on **Solo Hosted, Pro, Team 20** — not Free/Starter/Agent Team.
-6. Primary CTA colour only on Solo Hosted.
+5. Forge Hosted shown on **Solo Hosted, Pro, Team 20** as **entitlement** (install not yet available) — not Free/Starter/Agent Team.
+6. Primary CTA colour only on Solo Hosted. Never star Agent Team.
 7. Never claim WP 7.1 readiness until the curated pack exists.
+8. Always show glossary (website ↔ LS name) near pricing or checkout.
 
 ---
 

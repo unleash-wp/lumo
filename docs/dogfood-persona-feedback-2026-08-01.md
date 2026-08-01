@@ -210,24 +210,24 @@ Do **not** implement until Benjamin approves. Doc typos / dogfood-path clarifica
 
 ### P0 — blocks trust or revenue for this candidate
 
-| ID | Fix | Why | Owner hint |
-| --- | --- | --- | --- |
-| **P0-1** | Treat **Agent Team persona testing mode** as the dogfood gate for this RC (update go-live + dogfood sheet). External email optional later. | Avoid waiting on the wrong signal. | Docs (this pass) |
-| **P0-2** | Customer-facing Forge Hosted: say **included entitlement / Hosted install still shipping** (or hide until `ai-forge` unblocks). Never imply live Hosted Forge today. | Five personas flag trust leak. | www + connect + cards |
-| **P0-3** | Lemon Squeezy: create 5 products + webhook + portal Core/Pack zips (Pack on hosted SKUs). | No buyer can purchase or download. | Founder |
-| **P0-4** | Deploy lumo-pro `/connect` + knowledge seed; run Day-0 smoke (§6). | CODE-DONE without production = false readiness. | Founder + ops |
-| **P0-5** | One-line **name glossary** on pricing + connect (Website = LS name). | Dual names confuse Agency finance, freelancers, and support. | www + connect |
+| ID | Fix | Why | Owner hint | Status |
+| --- | --- | --- | --- | --- |
+| **P0-1** | Treat **Agent Team persona testing mode** as the dogfood gate for this RC (update go-live + dogfood sheet). External email optional later. | Avoid waiting on the wrong signal. | Docs (this pass) | **DONE** |
+| **P0-2** | Customer-facing Forge Hosted: say **included entitlement / Hosted install still shipping** (or hide until `ai-forge` unblocks). Never imply live Hosted Forge today. | Five personas flag trust leak. | www + connect + cards | **DONE** (copy + connect) |
+| **P0-3** | Lemon Squeezy: create 5 products + webhook + portal Core/Pack zips (Pack on hosted SKUs). | No buyer can purchase or download. | Founder | **FOUNDER-ONLY** (checklist ready) |
+| **P0-4** | Deploy lumo-pro `/connect` + knowledge seed; run Day-0 smoke (§6). | CODE-DONE without production = false readiness. | Founder + ops | **FOUNDER-ONLY** |
+| **P0-5** | One-line **name glossary** on pricing + connect (Website = LS name). | Dual names confuse Agency finance, freelancers, and support. | www + connect | **DONE** |
 
 ### P1 — raises conversion / reduces wrong SKU
 
-| ID | Fix | Why |
-| --- | --- | --- |
-| **P1-1** | Paste website-pricing-table §2 + §7 to www; hero = watcher + demo CTA. | Marketing must match lock. |
-| **P1-2** | Agent Team secondary copy: “files only · no hosted MCP · Solo Hosted for live catalogue.” | Stops 99 € dead-end for Cursor solos. |
-| **P1-3** | Teams block: “Pro for 1–3 seats with CI; Team 20 from ~4 seats / whole shop.” | Agency + dept decision helper. |
-| **P1-4** | Align `pricing-personas.md` / package pitches to **website names first**, LS names in parentheses. | Same ladder, less cognitive tax. |
-| **P1-5** | Dogfood / Free strip: state npm vs go-live `check` branch in one line everywhere Free is sold. | Entwickler confusion. |
-| **P1-6** | Record or attach a 60 s Free demo + (when keys exist) Solo Hosted LOUD screenshot for dept finance. | Substitutes for no hosted trial. |
+| ID | Fix | Why | Status |
+| --- | --- | --- | --- |
+| **P1-1** | Paste website-pricing-table §2 + §7 to www; hero = watcher + demo CTA. | Marketing must match lock. | **FOUNDER** www paste |
+| **P1-2** | Agent Team secondary copy: “files only · no hosted MCP · Solo Hosted for live catalogue.” | Stops 99 € dead-end for Cursor solos. | **DONE** |
+| **P1-3** | Teams block: “Pro for 1–3 seats with CI; Team 20 from ~4 seats / whole shop.” | Agency + dept decision helper. | **DONE** |
+| **P1-4** | Align `pricing-personas.md` / package pitches to **website names first**, LS names in parentheses. | Same ladder, less cognitive tax. | **DONE** |
+| **P1-5** | Dogfood / Free strip: state npm vs go-live `check` branch in one line everywhere Free is sold. | Entwickler confusion. | **DONE** |
+| **P1-6** | Record or attach a 60 s Free demo + (when keys exist) Solo Hosted LOUD screenshot for dept finance. | Substitutes for no hosted trial. | Open (founder media) |
 
 ### P2 — polish after checkout works
 
@@ -255,8 +255,9 @@ Those remain Day-0 / founder smoke items in `go-live-final.md` §3 and §6.
 
 ## 9. Next step (founder)
 
-1. Approve or edit the **P0 list** above.
-2. Implement approved P0/P1 (code + copy).
-3. Then formal **code-review** pass (not before).
+1. ~~Approve or edit the **P0 list** above.~~ **Approved** (implement pass 2026-08-01).
+2. ~~Implement approved P0/P1 (code + copy).~~ **Done** in repos (P0-3/P0-4 remain founder clicks).
+3. Formal **code-review** pass on release branch diffs.
+4. Founder Day-0: [sales-ready-checklist.md](./sales-ready-checklist.md) + [go-live-final.md](./go-live-final.md) §9.
 
-Canonical lock: [go-live-final.md](./go-live-final.md) · [website-pricing-table.md](./website-pricing-table.md) · [customer-dogfood-test.md](./customer-dogfood-test.md).
+Canonical lock: [go-live-final.md](./go-live-final.md) · [website-pricing-table.md](./website-pricing-table.md) · [customer-dogfood-test.md](./customer-dogfood-test.md) · [sales-ready-checklist.md](./sales-ready-checklist.md).

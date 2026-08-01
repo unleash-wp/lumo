@@ -13,10 +13,10 @@ English. This is the watcher product — not the ebook, not WordCamp promo.
 | **Lumo Free** | Local CLI + local MCP + AI Forge self-host (**no** UnleashWP hosted MCP) | Everyone trials on their machine |
 | **Agent Core** | 39 €/yr · Currency Guard + Code Reviewer | Price-sensitive entry — files only |
 | **Agent Pack** | 99 €/yr · 6 agents + skills + commands | Full team files — **free inside** Freelancer / Pro / Agency |
-| **Freelancer** | 149 €/yr · 1 seat · **hosted** Pro MCP · no CI · Agent Pack · **Vol.1 living lookups** · **Forge Hosted** (entitlement) | Solos who need hosted depth |
-| **Lumo Pro** | Hosted MCP only + CI gate · Pack · **Vol.1 lookups** · **Forge Hosted** (entitlement) — **no self-hosted Pro** | Senior, DevOps (~199 €/seat) |
-| **Agency** | **20 seats** · Forge Hosted · Pack · **Vol.1 lookups** — hosted MCP, not DIY Pro | Agency chef (~599 €) |
-| **AI Forge** | Tool shelf. **Local** for Free; **Hosted** on **Freelancer / Pro / Agency** (all paid hosted seats). Local UI may offer **DE** | Free self-host / paid hosted |
+| **Freelancer** | 149 €/yr · 1 seat · **hosted** Pro MCP · no CI · Agent Pack · **Vol.1 living lookups** · **Forge Hosted** (entitlement; install not yet available) | Solos who need hosted depth |
+| **Lumo Pro** | Hosted MCP only + CI gate · Pack · **Vol.1 lookups** · **Forge Hosted** (entitlement; install not yet available) — **no self-hosted Pro** | Senior, DevOps (~199 €/seat) |
+| **Agency** | **20 seats** · Forge Hosted entitlement (install not yet available) · Pack · **Vol.1 lookups** - hosted MCP, not DIY Pro | Agency chef (~599 €) |
+| **AI Forge** | Tool shelf. **Local** for Free; **Hosted entitlement** on **Freelancer / Pro / Agency** (install not yet available). Local UI may offer **DE** | Free self-host / paid hosted |
 | **WordPress agent-skills** | The manual (how to build) | Complementary, not a rival |
 | **Bookstore PDF (UnleashWP Learn Vol.1)** | Optional static print/PDF on Digistore24 — separate SKU | Readers who want paper |
 | **Vol.1 living edition (MCP)** | **69 `lumo_lookup` reference entries** on Freelancer / Pro / Agency — not Catch, not PDF | Paid hosted seats |
@@ -49,7 +49,7 @@ Layer 1 alone is not enough — ship connect + skills + hook path + CI path.
 2. Free: local `lumo-mcp` + AI Forge self-host — **not** hosted MCP
 3. Paid: https://mcp.unleash-wp.com/connect → Lemon Squeezy license → Cursor
 4. Whip: rules / `wp-enforce` / (Pro) CI
-5. Upgrade when they need hosted depth, CI, or Forge Hosted
+5. Upgrade when they need hosted depth, CI, or Forge Hosted entitlement (install not yet available)
 
 ## Non-goals (Security and honesty)
 
