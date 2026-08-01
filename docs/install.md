@@ -5,14 +5,27 @@ Cursor/Claude for **Solo Hosted / Pro / Team 20**. See
 [packages.md](./packages.md) and lumo-pro
 [product-harmony.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/product-harmony.md).
 
-**Free door (local):** CLI + local `lumo-mcp` + Free snapshot. Free never receives
+**Free door (local):** Lumo as an **AI Forge plugin** + `@unleashwp/lumo` catch engine. Free never receives
 hosted MCP bytes from `mcp.unleash-wp.com`. Starter / Agent Team are file zips only.
 
 Brand: Lumo owl (`assets/lumo-owl-*.png`).
 
 ---
 
-## (0) Hosted MCP — Solo Hosted / Pro / Team 20 (Cursor, Claude, Codex)
+## (0a) Free — AI Forge plugin (primary path)
+
+1. Install AI Forge: `npm install -g @unleashwp/ai-forge`
+2. Run `uwp-ai-forge serve` → **Plugins** → paste `github:unleash-wp/lumo` → Install
+3. Install the live catch engine: `npm install -g @unleashwp/lumo`
+4. Connect `uwp mcp` to Claude Code / Cursor (see [AI Forge install docs](https://unleash-wp.github.io/ai-forge/))
+
+Tools on `uwp mcp`: `lumo_lookup`, `lumo_check_code` (Free snapshot; not Pro depth).
+
+Updates: AI Forge → Plugins → Check for updates.
+
+---
+
+## (0b) Hosted MCP — Solo Hosted / Pro / Team 20 (Cursor, Claude, Codex)
 
 1. Buy Solo Hosted, Pro, or Team 20 (Lemon Squeezy). Starter / Agent Team keys do **not** unlock hosted MCP.
 2. Open https://mcp.unleash-wp.com/connect — paste the MCP JSON and download `lumo.mdc`.

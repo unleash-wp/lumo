@@ -1,7 +1,7 @@
 {
   "id": "lumo",
   "name": "Lumo",
-  "description": "The WordPress knowledge layer: 42 curated, source-verified entries (Core APIs, block.json/theme.json, security fundamentals) queryable from chat, plus the live code catch when @unleashwp/lumo is installed. WooCommerce and HPOS are Lumo Pro; the free tier says so instead of going quiet on them.",
+  "description": "AI Forge plugin: WordPress knowledge layer with 42 curated, source-verified entries (Core APIs, block.json/theme.json, security fundamentals) on uwp mcp, plus the live code catch when @unleashwp/lumo is installed. Install into AI Forge via github:unleash-wp/lumo. WooCommerce and HPOS are Lumo Pro; the free tier says so instead of going quiet on them.",
   "version": "0.4.0",
   "coreVersion": ">=0.3.0",
   "icon": "code",
