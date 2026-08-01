@@ -10,7 +10,7 @@
 
 Your AI stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release, across Core APIs, block and theme APIs, and security fundamentals, the moment they are written. Quiet ≠ clean.
 
-**Free = local snapshot.** Run Lumo + AI Forge on your machine; **no** UnleashWP hosted MCP.
+**Free = local snapshot via AI Forge.** Lumo ships as an **AI Forge plugin** (`github:unleash-wp/lumo`); **no** UnleashWP hosted MCP.
 **Paid = live curated from Core.** Solo Hosted / Pro / Team 20 → [connect](https://mcp.unleash-wp.com/connect) with a Lemon Squeezy license. **Starter** (39 €) / **Agent Team** (99 €) = files only. See [docs/packages.md](docs/packages.md).
 
 **MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Free:** local `lumo-mcp` · **Paid:** hosted MCP · **Knowledge:** Free snapshot vs Pro live catalogue
@@ -25,7 +25,7 @@ npx @unleashwp/lumo demo
 
 Real engine. Four samples. LOUD findings with sources. No account required for this proof.
 
-Then: **Free** → local MCP (`npx -y -p @unleashwp/lumo lumo-mcp`) + AI Forge self-host.
+Then: **Free** → install [AI Forge](https://github.com/unleash-wp/ai-forge), add the Lumo plugin (`github:unleash-wp/lumo`), plus `npm install -g @unleashwp/lumo` for the live catch engine.
 **Paid** → Agent Team (files only) or [connect](https://mcp.unleash-wp.com/connect) with Solo Hosted / Pro / Team 20 → hosted MCP + **Forge Hosted entitlement** (install not yet available) + (Pro / Team 20) CI.
 
 **Free testers of this go-live candidate** (until npm publish catches up):
@@ -37,7 +37,7 @@ npx -y github:unleash-wp/lumo#release/v1.0.0-go-live check path/to/file.php
 
 Published `npx @unleashwp/lumo demo` still works for the honesty demo on the last npm release.
 
-Products (do not mix): **Lumo** = watcher (English). **AI Forge** = tool shelf (DE optional in local UI). **Vol.1 living edition** = 69 MCP lookups on paid hosted seats (not PDF). Bookstore PDF = optional separate SKU.
+Products (do not mix): **AI Forge** = host (DE optional in local UI). **Lumo Free** = Forge plugin + watcher (English). **Lumo Pro** = separate hosted MCP (not instead of Forge). **Vol.1 living edition** = 69 MCP lookups on paid hosted seats (not PDF). Bookstore PDF = optional separate SKU.
 
 **MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code`
 
@@ -45,11 +45,17 @@ Products (do not mix): **Lumo** = watcher (English). **AI Forge** = tool shelf (
 
 ## Cursor / Claude
 
-**Free (local):**
+**Free (local, primary path — AI Forge plugin):**
+
+1. Install AI Forge: `npm install -g @unleashwp/ai-forge`
+2. Open **Plugins** → paste `github:unleash-wp/lumo` → Install
+3. Install the catch engine: `npm install -g @unleashwp/lumo`
+4. Connect `uwp mcp` to your editor (see [AI Forge handbook](https://unleash-wp.github.io/ai-forge/))
+
+**Free (air-gap / editor-only, no Forge):**
 
 ```bash
 npx -y -p @unleashwp/lumo lumo-mcp
-# + AI Forge self-host for the tool shelf
 ```
 
 **Paid (hosted):** Solo Hosted / Pro / Team 20 license:
@@ -171,13 +177,13 @@ Free proves the watcher **locally**. Paid is the job on **our** host: full evide
 deeper catalogue, pre-release briefings, commercial-plugin coverage, upgrade
 compat reports, and (Pro / Team 20) the CI gate. **AI Forge Hosted** is an included
 entitlement on **Solo Hosted / Pro / Team 20** (Hosted Forge install not yet available);
-Free self-hosts AI Forge locally.
+Free runs Lumo as an AI Forge plugin on a local Forge host.
 
 **Ladder (website names):**
 
 | Tier | Price | For |
 | --- | --- | --- |
-| Free | 0 € | **Local** CLI + local MCP + Forge self-host (**no** hosted MCP) |
+| Free | 0 € | **Local** Lumo Forge plugin + `@unleashwp/lumo` engine on AI Forge (**no** hosted MCP) |
 | **Starter** (Agent Core) | **39 €/yr** | 2 agents (Currency Guard + Reviewer); entry under Agent Team |
 | **Agent Team** (Agent Pack) | **99 €/yr** | 6 agents + skills + commands · **files only** (included free in Solo Hosted / Pro / Team 20) |
 | **Solo Hosted** ★ (Freelancer) | **149 €/yr** · 1 seat | **Hosted** Pro MCP + **Vol.1 living lookups** + Forge Hosted entitlement (install not yet available) · **no CI** · Agent Team included |
