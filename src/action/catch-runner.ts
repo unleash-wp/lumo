@@ -194,6 +194,7 @@ async function fetchProResults(
   }
 
   const text = json?.result?.content?.[0]?.text ?? '';
+  const structured = json?.result?.structuredContent;
 
   // computed:false means the Pro scan fell into its fail-open path. It still
   // answers, and the answer still reads "no known issues": that prose is not a
@@ -201,7 +202,7 @@ async function fetchProResults(
   // back to the free catch and marks the run degraded. "Pro answered" and "Pro
   // checked" are not the same thing, and only the second one may end a run
   // quietly. Servers predating the flag send undefined, which is not false.
-  if (json?.result?.structuredContent?.computed === false) {
+  if (structured?.computed === false) {
     throw new Error('Pro MCP could not run the scan (computed:false)');
   }
 
@@ -216,8 +217,8 @@ async function fetchProResults(
   //
   // Undefined fields (a server predating #112) deliberately do NOT trip this:
   // an absent field is not a claim of degradation, only an explicit one is.
-  const licenseNotice = json?.result?.structuredContent?.licenseNotice;
-  const servedTier = json?.result?.structuredContent?.servedTier;
+  const licenseNotice = structured?.licenseNotice;
+  const servedTier = structured?.servedTier;
   if (servedTier === 'free' || (licenseNotice !== undefined && licenseNotice !== 'none')) {
     throw new Error(
       `Pro MCP served the free tier for a licensed request (licenseNotice: ${licenseNotice ?? 'unknown'})`,
@@ -245,9 +246,9 @@ async function fetchProResults(
   // A server that says nothing about completeness is not claiming to be
   // incomplete. Only an explicit false counts, so a server predating the field
   // keeps behaving exactly as before.
-  const complete = json?.result?.structuredContent?.complete !== false;
+  const complete = structured?.complete !== false;
 
-  const found = json?.result?.structuredContent?.found;
+  const found = structured?.found;
   if (found === false) return { results: [], complete, text };
   // trim: a single trailing newline from the transport must not turn the
   // neutral sentence into a phantom finding.
@@ -263,10 +264,7 @@ async function fetchProResults(
   // field send undefined; treat that as 0 so we never invent a LOUD fail, but
   // still surface the prose as advisory. A positive loudCount from Pro must
   // never be coerced to SOFT — that was the paid-gate defect.
-  const loudCount =
-    typeof json?.result?.structuredContent?.loudCount === 'number'
-      ? json.result.structuredContent.loudCount
-      : 0;
+  const loudCount = typeof structured?.loudCount === 'number' ? structured.loudCount : 0;
 
   // Pro result is already rendered Markdown from the Pro server.
   return {

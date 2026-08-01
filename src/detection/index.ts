@@ -4,7 +4,7 @@ import { renderFree } from '../lib/render.js';
 import { detectFromComposer } from './composer.js';
 import { detectFromDirectory } from './directory.js';
 import { detectFromWpCli } from './wp-cli.js';
-import { detectFromSource, detectFromSourceOutcome } from './heuristic.js';
+import { detectFromSourceOutcome } from './heuristic.js';
 import { detectFromGitTracked } from './git.js';
 import { PATTERNS } from './registry.js';
 import type { PluginDetection } from './types.js';
@@ -92,13 +92,7 @@ export const unreadableProjectLine = (root: string): string =>
  * Stops at the first non-null result. NEVER throws.
  */
 export function detectStack(projectRoot: string): PluginDetection | null {
-  return (
-    detectFromComposer(projectRoot) ??
-    detectFromDirectory(projectRoot) ??
-    detectFromWpCli(projectRoot) ??
-    detectFromSource(projectRoot) ??
-    detectFromGitTracked(projectRoot)
-  );
+  return detectStackWithLimits(projectRoot).detection;
 }
 
 export interface StackDetectionOutcome {
