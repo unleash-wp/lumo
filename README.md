@@ -1,85 +1,126 @@
 # UnleashWP Lumo
 
+<p align="center">
+  <img src="assets/lumo-owl-128.png" alt="Lumo owl - the WordPress code watcher" width="96" height="96" />
+</p>
+
 **The WordPress agent skills are the manual. Lumo is the watcher.**
 
-Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release, across Core APIs, block and theme APIs, and security fundamentals, the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
+**Knowledge curated from WordPress Core changes** (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs.
 
-**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Transport:** stdio, runs locally · **Knowledge:** 42 curated, source-verified entries in Free; the full catalogue in Pro
+Your AI stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release, across Core APIs, block and theme APIs, and security fundamentals, the moment they are written. Quiet ≠ clean.
+
+**Free = local snapshot.** Run Lumo + AI Forge on your machine; **no** UnleashWP hosted MCP.
+**Paid = live curated from Core.** Solo Hosted / Pro / Team 20 → [connect](https://mcp.unleash-wp.com/connect) with a Lemon Squeezy license. **Starter** (39 €) / **Agent Team** (99 €) = files only. See [docs/packages.md](docs/packages.md).
+
+**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Free:** local `lumo-mcp` · **Paid:** hosted MCP · **Knowledge:** Free snapshot vs Pro live catalogue
 
 ---
 
-## The 30-second proof
-
-Nothing to paste, nothing to set up. This runs the real engine over four
-bundled samples and prints what it finds:
+## Start here - become a believer in 30 seconds
 
 ```bash
 npx @unleashwp/lumo demo
 ```
 
-It says in its first line that those are samples, not your project. Two of the
-findings are LOUD (certain defects with a dated source), two are advisory.
-Reproduce it yourself; that is the flagship proof.
+Real engine. Four samples. LOUD findings with sources. No account required for this proof.
 
-When you want it on your own code:
+Then: **Free** → local MCP (`npx -y -p @unleashwp/lumo lumo-mcp`) + AI Forge self-host.
+**Paid** → Agent Team (files only) or [connect](https://mcp.unleash-wp.com/connect) with Solo Hosted / Pro / Team 20 → hosted MCP + **Forge Hosted entitlement** (install not yet available) + (Pro / Team 20) CI.
+
+**Free testers of this go-live candidate** (until npm publish catches up):
 
 ```bash
-npx @unleashwp/lumo scan
+npx -y github:unleash-wp/lumo#release/v1.0.0-go-live demo
+npx -y github:unleash-wp/lumo#release/v1.0.0-go-live check path/to/file.php
 ```
 
-`lumo scan` walks your uncommitted diff. Deprecations that are not stamped as
-breaking changes (for example `wp_img_tag_add_decoding_attr` after WP 6.4) land
-as **advisory**, not LOUD — LOUD is reserved for patterns with a verified
-breaking version fact or an always-wrong security signal. See
-[docs/catch-demo.md](docs/catch-demo.md) for a walkthrough.
+Published `npx @unleashwp/lumo demo` still works for the honesty demo on the last npm release.
 
-Nobody asked Lumo to check. That is the product. The official [WordPress/agent-skills](https://github.com/WordPress/agent-skills) answer when your AI consults them; Lumo fires when your AI is wrong. Run both.
+Products (do not mix): **Lumo** = watcher (English). **AI Forge** = tool shelf (DE optional in local UI). **Vol.1 living edition** = 69 MCP lookups on paid hosted seats (not PDF). Bookstore PDF = optional separate SKU.
+
+**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code`
 
 ---
 
-## Install
+## Cursor / Claude
 
-### Claude Code (primary)
+**Free (local):**
+
+```bash
+npx -y -p @unleashwp/lumo lumo-mcp
+# + AI Forge self-host for the tool shelf
+```
+
+**Paid (hosted):** Solo Hosted / Pro / Team 20 license:
+
+1. Buy / open Lemon Squeezy portal.
+2. Open https://mcp.unleash-wp.com/connect: paste MCP JSON + download `lumo.mdc`.
+3. Whole files: `lumo check path/to/file.php` (scan is **diff-only**).
+
+```json
+{
+  "mcpServers": {
+    "lumo": {
+      "url": "https://mcp.unleash-wp.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN"
+      }
+    }
+  }
+}
+```
+
+Full install matrix: [docs/install.md](docs/install.md) · Product definition: [docs/lumo-product.md](docs/lumo-product.md)
+
+---
+
+## CLI
+
+| Command | What it does |
+| --- | --- |
+| `lumo demo` | First-win proof on samples |
+| `lumo check <file>` | Whole-file catch |
+| `lumo scan` | Git **diff** only |
+| `lumo mcp` | Local stdio MCP (air-gap) |
+
+---
+
+## The 30-second proof (demo)
+
+```bash
+npx @unleashwp/lumo demo
+```
+
+Then on your diff: `npx @unleashwp/lumo scan`. On a full file: `npx @unleashwp/lumo check file.php`.
+
+[WordPress/agent-skills](https://github.com/WordPress/agent-skills) = the manual; Lumo = the watcher. Run both.
+
+---
+
+## Other install paths
+
+### Claude Code plugin
 
 ```
 /plugin marketplace add unleash-wp/lumo
 /plugin install lumo@unleashwp-lumo
 ```
 
-Then run once in your project to check your current changes:
-
-```bash
-npx @unleashwp/lumo scan
-```
-
-Lumo scans your uncommitted diff and prints either the flagged patterns (LOUD first) or an honest "scanned N files: clean as of {date}".
-
-### Any MCP client (Cursor, Claude Desktop, …)
+### Local MCP (offline Free snapshot)
 
 ```bash
 npm install -g @unleashwp/lumo
-# MCP config: "command": "lumo-mcp", "args": [], "type": "stdio"
+# MCP: "command": "lumo-mcp", "args": [], "type": "stdio"
 ```
 
-Or run from source without a global install:
-
-```bash
-git clone https://github.com/unleash-wp/lumo.git
-cd lumo && npm install && npm run build
-# MCP config: "command": "node", "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
-```
-
-Cursor setup, the `wp-binding` skill, and the edit-time enforcement hook: [docs/install.md](docs/install.md)
+Full matrix: [docs/install.md](docs/install.md).
 
 ### CI (pull request review): Lumo Pro
 
-The GitHub Action is part of Lumo Pro and lives in its own repository:
-[unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action). It needs a
-licence key; without one it checks nothing and says so rather than reporting a
-pass. The runner ships in this package as `lumo action`, so the free install
-carries it, but running the gate is the paid part.
-
-Locally, `lumo scan` checks your working tree with no licence at all.
+[unleash-wp/lumo-action](https://github.com/unleash-wp/lumo-action): licence
+required; without one it checks nothing and says so rather than reporting a
+pass. Same UnleashWP account / key as hosted Pro.
 
 ---
 
@@ -100,13 +141,13 @@ Not in Free: WooCommerce, ACF Pro, Elementor, Gravity Forms, Meta Box, Carbon Fi
 block-theme and FSE currency layer, and the deprecation timeline. Lumo tells you when it
 detects one of those rather than reporting a clean bill of health it cannot vouch for.
 
-**Where it fires:**
+**Where it fires (account-first):**
 
-- In chat: `lumo_check_code` runs over WordPress code as the AI writes it (`wp-binding` skill)
-- `npx @unleashwp/lumo scan`: your uncommitted diff, from any terminal
-- GitHub Action: review comment per finding on every PR; LOUD blocks the merge
-- Claude Code `PreToolUse` hook: a stale edit is blocked before the file changes
-- `/lumo:wp-check` (audit the project) and `/lumo:wp-onboard` (first-run walk-through)
+- Cursor / Claude after sign-in: hosted MCP + project rules → `lumo_check_code` /
+  `lumo_audit` / `lumo_lookup` while you code
+- Same account unlocks Pro depth and the CI Action; no second login
+- Optional air-gap: `npx @unleashwp/lumo scan`, local `lumo-mcp`, Claude plugin
+- Claude Code `PreToolUse` hook / `/lumo:wp-check` when using the plugin path
 
 **The precision model:** three tiers, no false alarms:
 
@@ -116,27 +157,37 @@ detects one of those rather than reporting a clean bill of health it cannot vouc
 | **SOFT** | Real risk that depends on context; the condition is stated | Advisory |
 | **SILENT** | Repository-state noise | Suppressed |
 
-A LOUD catch requires a verified version fact. Without one it structurally degrades to SOFT. This is enforced in the data model, not by convention.
+A LOUD catch requires a verified version fact. Without one it structurally degrades to SOFT.
 
-**Honest bounds:** Free is a snapshot, verified as of its release date and frozen until the next one. Commercial plugins (ACF Pro, Elementor Pro, Gravity Forms, Meta Box) are detected and named, not covered. The live layer is Pro.
+**Honest bounds:** Free depth is limited; quiet ≠ clean. Commercial plugins are
+detected and named, not fully covered on Free. Live catalogue + evidence + CI
+gate = Pro on the same UnleashWP account.
 
 ---
 
-## Lumo Pro: the flow
+## Lumo Pro: same account, paid job
 
-Free catches what already broke. Pro keeps your team ahead of what breaks next. Built for agencies: every employee and freelancer writing WordPress code with AI gets a seat, and every seat gets the same current knowledge.
+Free proves the watcher **locally**. Paid is the job on **our** host: full evidence,
+deeper catalogue, pre-release briefings, commercial-plugin coverage, upgrade
+compat reports, and (Pro / Team 20) the CI gate. **AI Forge Hosted** is an included
+entitlement on **Solo Hosted / Pro / Team 20** (Hosted Forge install not yet available);
+Free self-hosts AI Forge locally.
 
-**1. Live currency.** The Pro catalog is re-checked against every WordPress and WooCommerce release. Free's snapshot has a date on it; Pro doesn't need one.
+**Ladder (website names):**
 
-**2. Pre-release Core briefings.** What breaks in the next WordPress release, before it ships. Your team stops writing a soon-dead pattern while it is still a warning, not a client incident.
+| Tier | Price | For |
+| --- | --- | --- |
+| Free | 0 € | **Local** CLI + local MCP + Forge self-host (**no** hosted MCP) |
+| **Starter** (Agent Core) | **39 €/yr** | 2 agents (Currency Guard + Reviewer); entry under Agent Team |
+| **Agent Team** (Agent Pack) | **99 €/yr** | 6 agents + skills + commands · **files only** (included free in Solo Hosted / Pro / Team 20) |
+| **Solo Hosted** ★ (Freelancer) | **149 €/yr** · 1 seat | **Hosted** Pro MCP + **Vol.1 living lookups** + Forge Hosted entitlement (install not yet available) · **no CI** · Agent Team included |
+| **Pro** | **199 €/yr** per seat | **Hosted only** + **CI Action** + **Vol.1 lookups** + Forge Hosted entitlement (install not yet available) · Pack included - no self-hosted Pro |
+| **Team 20** (Agency) | **599 €/yr** | **20 seats** + Forge Hosted entitlement (install not yet available) · **Pack + Vol.1 lookups** · CI |
 
-**3. Commercial-plugin coverage.** Curated, source-verified entries for ACF Pro, Elementor Pro, Gravity Forms, and Meta Box, the plugins agency code actually touches, which the official GPL skills cannot cover by design.
+**Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats (3×199 ≈ 599).
 
-**4. Upgrade compat reports.** `lumo_compat_check` runs a site's detected stack against the full version matrix and produces the upgrade report you hand to the client: what breaks, where, and the fix for each item. The report you bill for.
-
-**Terms:** annual license, per seat. 30-day money-back guarantee, no questions asked. Founding members get the founding rate and keep it for as long as their license renews.
-
-**Founding access opens soon. Watch this repo.** Checkout is not live yet; watchers are notified first when it opens.
+Pack details: [docs/packages.md](docs/packages.md) (canonical), [docs/website-pricing-table.md](docs/website-pricing-table.md), [docs/sales-ready-checklist.md](docs/sales-ready-checklist.md). 14-day money-back.
+**Not sold as AppSec.** Checkout: Lemon Squeezy when variants are live.
 
 ---
 

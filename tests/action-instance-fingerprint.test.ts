@@ -72,7 +72,21 @@ describe('runCatch forwards the fingerprint as X-Lumo-Instance', () => {
             JSON.stringify({
               result: {
                 content: [{ type: 'text', text: '' }],
-                structuredContent: { found: false },
+                structuredContent: {
+                  batch: true,
+                  results: [
+                    {
+                      path: 'inc/x.php',
+                      computed: true,
+                      complete: true,
+                      found: false,
+                      loudCount: 0,
+                      softCount: 0,
+                    },
+                  ],
+                  licenseNotice: 'none',
+                  servedTier: 'pro',
+                },
               },
             }),
         };
@@ -88,6 +102,7 @@ describe('runCatch forwards the fingerprint as X-Lumo-Instance', () => {
 
     expect(seenHeaders).toHaveLength(1);
     expect(seenHeaders[0]!['X-Lumo-Instance']).toBe('fingerprint-abc123');
+    expect(seenHeaders[0]!['X-Lumo-Client']).toBe('action');
   });
 
   it('omits the header rather than sending an empty one when no instanceId is given', async () => {
@@ -102,7 +117,21 @@ describe('runCatch forwards the fingerprint as X-Lumo-Instance', () => {
             JSON.stringify({
               result: {
                 content: [{ type: 'text', text: '' }],
-                structuredContent: { found: false },
+                structuredContent: {
+                  batch: true,
+                  results: [
+                    {
+                      path: 'inc/x.php',
+                      computed: true,
+                      complete: true,
+                      found: false,
+                      loudCount: 0,
+                      softCount: 0,
+                    },
+                  ],
+                  licenseNotice: 'none',
+                  servedTier: 'pro',
+                },
               },
             }),
         };

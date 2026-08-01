@@ -515,6 +515,120 @@ describe('SSE-framed responses (the live Pro server default)', () => {
   });
 });
 
+describe('quota and CI gate: no free fallback', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('BELL: HTTP 429 sets checkDidNotRun without proDegraded or free findings', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 429,
+        text: async () =>
+          JSON.stringify({
+            error: 'rate_limited',
+            message: 'This check did not run (daily quota).',
+          }),
+      })),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.checkDidNotRun).toBe(true);
+    expect(res.checkDidNotRunReason).toBe('quota');
+    expect(res.proDegraded).toBe(false);
+    expect(res.findings).toEqual([]);
+  });
+
+  it('BELL: HTTP 402 ci_not_included sets checkDidNotRun', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 402,
+        text: async () =>
+          JSON.stringify({
+            error: 'ci_not_included',
+            message: 'This check did not run.',
+          }),
+      })),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.checkDidNotRun).toBe(true);
+    expect(res.checkDidNotRunReason).toBe('ci_not_included');
+    expect(res.proDegraded).toBe(false);
+    expect(res.findings).toEqual([]);
+  });
+});
+
+describe('batch lumo_check_code (PERF-P0-1)', () => {
+  it('BELL: one fetch with files[] maps per-file LOUD findings', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: '## inc/x.php\n\n## Real LOUD finding\n\n---\n\n## inc/y.php\n\nneutral',
+              },
+            ],
+            structuredContent: {
+              batch: true,
+              results: [
+                {
+                  path: 'inc/x.php',
+                  computed: true,
+                  complete: true,
+                  found: true,
+                  loudCount: 1,
+                  softCount: 0,
+                },
+                {
+                  path: 'inc/y.php',
+                  computed: true,
+                  complete: true,
+                  found: false,
+                  loudCount: 0,
+                  softCount: 0,
+                },
+              ],
+              licenseNotice: 'none',
+              servedTier: 'pro',
+            },
+          },
+        }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const diff = [
+      'diff --git a/inc/x.php b/inc/x.php',
+      '--- a/inc/x.php',
+      '+++ b/inc/x.php',
+      '@@ -1,1 +1,2 @@',
+      '+<?php',
+      "+echo esc_html__( 'Hello', 'my-plugin' );",
+      'diff --git a/inc/y.php b/inc/y.php',
+      '--- a/inc/y.php',
+      '+++ b/inc/y.php',
+      '@@ -1,1 +1,2 @@',
+      '+<?php',
+      '+echo 1;',
+    ].join('\n');
+
+    const res = await runCatch({ diff, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    const callBody = JSON.parse(String(init.body)) as {
+      params: { arguments: { files?: unknown[] } };
+    };
+    expect(callBody.params.arguments.files).toHaveLength(2);
+    expect(JSON.stringify(callBody.params.arguments.files)).toContain('inc/x.php');
+    expect(res.findings.filter((f) => f.filename === 'inc/x.php')).toHaveLength(1);
+    expect(res.findings.find((f) => f.filename === 'inc/x.php')!.tier).toBe('LOUD');
+    expect(res.findings.filter((f) => f.filename === 'inc/y.php')).toHaveLength(0);
+  });
+});
+
 describe('parseMcpHttpResponseBody: the de-framing unit', () => {
   it('parses a bare JSON object unchanged', () => {
     expect(parseMcpHttpResponseBody('{"a":1}')).toEqual({ a: 1 });
