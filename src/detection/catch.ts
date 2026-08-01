@@ -342,6 +342,33 @@ export function applyCatchOverrides(
 
 const CATCH_CAP = 3;
 
+/** Signals indexed by language, built once per process (PERF-P0-2). */
+const signalsByLang = new Map<
+  Language,
+  { signal: CatchSignal; pattern: PatternDefinition }[]
+>();
+
+/** Drop the compiled signal index. Tests that swap PATTERNS must call this. */
+export function invalidateCatchSignalCache(): void {
+  signalsByLang.clear();
+}
+
+function getSignalsForLang(lang: Language): { signal: CatchSignal; pattern: PatternDefinition }[] {
+  let cached = signalsByLang.get(lang);
+  if (!cached) {
+    cached = [];
+    for (const pattern of PATTERNS) {
+      for (const sig of pattern.catchSignals ?? []) {
+        if (sig.language === lang) {
+          cached.push({ signal: sig, pattern });
+        }
+      }
+    }
+    signalsByLang.set(lang, cached);
+  }
+  return cached;
+}
+
 /**
  * A signal fired, but the entry it points at is Pro-only. Free has nothing to
  * render. Carries the data a caller needs to say so; the copy itself lives with
@@ -431,17 +458,7 @@ export function checkCodeWithGaps(
     const strippedComments = stripComments(diffFiltered);
     const strippedAll = stripCommentsAndStrings(diffFiltered);
 
-    // Collect all catch signals from the registry for the detected language.
-    // The owning pattern travels with the signal: when a signal fires into a
-    // Pro-only entry, the pattern is what names the plugin for the teaser.
-    const allSignals: { signal: CatchSignal; pattern: PatternDefinition }[] = [];
-    for (const pattern of PATTERNS) {
-      for (const sig of pattern.catchSignals ?? []) {
-        if (sig.language === lang || lang === undefined) {
-          allSignals.push({ signal: sig, pattern });
-        }
-      }
-    }
+    const allSignals = getSignalsForLang(lang);
 
     // 2. Run each signal against the blob
     const seen = new Map<string, CatchResult>(); // keyed by entrySlug
