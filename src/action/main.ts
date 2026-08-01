@@ -12,11 +12,15 @@
  *   off       → no comments, no exit signal
  *   (absent)  → advisory/comment only, byte-identical to warn-only
  *
- * The fail_on_loud action input remains for backwards compatibility and
- * is OR-combined with enforce.mode:block. Either can trigger failure.
+ * The fail_on_loud action input, when explicitly "true" or "false", always
+ * wins over enforce.mode. Left empty (the action's default), enforce.mode
+ * alone decides. See resolveBlockOnLoud(): a hardcoded "true" default used to
+ * override enforce.mode for every repository that never touched this input,
+ * which made "warn-only" unreachable through the Action no matter what a
+ * repository's own config asked for.
  *
  * Block/advise model (no-false-LOUD):
- *   LOUD  → comment + fail when fail_on_loud=true OR enforce.mode=block.
+ *   LOUD  → comment + fail when resolveBlockOnLoud() says so.
  *   SOFT  → comment only, never blocks.
  */
 
@@ -32,6 +36,7 @@ import {
   ACTION_PRO_DEGRADED_LINE,
   ACTION_PRO_DEGRADED_FAIL_LINE,
   buildScanLimitsNotice,
+  buildCatchDidNotRunNotice,
   ACTION_REQUIRES_PRO_LINE,
   ENFORCE_CONFIG_UNREADABLE_LINE,
 } from '../lib/render.js';
@@ -60,6 +65,35 @@ import {
  */
 export function failsOnDegraded(rawInput: string, proDegraded: boolean): boolean {
   return proDegraded && rawInput.trim().toLowerCase() === 'true';
+}
+
+// ---------------------------------------------------------------------------
+// fail_on_loud vs enforce.mode precedence (#110)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether a LOUD catch should fail the check.
+ *
+ * An explicit "true" or "false" on the fail_on_loud input always wins, so an
+ * operator who deliberately set it keeps the behaviour they asked for. Left
+ * empty or absent, the decision falls entirely to enforce.mode: only "block"
+ * fails, everything else (warn-only, off, an absent config) does not.
+ *
+ * Before this, the action.yml default of "true" meant the empty case never
+ * happened in practice: OR-combining a default-true fail_on_loud with
+ * enforce.mode:block made "warn-only" unreachable through the Action no
+ * matter what a repository's own .claude/.lumo.json asked for. The default
+ * moved to an empty string in action.yml so this function actually sees the
+ * absent case and can hand the decision to enforce.mode.
+ */
+export function resolveBlockOnLoud(
+  rawInput: string,
+  enforceMode: 'block' | 'warn-only' | 'off',
+): boolean {
+  const normalized = rawInput.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return enforceMode === 'block';
 }
 
 // ---------------------------------------------------------------------------
@@ -179,7 +213,7 @@ export async function announce(heading: string, line: string, annotate: boolean)
 }
 
 async function main(): Promise<void> {
-  const failOnLoud = core.getInput('fail_on_loud').trim().toLowerCase() !== 'false';
+  const rawFailOnLoud = core.getInput('fail_on_loud');
   const proUrl = core.getInput('lumo_pro_url').trim();
   const licenseKey = core.getInput('lumo_license_key').trim();
   // Mask the license key so it never surfaces in logs, even with ACTIONS_STEP_DEBUG enabled.
@@ -200,7 +234,7 @@ async function main(): Promise<void> {
     await announce('Lumo: configuration ignored', ENFORCE_CONFIG_UNREADABLE_LINE, true);
   }
   const enforceMode = resolvedMode === 'unreadable' ? 'warn-only' : resolvedMode;
-  const blockOnLoud = failOnLoud || enforceMode === 'block';
+  const blockOnLoud = resolveBlockOnLoud(rawFailOnLoud, enforceMode);
 
   // When enforce.mode is "off", skip comments entirely.
   if (enforceMode === 'off') {
@@ -254,12 +288,13 @@ async function main(): Promise<void> {
 
   const instanceId = deriveActionInstanceId(`${ctx.repo.owner}/${ctx.repo.repo}`);
 
-  const { loudCount, softCount, findings, proDegraded, scanLimits } = await runCatch({
-    diff,
-    proUrl: proUrl || undefined,
-    licenseKey: licenseKey || undefined,
-    instanceId,
-  });
+  const { loudCount, softCount, findings, proDegraded, scanLimits, didNotRunFiles } =
+    await runCatch({
+      diff,
+      proUrl: proUrl || undefined,
+      licenseKey: licenseKey || undefined,
+      instanceId,
+    });
 
   // The degradation must speak in the PR itself, not only in the job log,
   // same contract as the scanner's DID-NOT-RUN line. One comment per run.
@@ -292,6 +327,24 @@ async function main(): Promise<void> {
       body: `**[Lumo]** ${buildScanLimitsNotice(scanLimits)}`,
     });
     core.info(`[lumo] Scan limits hit on ${scanLimits.length} file(s), posted one summary`);
+  }
+
+  // The free catch's own outer catch fired on at least one file (#113):
+  // nothing was checked there at all. This must be visible in the PR itself,
+  // same contract as scanLimits and proDegraded above, and it must never be
+  // silently absorbed into "findings.length === 0" below: that branch posts
+  // ACTION_NO_MATCH_LINE, which reads as "checked, nothing matched", the
+  // exact false all-clear a crashed scan must not produce.
+  if (didNotRunFiles.length > 0) {
+    await octokit.rest.issues.createComment({
+      owner: ctx.repo.owner,
+      repo: ctx.repo.repo,
+      issue_number: pullNumber,
+      body: `**[Lumo]** ${buildCatchDidNotRunNotice(didNotRunFiles)}`,
+    });
+    core.info(
+      `[lumo] Catch engine did not run on ${didNotRunFiles.length} file(s), posted DID NOT RUN notice`,
+    );
   }
 
   // Optional autonomous review stage, advisory, fenced, fail-open. Defined
@@ -327,15 +380,21 @@ async function main(): Promise<void> {
   };
 
   if (findings.length === 0) {
-    // Reports the scope that was checked, never a verdict on the PR. Lumo saw
-    // the added lines only, and only against the catch that ran, calling that
-    // a clean PR turns a coverage limit into an approval.
-    //
-    // Summarised, not annotated: the engine did run here, and a yellow warning
-    // on every quiet pull request is the cost that gets a tool muted. The
-    // caveat still has to leave the log, because a green tick with nothing
-    // beside it is the coverage limit reading as an approval.
-    await announce('Lumo: nothing matched', ACTION_NO_MATCH_LINE, false);
+    // A run where the catch itself failed on some files is not "nothing
+    // matched": the DID NOT RUN notice above already said so, and pairing it
+    // with ACTION_NO_MATCH_LINE would claim those same files were checked and
+    // came back clean.
+    if (didNotRunFiles.length === 0) {
+      // Reports the scope that was checked, never a verdict on the PR. Lumo saw
+      // the added lines only, and only against the catch that ran, calling that
+      // a clean PR turns a coverage limit into an approval.
+      //
+      // Summarised, not annotated: the engine did run here, and a yellow warning
+      // on every quiet pull request is the cost that gets a tool muted. The
+      // caveat still has to leave the log, because a green tick with nothing
+      // beside it is the coverage limit reading as an approval.
+      await announce('Lumo: nothing matched', ACTION_NO_MATCH_LINE, false);
+    }
     await maybeClaudeReview();
     return;
   }

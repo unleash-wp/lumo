@@ -75,25 +75,44 @@ function scanForSignals(dir: string, depth: number, fileCount: { n: number }): s
   return null;
 }
 
+export interface HeuristicOutcome {
+  detection: PluginDetection | null;
+  /**
+   * True when the scan stopped at MAX_FILES before covering the whole
+   * project and found no signal in what it did read. A null detection here
+   * is not "this project has none of the patterns Lumo detects"; it is "Lumo
+   * stopped reading before finishing", and a caller that renders the two the
+   * same way turns a coverage limit into a verdict on the rest of the tree.
+   */
+  incomplete: boolean;
+}
+
 /**
  * Last-resort heuristic detector: scan the project's own PHP files for strong
  * pattern signals. Bounded by MAX_FILES and MAX_DEPTH so it stays fast.
  *
- * Returns a detection with version null when any signal is found; else null.
+ * Returns a detection with version null when any signal is found; else null,
+ * alongside whether the file budget was exhausted before a full read.
  * NEVER throws.
  */
-export function detectFromSource(projectRoot: string): PluginDetection | null {
+export function detectFromSourceOutcome(projectRoot: string): HeuristicOutcome {
   try {
-    const matched = scanForSignals(projectRoot, 0, { n: 0 });
+    const fileCount = { n: 0 };
+    const matched = scanForSignals(projectRoot, 0, fileCount);
     if (matched === null) {
-      return null;
+      return { detection: null, incomplete: fileCount.n >= MAX_FILES };
     }
-    return {
-      pattern: matched,
-      version: null,
-      source: 'heuristic',
-    };
+    return { detection: { pattern: matched, version: null, source: 'heuristic' }, incomplete: false };
   } catch {
-    return null;
+    return { detection: null, incomplete: false };
   }
+}
+
+/**
+ * Thin wrapper over detectFromSourceOutcome() for callers that only need the
+ * detection itself. Prefer detectFromSourceOutcome() where a null result
+ * must be told apart from a budget-limited one (see auditProject).
+ */
+export function detectFromSource(projectRoot: string): PluginDetection | null {
+  return detectFromSourceOutcome(projectRoot).detection;
 }

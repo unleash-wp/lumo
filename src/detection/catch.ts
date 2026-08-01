@@ -378,6 +378,14 @@ export interface CheckCodeOutcome {
   inputTruncated: boolean;
   /** Matches found and then dropped by the display cap, lowest tier first. */
   hitsOmitted: number;
+  /**
+   * True only when the outer catch below fired (typically the snapshot could
+   * not be loaded). `results: []` is normally "scanned, nothing matched"; on
+   * this path nothing was scanned at all, and a caller that renders the
+   * neutral line here is dressing a crash as a clean pass. Callers MUST check
+   * this before treating an empty `results` as a no-match verdict.
+   */
+  didNotRun: boolean;
 }
 
 /** Thin wrapper: the ranked results only. See checkCodeWithGaps for Pro gaps. */
@@ -398,8 +406,19 @@ export function checkCodeWithGaps(
 ): CheckCodeOutcome {
   try {
     const snap = snapshot ?? loadSnapshot();
-
-    // 1. Normalize input
+    // A snapshot without an entries array is not a quiet empty catalogue: it is
+    // a broken knowledge load. findEntry degrades to undefined per missing slug,
+    // so without this guard a {} snapshot scans every signal, finds no entries,
+    // and returns the same shape as "scanned, nothing matched".
+    if (!Array.isArray(snap.entries)) {
+      return {
+        results: [],
+        proGaps: [],
+        inputTruncated: false,
+        hitsOmitted: 0,
+        didNotRun: true,
+      };
+    }
     const { code: capped, truncated: inputTruncated } = capInput(code);
     const diffFiltered = filterDiffAddedLines(capped);
 
@@ -503,9 +522,10 @@ export function checkCodeWithGaps(
       proGaps,
       inputTruncated,
       hitsOmitted: sorted.length - raw.length,
+      didNotRun: false,
     };
   } catch {
-    return { results: [], proGaps: [], inputTruncated: false, hitsOmitted: 0 };
+    return { results: [], proGaps: [], inputTruncated: false, hitsOmitted: 0, didNotRun: true };
   }
 }
 

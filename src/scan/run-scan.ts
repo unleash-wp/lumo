@@ -30,6 +30,8 @@ import {
   formatCatch,
   SCAN_NO_MATCH_TEMPLATE,
   ACTION_PRO_DEGRADED_LINE,
+  buildScanLimitsNotice,
+  buildCatchDidNotRunNotice,
 } from '../lib/render.js';
 import { orderFindingsLoudFirst } from './order-findings.js';
 import { abspathFindings } from './abspath.js';
@@ -326,6 +328,17 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
     lines.push(`lumo scan: ${ACTION_PRO_DEGRADED_LINE}`);
   }
 
+  // Same disclosures the Action posts, surfaced here too: a limit of the
+  // scanner (or an outright failure to run on a file) describes the run, not
+  // the code, and printing it once here beats leaving it silent because this
+  // caller never asked.
+  if (result.scanLimits.length > 0) {
+    lines.push(`lumo scan: ${buildScanLimitsNotice(result.scanLimits)}`);
+  }
+  if (result.didNotRunFiles.length > 0) {
+    lines.push(`lumo scan: ${buildCatchDidNotRunNotice(result.didNotRunFiles)}`);
+  }
+
   // CI gate: LOUD is the only signal that may fail the job, and only while
   // LUMO_FAIL_ON_LOUD is not the literal string 'false'. SOFT never blocks.
   const exitCode = ci && result.loudCount > 0 && env['LUMO_FAIL_ON_LOUD'] !== 'false' ? 1 : 0;
@@ -361,13 +374,18 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
     return { lines, exitCode };
   }
 
-  // 5b. No findings, scope statement, never a verdict on the changes.
-  const fileLabel = fileCount === 1 ? '1 changed file' : `${fileCount} changed files`;
-  lines.push(
-    SCAN_NO_MATCH_TEMPLATE.replace(
-      'lumo scan: {files}',
-      `lumo scan: ${fileCount > 0 ? fileLabel : 'your changes'}`,
-    ).replace('{date}', date ? ` (knowledge of ${date})` : ''),
-  );
+  // 5b. No findings, scope statement, never a verdict on the changes. Skipped
+  // when the catch itself failed on some files (didNotRunFiles notice above):
+  // those files were never checked, so "no covered pattern matched" would be
+  // a claim about code the scan never read.
+  if (result.didNotRunFiles.length === 0) {
+    const fileLabel = fileCount === 1 ? '1 changed file' : `${fileCount} changed files`;
+    lines.push(
+      SCAN_NO_MATCH_TEMPLATE.replace(
+        'lumo scan: {files}',
+        `lumo scan: ${fileCount > 0 ? fileLabel : 'your changes'}`,
+      ).replace('{date}', date ? ` (knowledge of ${date})` : ''),
+    );
+  }
   return { lines, exitCode: 0 };
 }

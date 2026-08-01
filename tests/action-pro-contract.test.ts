@@ -316,6 +316,126 @@ describe('the run summary loses nothing on the way', () => {
   });
 });
 
+// A licence-service outage, an inactive key, or a client that sent no device
+// fingerprint all resolve the Pro server's request to the free tier. The
+// server now states that as data (licenseNotice, servedTier) as well as in
+// the prose notice it prepends. Before #112 the Action only ever looked at
+// found/loudCount, so a free-tier answer for a licensed request read exactly
+// like a healthy Pro pass, on the one layer a paying customer cannot see for
+// themselves.
+describe('licence degradation surfaces as a run degradation, not a Pro pass (#112)', () => {
+  it.each([
+    ['unverified', 'a licence-service outage'],
+    ['inactive', 'a determined-inactive key'],
+    ['no_instance', 'a client with no device fingerprint'],
+  ] as const)('BELL: licenseNotice %s (%s) degrades even on a clean-looking answer', async (notice, _reason) => {
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: 'No known issues detected in the submitted code.' }],
+        structuredContent: {
+          computed: true,
+          complete: true,
+          found: false,
+          loudCount: 0,
+          softCount: 0,
+          licenseNotice: notice,
+          servedTier: 'free',
+        },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+
+  it('BELL: servedTier free on its own degrades, even if licenseNotice says none', async () => {
+    // Should not happen given how resolveTier works, but the client must not
+    // trust servedTier==='free' just because licenseNotice looks healthy: this
+    // client sent a licence key and Pro coverage did not run, full stop.
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: 'No known issues detected in the submitted code.' }],
+        structuredContent: {
+          computed: true,
+          complete: true,
+          found: false,
+          loudCount: 0,
+          softCount: 0,
+          licenseNotice: 'none',
+          servedTier: 'free',
+        },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+
+  it('SILENCE: servedTier pro with licenseNotice none is a healthy run', async () => {
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: 'No known issues detected in the submitted code.' }],
+        structuredContent: {
+          computed: true,
+          complete: true,
+          found: false,
+          loudCount: 0,
+          softCount: 0,
+          licenseNotice: 'none',
+          servedTier: 'pro',
+        },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(false);
+  });
+
+  it('SILENCE: a server predating #112 sends neither field and is not degraded by their absence', async () => {
+    stubProResponse({
+      result: {
+        content: [{ type: 'text', text: '## Real LOUD finding with source' }],
+        structuredContent: { found: true, loudCount: 1, softCount: 0 },
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(false);
+    expect(res.loudCount).toBe(1);
+  });
+
+  it('BELL: an even older server with no structured fields at all still degrades via the prose notice', async () => {
+    stubProResponse({
+      result: {
+        content: [
+          {
+            type: 'text',
+            text:
+              '> **Lumo Pro could not verify your licence right now.** The licence ' +
+              'service did not answer, so this request was served by the free tier.\n\n' +
+              'No known issues detected in the submitted code.',
+          },
+        ],
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+
+  it('BELL: the inactive-key prose notice also degrades an old server with no structured fields', async () => {
+    stubProResponse({
+      result: {
+        content: [
+          {
+            type: 'text',
+            text:
+              '> **The licence key sent with this request is not active for Lumo Pro.** ' +
+              'It was served by the free tier.',
+          },
+        ],
+      },
+    });
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.proDegraded).toBe(true);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // SSE response framing (issue #109). WebStandardStreamableHTTPServerTransport
 // runs the SDK default (SSE) unless the server sets enableJsonResponse, which

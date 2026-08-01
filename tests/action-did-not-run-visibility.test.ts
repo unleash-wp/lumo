@@ -110,4 +110,17 @@ describe('both silent paths use it', () => {
     // means advisory, never a blocked merge.
     expect(source).toMatch(/'unreadable' === resolvedMode \? 'warn-only'|resolvedMode === 'unreadable' \? 'warn-only'/);
   });
+
+  // #113: a file where the free catch itself crashed was never checked. The
+  // "nothing matched" line must not fire alongside it, that would be the same
+  // false all-clear this whole file exists to prevent, one layer down.
+  it('a crashed-engine file gets its own DID NOT RUN notice', () => {
+    expect(source).toMatch(/buildCatchDidNotRunNotice\(didNotRunFiles\)/);
+  });
+
+  it('nothing-matched is gated on no file having crashed', () => {
+    expect(source).toMatch(
+      /if \(didNotRunFiles\.length === 0\) \{[\s\S]{0,1200}?announce\(\s*'Lumo: nothing matched',\s*ACTION_NO_MATCH_LINE,\s*false\s*\)/,
+    );
+  });
 });
