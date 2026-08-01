@@ -63,8 +63,8 @@ near-term rules; live truth stays on hosted MCP for paying seats.
 | Topic | Status 2026-08-01 |
 | --- | --- |
 | WP **7.0** iframe / apiVersion 3, Interactivity `watch`, router nav deprecation, PHP 7.4 floor, html5 script support, script module deps | **In catalogue** (see `wp-7-0-*.ts`) |
-| WP **7.1** Free high-signal slice | **Shipped** in Free snapshot: Classic inserter reversal; prepare-schema mutation; ability REST callbacks ignored; background.gradient vs color.gradient; `__next40pxDefaultSize` on form controls |
-| WP **7.1** Pro depth | **Shipped (partial):** abilities lifecycle / typed REST / get-user-info reference; Icon API; Navigation→Navigator; theme.json textShadow; client-side media; React 19 punted; dimensions.minWidth |
+| WP **7.1** Free high-signal slice | **Shipped** in Free snapshot: Classic inserter reversal; prepare-schema mutation; ability REST callbacks ignored; background.gradient vs color.gradient; `__next40pxDefaultSize` on form controls; **Post Editor iframe `ownerDocument` / global `document`/`window`** |
+| WP **7.1** Pro depth | **Shipped (partial):** abilities lifecycle / typed REST / get-user-info reference; Icon API; Navigation→Navigator; theme.json textShadow; client-side media; React 19 punted; dimensions.minWidth; **always-iframe Post Editor migration map**; **editorStyle vs enqueue_block_editor_assets**; **admin-scoped editor CSS** |
 | WP **7.1** full pack | **Not done** — Knowledge CPT, DataViews filters, Design System theming, jQuery UI 1.14.2 removals, Custom HTML editable, founder briefing still open |
 | Pre-release briefing entry | Template only (`core-briefing-content.ts`) |
 | Website claim “Ready for WP 7.1” | **Forbidden** until full curated pack + `verify:knowledge` |
@@ -78,6 +78,7 @@ near-term rules; live truth stays on hosted MCP for paying seats.
 | `wp-7-1-ability-rest-schema-callbacks-ignored` | Use validate filters, not REST schema callbacks | **Published** (Catch, Free) |
 | `wp-7-1-background-gradient-support` | background.gradient vs color.gradient | **Published** (Catch, Free) |
 | `wp-7-1-next40px-default-size-ignored` | Form-control `__next40pxDefaultSize` ignored | **Published** (Catch, Free) |
+| `wp-7-1-post-editor-iframe-owner-document` | Global `document`/`window` vs `ownerDocument`/`defaultView` in iframed Post Editor | **Published** (Catch, Free) |
 | `wp-7-1-abilities-api-improvements` | Lifecycle filters, typed REST, get-user-info | **Published** (Reference, Pro) |
 | `wp-7-1-icon-api` | collection/name Icon API | **Published** (Catch, Pro) |
 | `wp-7-1-editor-navigation-removed` | Navigation → Navigator | **Published** (Catch, Pro) |
@@ -85,6 +86,9 @@ near-term rules; live truth stays on hosted MCP for paying seats.
 | `wp-7-1-client-side-media-processing` | Filter + CSP worker-src | **Published** (Reference, Pro) |
 | `wp-7-1-react-19-punted` | React 19 not in Core 7.1 | **Published** (Reference, Pro) |
 | `wp-7-1-dimensions-min-width` | supports.dimensions.minWidth | **Published** (Reference, Pro) |
+| `wp-7-1-post-editor-always-iframe` | GB 23.6 / WP 7.1 always-iframe migration map | **Published** (Reference, Pro) |
+| `wp-7-1-iframe-editor-style-enqueue` | Canvas CSS via `editorStyle`, not `enqueue_block_editor_assets` | **Published** (Catch, Pro) |
+| `wp-7-1-iframe-admin-scoped-editor-css` | Drop `.wp-admin` / `body.block-editor-page` canvas selectors | **Published** (Catch, Pro) |
 | ~~`wp-7-1-classic-block-inserter-hidden`~~ | ~~Classic block hidden~~ | **Obsolete** — plan reverted; do not publish |
 | `wp-7-1-knowledge-cpt-route-collision` | `wp_knowledge` CPT / REST / caps collisions | Ticket — re-verify before curate |
 | `wp-7-1-dataviews-server-registration` | DataViews server registration shift | Ticket — Reference until API stable |

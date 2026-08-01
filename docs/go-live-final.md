@@ -93,7 +93,7 @@ Legend: **DONE** = verified in this pass · **CODE-DONE** = in repo, needs deplo
 - [x] **DONE** Product docs ladder locked (`packages.md`, harmony, personas, website-pricing-table, RELEASE)
 - [x] **DONE** lumo-action: Pro / Team 20 CI; examples point at `https://mcp.unleash-wp.com` (not a fake self-host domain)
 - [x] **DONE** lumo-wp: socket-only; README states no customer self-hosted Pro
-- [x] **DONE** website-pricing-table catalogue counts match capability-inventory (177 / 95 / 42)
+- [x] **DONE** website-pricing-table catalogue counts match capability-inventory (192 / 95+ / 48)
 
 
 
@@ -178,7 +178,7 @@ Legend: **DONE** = verified in this pass · **CODE-DONE** = in repo, needs deplo
 - **69 reference-lane entries** (`book-`* slugs) in lumo-pro knowledge DB.
 - Retrieval via `lumo_lookup` **only** — advisory/reference lane, **never fires as Catch**.
 - Distils **32 of 37** UnleashWP Learn Vol.1 chapters into queryable MCP answers.
-- Full Pro catalogue ~**177** published entries (frontier + plugins + book reference + 7.1 first wave + Abilities reference).
+- Full Pro catalogue ~**192** published entries (frontier + plugins + book reference + 7.1 wave + Abilities reference).
 
 
 
