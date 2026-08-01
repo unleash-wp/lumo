@@ -39,7 +39,7 @@ One global EUR price. No PPP. Quiet ≠ clean. Not AppSec.
 5. Freelancer + Pro + Agency ids **in** `LUMO_LS_PRODUCT_IDS`.
 6. Vol.1 living edition = **69 reference-lane** `book-`* **entries** in Pro MCP via `lumo_lookup` only — **never Catch**. Not the 345-page PDF.
 7. **AI Forge Hosted** is included on **Freelancer (Solo Hosted), Pro, and Agency (Team 20)** — not Free / Core / Pack. Packaging entitlement / founder lock (not claimed live-shipped while `ai-forge` install is blocked).
-8. **Do not claim Ready for WP 7.1.** Catalogue has WP 7.0 + a **first 7.1 wave** (Classic block inserter reversal). Full 7.1 pack still open.
+8. **Do not claim Ready for WP 7.1.** Catalogue has WP 7.0 + a **growing 7.1 wave** (Free Catch slice + Pro depth). Full 7.1 pack still open.
 
 
 
@@ -70,7 +70,7 @@ Legend: **DONE** = verified in this pass · **CODE-DONE** = in repo, needs deplo
 - [x] **DONE** Connect page + Cursor rule: public names + Forge Hosted on Solo/Pro/Team 20 + Vol.1 honesty (English only)
 - [x] **DONE** Auth/copy: retired “Skills Pack 19” / “Freelancer Pack 39” language removed from shop-architecture, server-load, require-auth
 - [x] **DONE** 69 `book-`* reference entries in Pro DB (reference lane, no Catch)
-- [x] **DONE** WP 7.1 first wave: `wp-7-1-classic-block-inserter-reversal` + catch tests
+- [x] **DONE** WP 7.1 growing wave: Free Catch slice (5) + Pro depth (7) + catch tests; not Ready claim
 - [x] **DONE** Abilities reference: `wp-abilities-domain-vs-projection` (lookup only)
 - [x] **DONE** Agent Core + Pack zip scripts + COMMERCIAL public names + dated zips in `lumo-agent-kit/dist/`
 - [x] **DONE** Free CLI help matches public ladder

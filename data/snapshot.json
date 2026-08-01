@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-25T14:00:00Z",
+  "generatedAt": "2026-08-01T18:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -840,6 +840,106 @@
       "versions": [
         {
           "wp_version_min": "2.1",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-1-classic-block-inserter-reversal",
+      "title": "WordPress 7.1: Classic block stays in the inserter — remove wp_classic_block_supports_inserter workarounds",
+      "category_slug": "wordpress-7-1",
+      "summary": "WordPress 7.1 keeps the Classic block (`core/freeform`) in the block inserter by default. A mid-cycle plan to hide it was reverted on 7 July 2026 (Make/Core). The temporary `wp_classic_block_supports_inserter` filter was removed and never shipped in a stable release. AI-generated mu-plugins or docs that re-enable the Classic block via that filter, or that recommend the Enable Classic Block companion plugin for 7.1, are stale. No migration is required; remove the workaround.",
+      "code_example": "// CORRECT for WordPress 7.1 — no filter, no companion plugin.\n// Classic block stays in the inserter by default (Make/Core, 7 July 2026).\n// Existing Classic blocks keep working. Convert to blocks remains available.\n\n// If you previously added a workaround, delete it:\n// - remove add_filter( 'wp_classic_block_supports_inserter', ... )\n// - deactivate and delete the Enable Classic Block plugin",
+      "bad_pattern": "// WRONG for WordPress 7.1 — filter was removed when the hide plan was reverted.\n// Never shipped in a stable release; add_filter is a no-op / dead API.\nadd_filter( 'wp_classic_block_supports_inserter', '__return_true' );\n\n// Also stale: recommending the Enable Classic Block plugin for 7.1 readiness.",
+      "source_url": "https://make.wordpress.org/core/2026/07/07/the-classic-block-stays-in-the-inserter-for-wordpress-7-1/",
+      "test_step": "1. Grep the project for wp_classic_block_supports_inserter — any hit is stale for 7.1.\n2. Confirm no Enable Classic Block plugin is required for inserter access.\n3. On WP 7.1, open the block inserter and confirm Classic is listed without custom filters.",
+      "tier": "free",
+      "updatedAt": "2026-08-01T15:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.1",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-1-prepare-json-schema-for-client",
+      "title": "WordPress 7.1: prepare schemas for clients with wp_prepare_json_schema_for_client — do not mutate stored ability schemas",
+      "category_slug": "wordpress-7-1",
+      "summary": "WordPress 7.1 adds wp_prepare_json_schema_for_client() (ticket #64955) to convert WordPress-style schemas into portable JSON Schema draft-04 for REST clients, MCP, and AI tooling. Core applies this automatically for Abilities REST responses and AI Client declarations. Plugins that expose schemas outside PHP validation should call it on a copy. Do not replace the schema stored on an ability with the prepared version: preparation strips sanitize_callback / validate_callback / arg_options and rewrites required-property shape for clients only.",
+      "code_example": "// CORRECT: keep the WordPress schema for the ability; prepare a copy for clients.\nwp_register_ability( 'my-plugin/create-item', [\n    'label'            => 'Create Item',\n    'input_schema'     => $wordpress_schema,\n    'execute_callback' => 'my_plugin_create_item',\n] );\n\n// Custom REST / MCP / AI exposure boundary:\n$client_schema = wp_prepare_json_schema_for_client( $wordpress_schema );\n// or: wp_prepare_json_schema_for_client( $wordpress_schema, 'rest-api' );",
+      "bad_pattern": "// WRONG: stores the client-prepared schema on the ability.\n// Preparation strips server-only keywords; PHP validation then loses them.\nwp_register_ability( 'my-plugin/create-item', [\n    'label'            => 'Create Item',\n    'input_schema'     => wp_prepare_json_schema_for_client( $wordpress_schema ),\n    'execute_callback' => 'my_plugin_create_item',\n] );",
+      "source_url": "https://make.wordpress.org/core/2026/07/31/json-schema-preparation-for-client-compatibility-in-wordpress-7-1/",
+      "test_step": "1. Confirm ability registration stores the WordPress schema, not wp_prepare_json_schema_for_client() output.\n2. On any custom REST/MCP/AI exposure path, call wp_prepare_json_schema_for_client() on a copy.\n3. Assert the prepared schema has no sanitize_callback / validate_callback keys while the stored ability schema still may.",
+      "tier": "free",
+      "updatedAt": "2026-08-01T18:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.1",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-1-ability-rest-schema-callbacks-ignored",
+      "title": "WordPress 7.1: ability custom validation uses wp_ability_validate_input / output — REST schema callbacks are not executed",
+      "category_slug": "wordpress-7-1",
+      "summary": "WordPress 7.1 adds wp_ability_validate_input and wp_ability_validate_output filters (ticket #64311) so plugins can supplement JSON Schema validation on abilities. REST-style validate_callback and sanitize_callback keywords on ability schemas are not executed by the Abilities API. Custom runtime rules belong on those filters (return true or WP_Error), not on schema callbacks copied from register_rest_route().",
+      "code_example": "// CORRECT: schema describes shape; custom rules use the 7.1 filters.\nwp_register_ability( 'my-plugin/send-message', [\n    'label'            => 'Send Message',\n    'input_schema'     => [\n        'type'       => 'object',\n        'properties' => [\n            'recipient' => [ 'type' => 'string' ],\n        ],\n        'required'   => [ 'recipient' ],\n    ],\n    'execute_callback' => 'my_plugin_send_message',\n] );\n\nadd_filter(\n    'wp_ability_validate_input',\n    static function ( $is_valid, $input, $ability_name ) {\n        if ( 'my-plugin/send-message' !== $ability_name || is_wp_error( $is_valid ) ) {\n            return $is_valid;\n        }\n        if ( ! is_array( $input ) || empty( $input['recipient'] ) ) {\n            return new WP_Error( 'invalid_recipient', 'Recipient required.' );\n        }\n        return true;\n    },\n    10,\n    3\n);",
+      "bad_pattern": "// WRONG: REST-style schema callbacks are not executed by WP_Ability.\nwp_register_ability( 'my-plugin/send-message', [\n    'label'            => 'Send Message',\n    'input_schema'     => [\n        'type'       => 'object',\n        'properties' => [\n            'recipient' => [\n                'type'              => 'string',\n                'validate_callback' => 'my_plugin_validate_recipient',\n                'sanitize_callback' => 'sanitize_email',\n            ],\n        ],\n    ],\n    'execute_callback' => 'my_plugin_send_message',\n] );",
+      "source_url": "https://make.wordpress.org/core/2026/07/31/abilities-api-improvements-in-wordpress-7-1/",
+      "test_step": "1. Register an ability with only validate_callback in input_schema; confirm the callback never runs on execute.\n2. Add wp_ability_validate_input returning WP_Error for invalid input; confirm execute fails with that error.\n3. Keep register_rest_route() validate_callback usage unchanged for real REST args.",
+      "tier": "free",
+      "updatedAt": "2026-08-01T18:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.1",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-1-background-gradient-support",
+      "title": "WordPress 7.1: use supports.background.gradient (style.background.gradient) when gradients must coexist with background images",
+      "category_slug": "wordpress-7-1",
+      "summary": "WordPress 7.1 adds supports.background.gradient, stored at style.background.gradient and rendered via the background-image longhand so gradients can coexist with background images. Existing supports.color.gradient / style.color.gradient behaviour is unchanged but still uses the background shorthand, which resets other background properties. Blocks that need image + gradient together must opt into the new support, not color.gradient.",
+      "code_example": "{\n  \"supports\": {\n    \"background\": {\n      \"backgroundImage\": true,\n      \"gradient\": true\n    }\n  }\n}\n// CORRECT: style.background.gradient + background-image longhand coexistence.",
+      "bad_pattern": "{\n  \"supports\": {\n    \"background\": {\n      \"backgroundImage\": true\n    },\n    \"color\": {\n      \"gradient\": true\n    }\n  }\n}\n// WRONG when image + gradient must render together: color.gradient resets background.",
+      "source_url": "https://make.wordpress.org/core/2026/07/26/new-block-support-in-wordpress-7-1-background-gradient-background-gradient/",
+      "test_step": "1. Opt into supports.background.gradient on a custom block that also supports backgroundImage.\n2. Set both a background image and a gradient in the inspector; confirm both appear in front-end CSS as comma-separated background-image values.\n3. Confirm legacy color.gradient-only blocks are unchanged.",
+      "tier": "free",
+      "updatedAt": "2026-08-01T18:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.1",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-1-next40px-default-size-ignored",
+      "title": "WordPress 7.1: remove __next40pxDefaultSize from @wordpress/components form controls (ignored; Button unchanged)",
+      "category_slug": "wordpress-7-1",
+      "summary": "Starting in WordPress 7.1, @wordpress/components form controls render at 40px height by default. The __next40pxDefaultSize prop is ignored; __next40pxDefaultSize={false} no longer restores 36px. Remove the prop from form controls. Button still uses the opt-in prop and is unchanged. The deprecated Navigation component is removed — use Navigator (see Pro entry wp-7-1-editor-navigation-removed).",
+      "code_example": "import { TextControl, Button } from '@wordpress/components';\n\n// CORRECT: form controls need no size prop.\n<TextControl label=\"Title\" value={ title } onChange={ setTitle } />\n\n// Button is unchanged — keep the opt-in when you want 40px there.\n<Button __next40pxDefaultSize variant=\"primary\">Save</Button>",
+      "bad_pattern": "import { TextControl } from '@wordpress/components';\n\n// WRONG on WP 7.1 form controls: prop is ignored; false no longer opts out.\n<TextControl\n  label=\"Title\"\n  value={ title }\n  onChange={ setTitle }\n  __next40pxDefaultSize\n/>",
+      "source_url": "https://make.wordpress.org/core/2026/07/23/editor-components-updates-in-wordpress-7-1/",
+      "test_step": "1. Grep for __next40pxDefaultSize next to form controls; remove those props.\n2. Leave Button __next40pxDefaultSize alone unless you intentionally change Button sizing.\n3. In the editor on WP 7.1, confirm form controls are 40px without the prop.",
+      "tier": "free",
+      "updatedAt": "2026-08-01T18:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.1",
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": false
