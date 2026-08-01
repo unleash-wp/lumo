@@ -35,6 +35,8 @@ import {
   ACTION_SCOPE_LINE,
   ACTION_PRO_DEGRADED_LINE,
   ACTION_PRO_DEGRADED_FAIL_LINE,
+  ACTION_QUOTA_BLOCKED_LINE,
+  ACTION_CI_NOT_INCLUDED_LINE,
   buildScanLimitsNotice,
   buildCatchDidNotRunNotice,
   ACTION_REQUIRES_PRO_LINE,
@@ -288,13 +290,29 @@ async function main(): Promise<void> {
 
   const instanceId = deriveActionInstanceId(`${ctx.repo.owner}/${ctx.repo.repo}`);
 
-  const { loudCount, softCount, findings, proDegraded, scanLimits, didNotRunFiles } =
+  const { loudCount, softCount, findings, proDegraded, checkDidNotRun, checkDidNotRunReason, scanLimits, didNotRunFiles } =
     await runCatch({
       diff,
       proUrl: proUrl || undefined,
       licenseKey: licenseKey || undefined,
       instanceId,
     });
+
+  if (checkDidNotRun) {
+    const body =
+      checkDidNotRunReason === 'ci_not_included'
+        ? ACTION_CI_NOT_INCLUDED_LINE
+        : ACTION_QUOTA_BLOCKED_LINE;
+    await octokit.rest.issues.createComment({
+      owner: ctx.repo.owner,
+      repo: ctx.repo.repo,
+      issue_number: pullNumber,
+      body: `**[Lumo]** ${body}`,
+    });
+    await announce('Lumo: DID NOT RUN', body.replace(/\*\*/g, ''), true);
+    core.info('[lumo] Pro check blocked (quota or CI gate), posted DID NOT RUN notice');
+    return;
+  }
 
   // The degradation must speak in the PR itself, not only in the job log,
   // same contract as the scanner's DID-NOT-RUN line. One comment per run.

@@ -1,14 +1,27 @@
 ---
-description: Run lumo_check_code on every WordPress/WooCommerce PHP or JS suggestion
-globs: ["**/*.php", "**/blocks/**", "**/block.json", "**/*.jsx", "**/*.tsx", "**/*.js"]
-alwaysApply: true
+description: WordPress/WooCommerce work MUST go through Lumo before code is shown to the user.
+globs:
+  - "**/*woo*"
+  - "**/*wordpress*"
+  - "**/wp-*"
+  - "**/*.php"
+alwaysApply: false
 ---
 
-When you produce or review WordPress or WooCommerce PHP or JavaScript code:
+# Lumo binding (Cursor)
 
-1. Call `lumo_check_code` on it before showing the user.
-2. If a LOUD catch returns, lead your response with it. Your AI was demonstrably wrong and Lumo has the dated source.
-3. If a SOFT catch returns, include it as a review note after your code.
-4. If the result is the neutral line, continue normally, silence is correct.
+Brand: Lumo owl — watcher for AI-written WordPress code.
 
-Lumo proposes and cites; it never edits code autonomously.
+**Mandatory sequence on WP/Woo tasks — no skipping**
+
+1. `lumo_check_code` on code you are about to write or change. Wait for it.
+2. If the user asked to scan the project → `lumo_audit`.
+3. If they named an API/topic → `lumo_lookup`.
+
+Do not skip tools because the answer “feels obvious.” Training cutoffs miss
+deprecations and HPOS/order-storage breaks. Quiet ≠ clean. LOUD findings block
+shipping advice until fixed or explicitly accepted.
+
+Connect once via UnleashWP account (hosted MCP) — preferred — or local
+`@unleashwp/lumo` stdio for air-gap. Same tools either way; Pro unlocks depth
+and the CI gate on the same login.

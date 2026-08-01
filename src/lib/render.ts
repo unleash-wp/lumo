@@ -289,8 +289,10 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
  * Caller substitutes {files} and {date}.
  */
 export const SCAN_NO_MATCH_TEMPLATE =
-  'lumo scan: {files} checked against Lumo Free{date}: no covered pattern matched. ' +
-  'Outside that coverage nothing was checked, so this is not an all-clear.';
+  'lumo scan: {files} checked against Lumo Free{date}: no covered pattern matched in the git diff. ' +
+  'Outside that coverage nothing was checked, so this is not an all-clear.\n' +
+  'Scope is the diff only (not whole files already committed). ' +
+  'Whole file: `lumo check path/to/file.php`. Proof on samples: `lumo demo`.';
 
 /**
  * Logged when the Action finds nothing. States scope, never a verdict on the PR.
@@ -409,6 +411,16 @@ export const ACTION_PRO_DEGRADED_FAIL_LINE =
   'this pull request. Re-run once the server answers, or set ' +
   'fail_on_degraded to false to let a degraded run stay green.';
 
+export const ACTION_QUOTA_BLOCKED_LINE =
+  '**The Lumo Pro check did not run (daily quota).** No code in this pull request ' +
+  'was checked on the paid layer. Retry after the quota window resets or upgrade ' +
+  'your seat at /connect.';
+
+export const ACTION_CI_NOT_INCLUDED_LINE =
+  '**The Lumo Pro check did not run.** GitHub Action CI is not included on Solo ' +
+  'Hosted (Freelancer). Upgrade to Lumo Pro or Team 20 for CI, or remove the ' +
+  'Action from the workflow.';
+
 /**
  * One notice per run for the scanner's own limits, never one per file.
  *
@@ -520,8 +532,8 @@ export function joinPluginNames(names: string[]): string {
 export function buildCodeProTeaser(pluginName: string): string {
   return (
     `Detected ${pluginName} in this code, and Lumo Free has no entry for it. ` +
-    `This is not an all-clear. ${pluginName} is not covered by any free or official ` +
-    `WordPress skill set. Lumo Pro covers ${pluginName}.`
+    `This is not an all-clear. ${pluginName} is not covered by the free WordPress ` +
+    `agent skills Lumo ships. Lumo Pro covers ${pluginName}.`
   );
 }
 

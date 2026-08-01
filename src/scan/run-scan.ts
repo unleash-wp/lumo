@@ -30,6 +30,8 @@ import {
   formatCatch,
   SCAN_NO_MATCH_TEMPLATE,
   ACTION_PRO_DEGRADED_LINE,
+  ACTION_QUOTA_BLOCKED_LINE,
+  ACTION_CI_NOT_INCLUDED_LINE,
   buildScanLimitsNotice,
   buildCatchDidNotRunNotice,
 } from '../lib/render.js';
@@ -326,6 +328,14 @@ export async function runScan(opts: RunScanOptions = {}): Promise<RunScanResult>
   // say it in the run itself, or a degraded gate reads as a Pro pass.
   if (ci && result.proDegraded) {
     lines.push(`lumo scan: ${ACTION_PRO_DEGRADED_LINE}`);
+  }
+
+  if (ci && result.checkDidNotRun) {
+    const line =
+      result.checkDidNotRunReason === 'ci_not_included'
+        ? ACTION_CI_NOT_INCLUDED_LINE
+        : ACTION_QUOTA_BLOCKED_LINE;
+    lines.push(`lumo scan: ${line}`);
   }
 
   // Same disclosures the Action posts, surfaced here too: a limit of the

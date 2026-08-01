@@ -1,23 +1,70 @@
 # Install Options
 
-The core value of Lumo is local. The HPOS knowledge runs entirely inside Claude Code from the bundled skill and snapshot. The MCP path is a fallback for teams that need the Pro endpoint or want to pin a shared config; it is not on the critical path for the Free agent.
+**Paid door (hosted):** one UnleashWP Lemon Squeezy license → hosted MCP in
+Cursor/Claude for **Solo Hosted / Pro / Team 20**. See
+[packages.md](./packages.md) and lumo-pro
+[product-harmony.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/product-harmony.md).
+
+**Free door (local):** CLI + local `lumo-mcp` + Free snapshot. Free never receives
+hosted MCP bytes from `mcp.unleash-wp.com`. Starter / Agent Team are file zips only.
+
+Brand: Lumo owl (`assets/lumo-owl-*.png`).
 
 ---
 
-## (a) Self-hosted marketplace: primary
+## (0) Hosted MCP — Solo Hosted / Pro / Team 20 (Cursor, Claude, Codex)
+
+1. Buy Solo Hosted, Pro, or Team 20 (Lemon Squeezy). Starter / Agent Team keys do **not** unlock hosted MCP.
+2. Open https://mcp.unleash-wp.com/connect — paste the MCP JSON and download `lumo.mdc`.
+3. Add the server in Cursor **Settings → MCP**:
+
+```json
+{
+  "mcpServers": {
+    "lumo": {
+      "url": "https://mcp.unleash-wp.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_LICENSE_KEY"
+      }
+    }
+  }
+}
+```
+
+4. Copy [`.cursor/rules/lumo.mdc`](../.cursor/rules/lumo.mdc) and
+   [`lumo-wordpress.mdc`](../.cursor/rules/lumo-wordpress.mdc) into the
+   WordPress project so the agent **must** call `lumo_check_code` /
+   `lumo_audit` / `lumo_lookup` on PHP/JS work. MCP alone does not force tool
+   use.
+
+Send `X-Lumo-Instance` from clients that support seat accounting when available.
+
+Claude Code HTTP form:
+
+```
+claude mcp add --transport http lumo https://mcp.unleash-wp.com/mcp --scope project
+```
+
+(Then set the Authorization header / env as documented for your Claude version.)
+
+---
+
+## (a) Claude Code marketplace plugin
 
 ```
 /plugin marketplace add unleash-wp/lumo
 /plugin install lumo@unleashwp-lumo
 ```
 
-This is the recommended path. It resolves directly against the public `unleash-wp/lumo` GitHub repo (no separate hosting). The two commands are all you need.
+Resolves against the public `unleash-wp/lumo` GitHub repo.
 
 ---
 
-## (b) Local MCP: Free agent via stdio (Claude Code, Cursor)
+## (b) Local MCP: offline Free snapshot via stdio (Claude Code, Cursor)
 
-The `lumo` repo ships a local MCP server (`lumo_audit` + `lumo_lookup`) that runs entirely on your machine, with no license and no network call.
+Power-user / air-gap. The `lumo` repo ships a local MCP server
+(`lumo_audit` + `lumo_lookup` + `lumo_check_code`) on your machine with no
+license and no network call.
 
 ### Build the bin once
 
@@ -59,31 +106,31 @@ Or write `.mcp.json` by hand:
 
 If you installed globally (`npm install -g .`), use `"command": "lumo-mcp"` and `"args": []`.
 
-### Cursor
+### Cursor (local stdio fallback)
 
-Open **Settings → MCP** and add a new server entry:
+Prefer section **(0)** hosted MCP. For offline:
 
 ```json
 {
   "mcpServers": {
     "lumo-free": {
       "type": "stdio",
-      "command": "node",
-      "args": ["/absolute/path/to/lumo/dist/mcp.mjs"]
+      "command": "lumo-mcp",
+      "args": []
     }
   }
 }
 ```
 
-Cursor picks up the server on next restart. Both `lumo_audit` and `lumo_lookup` will appear in the tool list. The bundled `.cursor/rules/lumo.mdc` nudges the agent to reach for them on WordPress/WooCommerce code.
-
-Cursor gets the full knowledge + audit experience with the evidence layer and the per-answer upgrade hint. The Claude Code plugin additionally ships the onboarding walk-through, the local risk scoreboard, and the dampened upgrade prompt; those are Claude-Code-specific and do not run in Cursor. Cursor converts through the upgrade hint carried in each answer.
+Also install the project rules under `.cursor/rules/` so tool calls are
+mandatory. Cursor does not get the Claude Code onboarding walk-through; the
+upgrade path is the account portal + hints in answers.
 
 ---
 
-## (c) MCP add: for Lumo Pro or shared team config
+## (c) Hosted MCP / shared team config (same as §0 with paid token)
 
-Use this when you have a Lumo Pro license and want to connect the Pro knowledge endpoint, or when you need to pin the MCP config for a shared project.
+Use when the account is Solo Hosted / Pro / Team 20 or you pin a shared `.mcp.json`.
 
 **macOS / Linux (bash or zsh):**
 

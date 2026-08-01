@@ -6,8 +6,8 @@
  * returns structured findings the action entry-point posts as review comments.
  *
  * Pro seam: when proUrl + licenseKey are present, calls the Pro MCP server's
- * lumo_check_code tool via the MCP JSON-RPC HTTP protocol. Falls back to the
- * free catch if the Pro server is unreachable.
+ * lumo_check_code tool via the MCP JSON-RPC HTTP protocol (batch files[] when
+ * possible). Falls back to the free catch if the Pro server is unreachable.
  */
 
 import { parseDiff } from './diff-parser.js';
@@ -22,6 +22,9 @@ import {
   catchInputTruncatedLine,
   catchHitsOmittedLine,
 } from '../lib/render.js';
+
+/** Must match lumo-pro CHECK_CODE_BATCH_FILE_CAP (PERF-P0-1). */
+export const CHECK_CODE_BATCH_FILE_CAP = 50;
 
 export interface Finding {
   filename: string;
@@ -41,6 +44,13 @@ export interface RunResult {
    * checked and found nothing", which is a false all-clear on the paid layer.
    */
   proDegraded: boolean;
+  /**
+   * True when a paid-configured run hit quota or CI-not-included on the Pro
+   * server. No free-catch fallback ran: the check did not happen.
+   */
+  checkDidNotRun: boolean;
+  /** When checkDidNotRun, why the gate stopped (for PR copy). */
+  checkDidNotRunReason?: 'quota' | 'ci_not_included';
   /**
    * Files whose scan hit one of its own limits, and which limit. Reported ONCE
    * per run by the caller, not once per file: a limit of the scanner describes
@@ -66,11 +76,39 @@ export interface RunResult {
 // invent a softer tier than Pro reported.
 // ---------------------------------------------------------------------------
 
+/** Pro server refused the check (quota / CI gate). No free fallback. */
+export class ProCheckBlockedError extends Error {
+  readonly reason: 'quota' | 'ci_not_included';
+
+  constructor(reason: 'quota' | 'ci_not_included', detail: string) {
+    super(detail);
+    this.name = 'ProCheckBlockedError';
+    this.reason = reason;
+  }
+}
+
+export const LUMO_CLIENT_ACTION = 'action';
+
 interface ProRenderedFinding {
   _proRendered: true;
   body: string;
   /** From Pro structuredContent.loudCount. >= 1 → LOUD for fail_on_loud. */
   loudCount: number;
+}
+
+interface ProFileStructured {
+  path: string;
+  computed?: boolean;
+  complete?: boolean;
+  found?: boolean;
+  loudCount?: number;
+  softCount?: number;
+}
+
+interface ProFileOutcome {
+  results: Array<CatchResult | ProRenderedFinding>;
+  complete: boolean;
+  text: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -80,7 +118,7 @@ interface ProRenderedFinding {
 // LICENSE_NO_INSTANCE_NOTICE in lumo-pro's src/mcp/cap.ts, duplicated here (not
 // imported: this client has no dependency on the Pro server's source) so an
 // older server that only ever spoke prose still degrades this run instead of
-// having its free-tier text read as a Pro verdict.
+// having its free-catch text read as a Pro verdict.
 // ---------------------------------------------------------------------------
 const LICENSE_DEGRADATION_NOTICE_PREFIXES = [
   '> **Lumo Pro could not verify your licence right now.**',
@@ -130,23 +168,84 @@ export function parseMcpHttpResponseBody(rawBody: string): unknown {
   return JSON.parse(dataLines[dataLines.length - 1]!);
 }
 
-async function fetchProResults(
+function extractBatchFileText(fullText: string, path: string, fileCount: number): string {
+  if (fileCount <= 1) return fullText;
+  const marker = `## ${path}\n\n`;
+  const start = fullText.indexOf(marker);
+  if (start === -1) return fullText;
+  const after = fullText.slice(start + marker.length);
+  const next = after.indexOf('\n\n---\n\n');
+  return next === -1 ? after : after.slice(0, next);
+}
+
+function proOutcomeFromStructured(
+  text: string,
+  structured: ProFileStructured | undefined,
+  licenseNotice: string | undefined,
+  servedTier: string | undefined,
+): ProFileOutcome {
+  if (structured?.computed === false) {
+    throw new Error('Pro MCP could not run the scan (computed:false)');
+  }
+
+  if (servedTier === 'free' || (licenseNotice !== undefined && licenseNotice !== 'none')) {
+    throw new Error(
+      `Pro MCP served the free tier for a licensed request (licenseNotice: ${licenseNotice ?? 'unknown'})`,
+    );
+  }
+
+  const trimmedText = text.trim();
+  if (LICENSE_DEGRADATION_NOTICE_PREFIXES.some((prefix) => trimmedText.startsWith(prefix))) {
+    throw new Error('Pro MCP response opens with a licence-degradation notice');
+  }
+
+  const complete = structured?.complete !== false;
+  const found = structured?.found;
+  if (found === false) return { results: [], complete, text };
+  if (
+    found === undefined &&
+    (!text.trim() || text.trim() === 'No known issues detected in the submitted code.')
+  ) {
+    return { results: [], complete, text };
+  }
+  if (!text.trim()) return { results: [], complete, text };
+
+  const loudCount = typeof structured?.loudCount === 'number' ? structured.loudCount : 0;
+
+  return {
+    results: [{ _proRendered: true as const, body: text, loudCount }],
+    complete,
+    text,
+  };
+}
+
+async function postProCheckCode(
   proUrl: string,
   licenseKey: string,
-  code: string,
-  language: 'php' | 'js',
+  body: { code?: string; language?: 'php' | 'js'; files?: Array<{ path: string; code: string; language: 'php' | 'js' }> },
   instanceId?: string,
-): Promise<{ results: Array<CatchResult | ProRenderedFinding>; complete: boolean; text: string }> {
+): Promise<{
+  text: string;
+  structured: {
+    batch?: boolean;
+    results?: ProFileStructured[];
+    computed?: boolean;
+    complete?: boolean;
+    found?: boolean;
+    loudCount?: number;
+    softCount?: number;
+    licenseNotice?: 'none' | 'unverified' | 'inactive' | 'no_instance';
+    servedTier?: 'free' | 'pro';
+  };
+}> {
   const url = `${proUrl.replace(/\/$/, '')}/mcp`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json, text/event-stream',
     Authorization: `Bearer ${licenseKey}`,
+    'X-Lumo-Client': LUMO_CLIENT_ACTION,
   };
-  // #159: Pro requires this to enforce the seat. Without it, the server
-  // validates the key but cannot check its activation, and resolves free.
-  // Omitted only when the caller could not derive one (see deriveActionInstanceId).
   if (instanceId) headers['X-Lumo-Instance'] = instanceId;
 
   const res = await fetch(url, {
@@ -158,14 +257,28 @@ async function fetchProResults(
       method: 'tools/call',
       params: {
         name: 'lumo_check_code',
-        arguments: { code, language },
+        arguments: body,
       },
     }),
     signal: AbortSignal.timeout(15_000),
   });
 
   if (!res.ok) {
-    throw new Error(`Pro MCP responded ${res.status}: ${await res.text()}`);
+    const bodyText = await res.text();
+    if (res.status === 429) {
+      throw new ProCheckBlockedError('quota', bodyText || '429 rate_limited');
+    }
+    if (res.status === 402) {
+      try {
+        const parsed = JSON.parse(bodyText) as { error?: string };
+        if (parsed.error === 'ci_not_included') {
+          throw new ProCheckBlockedError('ci_not_included', bodyText);
+        }
+      } catch (err) {
+        if (err instanceof ProCheckBlockedError) throw err;
+      }
+    }
+    throw new Error(`Pro MCP responded ${res.status}: ${bodyText}`);
   }
 
   const rawBody = await res.text();
@@ -173,6 +286,8 @@ async function fetchProResults(
     result?: {
       content?: Array<{ type: string; text?: string }>;
       structuredContent?: {
+        batch?: boolean;
+        results?: ProFileStructured[];
         computed?: boolean;
         complete?: boolean;
         found?: boolean;
@@ -186,190 +301,157 @@ async function fetchProResults(
   try {
     json = parseMcpHttpResponseBody(rawBody) as typeof json;
   } catch (err) {
-    // Same failure shape as an HTTP error: caught by catchFile() below, which
-    // falls back to the free catch and marks the run degraded. A response we
-    // cannot decode is not a "Pro said nothing", it is "Pro did not deliver".
     const msg = err instanceof Error ? err.message : String(err);
     throw new Error(`Pro MCP response could not be parsed (${msg})`);
   }
 
-  const text = json?.result?.content?.[0]?.text ?? '';
-  const structured = json?.result?.structuredContent;
-
-  // computed:false means the Pro scan fell into its fail-open path. It still
-  // answers, and the answer still reads "no known issues": that prose is not a
-  // verdict. Treat it exactly like an unreachable server: the caller below falls
-  // back to the free catch and marks the run degraded. "Pro answered" and "Pro
-  // checked" are not the same thing, and only the second one may end a run
-  // quietly. Servers predating the flag send undefined, which is not false.
-  if (structured?.computed === false) {
-    throw new Error('Pro MCP could not run the scan (computed:false)');
-  }
-
-  // #112: a licence-service outage, an inactive key, or a client that sent no
-  // device fingerprint all resolve the request to the free tier, and the
-  // server states that as data now (licenseNotice, servedTier) as well as in
-  // the prose notice it prepends. This client sent a licence key expecting Pro
-  // coverage; a free-tier answer served back for that request is not a Pro
-  // verdict, whatever the text reads like, and must degrade exactly like an
-  // unreachable server: fall back to the local free catch and mark the run
-  // degraded, never trust the served text as Pro's.
-  //
-  // Undefined fields (a server predating #112) deliberately do NOT trip this:
-  // an absent field is not a claim of degradation, only an explicit one is.
-  const licenseNotice = structured?.licenseNotice;
-  const servedTier = structured?.servedTier;
-  if (servedTier === 'free' || (licenseNotice !== undefined && licenseNotice !== 'none')) {
-    throw new Error(
-      `Pro MCP served the free tier for a licensed request (licenseNotice: ${licenseNotice ?? 'unknown'})`,
-    );
-  }
-
-  // Older servers still predating even the prose notices' distinguishing data
-  // fields may prepend one of the three fixed licence-degradation notices as
-  // plain text with no structured signal at all. Recognise it by its fixed
-  // opening line so a caller of that vintage still degrades instead of
-  // reading the free-tier prose as a Pro verdict.
-  const trimmedText = text.trim();
-  if (LICENSE_DEGRADATION_NOTICE_PREFIXES.some((prefix) => trimmedText.startsWith(prefix))) {
-    throw new Error('Pro MCP response opens with a licence-degradation notice');
-  }
-
-  // The Pro server states its verdict as data: structuredContent.found. Decide
-  // on the flag, never on the prose: the old string comparison matched a
-  // sentence the server never sent, so every clean Pro answer was wrapped as a
-  // finding. The literal below is the HISTORICAL neutral wording, kept only for
-  // a server predating the flag; the current server no longer sends it and
-  // always sends the flags. Fail direction on total uncertainty: treat as a
-  // finding (a false alarm), never as an all-clear.
-
-  // A server that says nothing about completeness is not claiming to be
-  // incomplete. Only an explicit false counts, so a server predating the field
-  // keeps behaving exactly as before.
-  const complete = structured?.complete !== false;
-
-  const found = structured?.found;
-  if (found === false) return { results: [], complete, text };
-  // trim: a single trailing newline from the transport must not turn the
-  // neutral sentence into a phantom finding.
-  if (
-    found === undefined &&
-    (!text.trim() || text.trim() === 'No known issues detected in the submitted code.')
-  ) {
-    return { results: [], complete, text };
-  }
-  if (!text.trim()) return { results: [], complete, text };
-
-  // loudCount is the only signal that may fail the check. Servers predating the
-  // field send undefined; treat that as 0 so we never invent a LOUD fail, but
-  // still surface the prose as advisory. A positive loudCount from Pro must
-  // never be coerced to SOFT — that was the paid-gate defect.
-  const loudCount = typeof structured?.loudCount === 'number' ? structured.loudCount : 0;
-
-  // Pro result is already rendered Markdown from the Pro server.
   return {
-    results: [{ _proRendered: true as const, body: text, loudCount }],
-    complete,
-    text,
+    text: json?.result?.content?.[0]?.text ?? '',
+    structured: json?.result?.structuredContent ?? {},
   };
+}
+
+/** Legacy single-file Pro fetch (servers predating files[] batch). */
+async function fetchProResultsLegacy(
+  proUrl: string,
+  licenseKey: string,
+  code: string,
+  language: 'php' | 'js',
+  instanceId?: string,
+): Promise<ProFileOutcome> {
+  const { text, structured } = await postProCheckCode(
+    proUrl,
+    licenseKey,
+    { code, language },
+    instanceId,
+  );
+  return proOutcomeFromStructured(
+    text,
+    structured.batch
+      ? structured.results?.[0]
+      : {
+          path: '',
+          computed: structured.computed,
+          complete: structured.complete,
+          found: structured.found,
+          loudCount: structured.loudCount,
+          softCount: structured.softCount,
+        },
+    structured.licenseNotice,
+    structured.servedTier,
+  );
+}
+
+async function fetchProBatchChunk(
+  proUrl: string,
+  licenseKey: string,
+  files: FileDiff[],
+  instanceId?: string,
+): Promise<Map<string, ProFileOutcome>> {
+  const out = new Map<string, ProFileOutcome>();
+
+  const { text: fullText, structured } = await postProCheckCode(
+    proUrl,
+    licenseKey,
+    {
+      files: files.map((f) => ({ path: f.filename, code: f.blob, language: f.language })),
+    },
+    instanceId,
+  );
+
+  const licenseNotice = structured.licenseNotice;
+  const servedTier = structured.servedTier;
+
+  if (structured.batch && structured.results && structured.results.length > 0) {
+    for (const row of structured.results) {
+      const fileText = extractBatchFileText(fullText, row.path, structured.results.length);
+      out.set(row.path, proOutcomeFromStructured(fileText, row, licenseNotice, servedTier));
+    }
+    return out;
+  }
+
+  // Server predates batch: fall back to one HTTP call per file in this chunk.
+  for (const file of files) {
+    out.set(file.filename, await fetchProResultsLegacy(proUrl, licenseKey, file.blob, file.language, instanceId));
+  }
+  return out;
+}
+
+async function fetchProBatch(
+  proUrl: string,
+  licenseKey: string,
+  files: FileDiff[],
+  instanceId?: string,
+): Promise<Map<string, ProFileOutcome>> {
+  const out = new Map<string, ProFileOutcome>();
+  for (let i = 0; i < files.length; i += CHECK_CODE_BATCH_FILE_CAP) {
+    const chunk = files.slice(i, i + CHECK_CODE_BATCH_FILE_CAP);
+    const chunkOut = await fetchProBatchChunk(proUrl, licenseKey, chunk, instanceId);
+    for (const [path, result] of chunkOut) {
+      out.set(path, result);
+    }
+  }
+  return out;
 }
 
 function isProRendered(r: CatchResult | ProRenderedFinding): r is ProRenderedFinding {
   return '_proRendered' in r && r._proRendered === true;
 }
 
-// ---------------------------------------------------------------------------
-// Per-file catch
-// ---------------------------------------------------------------------------
-
-async function catchFile(
-  file: FileDiff,
-  proUrl?: string,
-  licenseKey?: string,
-  instanceId?: string,
-): Promise<{ findings: Finding[]; proDegraded: boolean; scanLimits: string[]; didNotRun: boolean }> {
-  let results: Array<CatchResult | ProRenderedFinding>;
-  // Set only on the free path: Pro has the knowledge, so it reports no gap.
-  let proGaps: ProGap[] = [];
-  let proDegraded = false;
-  let didNotRun = false;
-  const scanLimits: string[] = [];
-
-  const runFreeCatch = (): Array<CatchResult | ProRenderedFinding> => {
-    const outcome = checkCodeWithGaps(file.blob, file.language);
-    proGaps = outcome.proGaps;
-    didNotRun = outcome.didNotRun;
-    if (outcome.inputTruncated) scanLimits.push(catchInputTruncatedLine(INPUT_LINE_CAP));
-    if (outcome.hitsOmitted > 0) scanLimits.push(catchHitsOmittedLine(outcome.hitsOmitted));
-    return outcome.results;
-  };
-
-  if (proUrl && licenseKey) {
-    try {
-      const pro = await fetchProResults(proUrl, licenseKey, file.blob, file.language, instanceId);
-      results = pro.results;
-      // The Pro server names the limit in its own prose, but that prose only
-      // reaches the pull request when it also reported a finding. When it did
-      // not, this summary is the only place the limit can be stated, so it
-      // carries the server's own words rather than a vaguer paraphrase. When it
-      // did, the sentence is already in the finding above and repeating it here
-      // would be the duplication this summary exists to avoid.
-      if (!pro.complete) {
-        // The empty-text fallback is not defensive padding: a server can set the
-        // flag and send nothing readable, and an empty bullet in the summary
-        // would report the limit as if it had been explained. Saying less, but
-        // saying it, beats a blank line that looks like an answer.
-        const fromServer = pro.text.trim();
-        scanLimits.push(
-          pro.results.length > 0
-            ? 'the paid scan hit one of its own limits, see its answer on this file above'
-            : fromServer || 'the paid scan hit one of its own limits and did not say which',
-        );
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      // "did not deliver a check", not "unreachable": a server that answers but
-      // could not scan lands here too, and telling the operator it was
-      // unreachable sends them to look at the network instead of the server.
-      console.error(`[lumo] Pro MCP did not deliver a check (${msg}), falling back to free catch`);
-      proDegraded = true;
-      results = runFreeCatch();
-    }
-  } else {
-    results = runFreeCatch();
-  }
-
+function findingsFromResults(
+  filename: string,
+  results: Array<CatchResult | ProRenderedFinding>,
+  proGaps: ProGap[],
+): Finding[] {
   const findings: Finding[] = results.map((r) => {
     if (isProRendered(r)) {
-      // Pro owns the loud/soft counts in structuredContent. A positive loudCount
-      // must fail the check when fail_on_loud is on; coercing everything to SOFT
-      // made the paid gate inert.
       const tier: CatchTier = r.loudCount > 0 ? 'LOUD' : 'SOFT';
-      return { filename: file.filename, tier, body: r.body };
+      return { filename, tier, body: r.body };
     }
     return {
-      filename: file.filename,
+      filename,
       tier: r.tier,
       body: formatCatch(r),
     };
   });
 
-  // A Pro-only signal fired on this file. Without this the Action reports "no
-  // findings" on a WooCommerce pull request: the same false all-clear the tool
-  // and hook paths already fixed, in the channel where nobody is watching live.
-  //
-  // Always SOFT: a coverage gap is not a defect in the contributor's code, so it
-  // must never fail a build through fail_on_loud.
   if (proGaps.length > 0) {
     const names = joinPluginNames(proGaps.map((g) => g.pluginName));
     findings.push({
-      filename: file.filename,
+      filename,
       tier: 'SOFT' as CatchTier,
       body: findings.length === 0 ? buildCodeProTeaser(names) : buildCodeProGapLine(names),
     });
   }
 
-  return { findings, proDegraded, scanLimits, didNotRun };
+  return findings;
+}
+
+function runFreeCatch(file: FileDiff): {
+  results: Array<CatchResult | ProRenderedFinding>;
+  proGaps: ProGap[];
+  didNotRun: boolean;
+  scanLimits: string[];
+} {
+  const outcome = checkCodeWithGaps(file.blob, file.language);
+  const scanLimits: string[] = [];
+  if (outcome.inputTruncated) scanLimits.push(catchInputTruncatedLine(INPUT_LINE_CAP));
+  if (outcome.hitsOmitted > 0) scanLimits.push(catchHitsOmittedLine(outcome.hitsOmitted));
+  return {
+    results: outcome.results,
+    proGaps: outcome.proGaps,
+    didNotRun: outcome.didNotRun,
+    scanLimits,
+  };
+}
+
+function scanLimitNoteFromPro(pro: ProFileOutcome, hasFindings: boolean): string | undefined {
+  if (pro.complete) return undefined;
+  const fromServer = pro.text.trim();
+  if (hasFindings) {
+    return 'the paid scan hit one of its own limits, see its answer on this file above';
+  }
+  return fromServer || 'the paid scan hit one of its own limits and did not say which';
 }
 
 // ---------------------------------------------------------------------------
@@ -395,19 +477,71 @@ export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const scanLimits: RunResult['scanLimits'] = [];
   const didNotRunFiles: string[] = [];
   let proDegraded = false;
+  let checkDidNotRun = false;
+  let checkDidNotRunReason: RunResult['checkDidNotRunReason'];
 
-  for (const file of files) {
-    const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey, opts.instanceId);
-    findings.push(...fileResult.findings);
-    proDegraded = proDegraded || fileResult.proDegraded;
-    if (fileResult.didNotRun) didNotRunFiles.push(file.filename);
-    for (const note of fileResult.scanLimits) {
-      scanLimits.push({ filename: file.filename, note });
+  if (opts.proUrl && opts.licenseKey && files.length > 0) {
+    try {
+      const proByFile = await fetchProBatch(opts.proUrl, opts.licenseKey, files, opts.instanceId);
+      for (const file of files) {
+        const pro = proByFile.get(file.filename);
+        if (!pro) {
+          console.error(`[lumo] Pro MCP returned no result for ${file.filename}, falling back to free catch`);
+          proDegraded = true;
+          const free = runFreeCatch(file);
+          if (free.didNotRun) didNotRunFiles.push(file.filename);
+          findings.push(...findingsFromResults(file.filename, free.results, free.proGaps));
+          for (const note of free.scanLimits) {
+            scanLimits.push({ filename: file.filename, note });
+          }
+          continue;
+        }
+
+        const fileFindings = findingsFromResults(file.filename, pro.results, []);
+        findings.push(...fileFindings);
+        const limitNote = scanLimitNoteFromPro(pro, fileFindings.length > 0);
+        if (limitNote) scanLimits.push({ filename: file.filename, note: limitNote });
+      }
+    } catch (err) {
+      if (err instanceof ProCheckBlockedError) {
+        checkDidNotRun = true;
+        checkDidNotRunReason = err.reason;
+      } else {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[lumo] Pro MCP did not deliver a check (${msg}), falling back to free catch`);
+        proDegraded = true;
+        for (const file of files) {
+          const free = runFreeCatch(file);
+          if (free.didNotRun) didNotRunFiles.push(file.filename);
+          findings.push(...findingsFromResults(file.filename, free.results, free.proGaps));
+          for (const note of free.scanLimits) {
+            scanLimits.push({ filename: file.filename, note });
+          }
+        }
+      }
+    }
+  } else {
+    for (const file of files) {
+      const free = runFreeCatch(file);
+      if (free.didNotRun) didNotRunFiles.push(file.filename);
+      findings.push(...findingsFromResults(file.filename, free.results, free.proGaps));
+      for (const note of free.scanLimits) {
+        scanLimits.push({ filename: file.filename, note });
+      }
     }
   }
 
   const loudCount = findings.filter((f) => f.tier === 'LOUD').length;
   const softCount = findings.filter((f) => f.tier === 'SOFT').length;
 
-  return { loudCount, softCount, findings, proDegraded, scanLimits, didNotRunFiles };
+  return {
+    loudCount,
+    softCount,
+    findings,
+    proDegraded,
+    checkDidNotRun,
+    checkDidNotRunReason,
+    scanLimits,
+    didNotRunFiles,
+  };
 }
