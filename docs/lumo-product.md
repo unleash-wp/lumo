@@ -4,7 +4,9 @@ English. This is the watcher product — not the ebook, not WordCamp promo.
 
 ## One sentence
 
-**Lumo watches AI-written WordPress code and stops stale patterns before they ship — with a dated source, every time.**
+**Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs.**
+
+Lumo watches AI-written WordPress code and stops stale patterns before they ship. Free = local snapshot. Pro = live curated knowledge that tracks Core. Quiet ≠ clean.
 
 ## What is what
 
@@ -23,11 +25,12 @@ English. This is the watcher product — not the ebook, not WordCamp promo.
 
 ## Why it wins
 
-1. **Honesty first** — quiet ≠ clean; DID NOT RUN ≠ pass; Free ≠ Pro catalogue.
-2. **Proof in 30 seconds** — `lumo demo` uses the real engine on samples.
-3. **Whips the AI** — three layers (see below), not a polite suggestion.
-4. **Paid job is clear** — CI gate + depth. Not a vague “AI suite”.
-5. **One account** — Free → Skills / Freelancer → Pro → Agency / Forge without a second signup.
+1. **Core-sourced knowledge:** curated from Core release notes, Make/Core, Trac, handbooks, and the contributor pipeline; evidence is wrong→correct + source + version (not “cited blog post” alone).
+2. **Honesty first:** quiet ≠ clean; DID NOT RUN ≠ pass; Free snapshot ≠ Pro live catalogue.
+3. **Proof in 30 seconds:** `lumo demo` uses the real engine on samples.
+4. **Whips the AI:** three layers (see below), not a polite suggestion.
+5. **Paid job is clear:** live Core-tracking depth + CI gate. Not a vague “AI suite”.
+6. **One account:** Free → Skills / Freelancer → Pro → Agency / Forge without a second signup.
 
 ## How Lumo whips the AI (technical bar)
 

@@ -1,21 +1,23 @@
 # UnleashWP Lumo
 
 <p align="center">
-  <img src="assets/lumo-owl-128.png" alt="Lumo owl — the WordPress code watcher" width="96" height="96" />
+  <img src="assets/lumo-owl-128.png" alt="Lumo owl - the WordPress code watcher" width="96" height="96" />
 </p>
 
 **The WordPress agent skills are the manual. Lumo is the watcher.**
 
-Your AI's WordPress knowledge stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release, across Core APIs, block and theme APIs, and security fundamentals, the moment they are written, with the wrong-vs-correct fix and a dated source. Without being asked.
+**Knowledge curated from WordPress Core changes** (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs.
 
-**Free = local.** Run Lumo + AI Forge on your machine — **no** UnleashWP hosted MCP.
-**Paid = hosted.** Solo Hosted / Pro / Team 20 → [connect](https://mcp.unleash-wp.com/connect) with a Lemon Squeezy license. **Starter** (39 €) / **Agent Team** (99 €) = files only. See [docs/packages.md](docs/packages.md).
+Your AI stopped at its training cutoff. WordPress kept shipping. Lumo watches AI-written WordPress code and flags patterns that broke in a specific release, across Core APIs, block and theme APIs, and security fundamentals, the moment they are written. Quiet ≠ clean.
 
-**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Free:** local `lumo-mcp` · **Paid:** hosted MCP · **Knowledge:** Free snapshot vs full catalogue in Pro
+**Free = local snapshot.** Run Lumo + AI Forge on your machine; **no** UnleashWP hosted MCP.
+**Paid = live curated from Core.** Solo Hosted / Pro / Team 20 → [connect](https://mcp.unleash-wp.com/connect) with a Lemon Squeezy license. **Starter** (39 €) / **Agent Team** (99 €) = files only. See [docs/packages.md](docs/packages.md).
+
+**MCP tools:** `lumo_audit` · `lumo_lookup` · `lumo_check_code` · **Free:** local `lumo-mcp` · **Paid:** hosted MCP · **Knowledge:** Free snapshot vs Pro live catalogue
 
 ---
 
-## Start here — become a believer in 30 seconds
+## Start here - become a believer in 30 seconds
 
 ```bash
 npx @unleashwp/lumo demo
