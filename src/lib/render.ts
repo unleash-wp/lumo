@@ -411,6 +411,16 @@ export const ACTION_PRO_DEGRADED_FAIL_LINE =
   'this pull request. Re-run once the server answers, or set ' +
   'fail_on_degraded to false to let a degraded run stay green.';
 
+export const ACTION_QUOTA_BLOCKED_LINE =
+  '**The Lumo Pro check did not run (daily quota).** No code in this pull request ' +
+  'was checked on the paid layer. Retry after the quota window resets or upgrade ' +
+  'your seat at /connect.';
+
+export const ACTION_CI_NOT_INCLUDED_LINE =
+  '**The Lumo Pro check did not run.** GitHub Action CI is not included on Solo ' +
+  'Hosted (Freelancer). Upgrade to Lumo Pro or Team 20 for CI, or remove the ' +
+  'Action from the workflow.';
+
 /**
  * One notice per run for the scanner's own limits, never one per file.
  *

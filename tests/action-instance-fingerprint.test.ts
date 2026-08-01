@@ -88,6 +88,7 @@ describe('runCatch forwards the fingerprint as X-Lumo-Instance', () => {
 
     expect(seenHeaders).toHaveLength(1);
     expect(seenHeaders[0]!['X-Lumo-Instance']).toBe('fingerprint-abc123');
+    expect(seenHeaders[0]!['X-Lumo-Client']).toBe('action');
   });
 
   it('omits the header rather than sending an empty one when no instanceId is given', async () => {

@@ -86,20 +86,22 @@
 | Paid seat | `hostedRequiresPaid()` | non-pro → **402** before DB | Free/Community never touch DB ✓ |
 | Seats | LS activation + `X-Lumo-Instance` | Action: `sha256(owner/repo)`; WP: `sha256(siteurl\|blog_id)` | Cursor/Claude without fingerprint → free + `no_instance` notice (not false Pro) |
 | IP rate limit | in-memory sliding window | **120/min** (`LUMO_RATE_LIMIT_PER_MIN`) | Resets on process restart; multi-instance = N× limit |
-| Key quota | in-memory min + day | Paid **120/min**, **8000/day**; Free buckets 20/min · 400/day exist but Free is 402’d first in prod | **No SKU split** (Solo = Pro = Agency same paid bucket). No Redis/persistent store |
+| Key quota | in-memory min + day | **SKU split:** Solo 1500/30 · Pro 5000/60 · Team 20 000/120 (locked 2026-08-01); Solo CI blocked via `X-Lumo-Client: action` | No Redis/persistent store |
 | Catch input | `INPUT_LINE_CAP` | 2000 lines | Disclosed when truncated ✓ |
 | Catch output | Free `CATCH_CAP` 3; Pro budget-driven | `CHECK_CODE_TOKEN_BUDGET` 6250; lookup 1500 | Caps disclosed ✓ |
 | Token cap | `emitText` / `capText` | Truncation notice | OK |
 | 402 / license notices | Front of answer | unverified / inactive / no_instance | Product law ✓ |
 | Action degradation | 429/timeout → free catch + `proDegraded` | PR comment + optional `fail_on_degraded` | Must stay visible; never green silent |
-| CI SKU | Docs: Solo no CI; Pro/Team yes | **Not enforced in MCP** | FOUNDERS-DECIDE |
+| CI SKU | Docs: Solo no CI; Pro/Team yes | **Enforced:** Solo + `X-Lumo-Client: action` → 402 `ci_not_included` | LOCKED 2026-08-01 |
 
 **What 429 looks like today (HTTP):**
 
 ```json
 { "error": "rate_limited", "retry_after": N, "limit": L, "window": "minute"|"day",
-  "message": "Paid MCP … quota exceeded for this key. Retry shortly." }
+  "message": "This check did not run (daily quota)." }
 ```
+
+Solo + GitHub Action: `{ "error": "ci_not_included", "message": "This check did not run. …" }` (402).
 
 Action treats non-OK as throw → free fallback + degraded notice. That is fail-open on availability **with disclosure**, not a clean Pro pass — keep it that way.
 
