@@ -23,9 +23,11 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € �
 | **Lumo Free** | Free | 0 € | **Never** | Local `@unleashwp/lumo` (bundled snapshot: Core/REST/block teaser Catch) + AI Forge **self-host**. No hosted MCP. |
 | **Agent Core** | **Starter** | **39 €/yr** | **Never** | **2 specialist agents on disk:** block/theme/Interactivity currency (WP 7.0) + Core PHP review (escaping, REST auth, caps, HPOS basics, Cron/HTTP/options). Scaffold skills. No live plugin catalogue. |
 | **Lumo Agent Pack** | **Agent Team** | **99 €/yr** | **Never** | **Full 6-agent team on disk** (Currency Guard, Code Reviewer, Woo HPOS/Subscriptions, Plugin ACF/GF/Elementor/Meta Box/Carbon/CF7 patterns, Security, Release) + 9 skills + 5 commands. No hosted MCP. |
-| **Freelancer** | **Solo Hosted** ★ | **149 €/yr** | **Yes** · 1 seat | Hosted MCP depth (Core, REST, FSE, Abilities, WP **7.0** + growing **7.1** wave, plugins via `lumo_plugin_advice`) · **Agent Pack** · Vol.1 · **Forge Hosted** · no CI. **Full WP 7.1 pack = still open (not claimed ready).** |
-| **Lumo Pro** | **Pro** | **199 €/seat/yr** | **Yes · hosted only** | Same as Solo Hosted + CI Action · **Agent Pack** · Vol.1 · **Forge Hosted** |
-| **Agency** | **Team 20** | **599 €/yr** | **Yes · hosted only** · **20 seats** | Hosted MCP · **Agent Pack** · Vol.1 · **Forge Hosted** · CI |
+| **Freelancer** | **Solo Hosted** ★ | **149 €/yr** | **Yes** · 1 seat | Hosted MCP depth (Core, REST, FSE, Abilities, WP **7.0** + growing **7.1** wave, plugins via `lumo_plugin_advice`) · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) · no CI. **Full WP 7.1 pack = still open (not claimed ready).** |
+| **Lumo Pro** | **Pro** | **199 €/seat/yr** | **Yes · hosted only** | Same as Solo Hosted + CI Action · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) |
+| **Agency** | **Team 20** | **599 €/yr** | **Yes · hosted only** · **20 seats** | Hosted MCP · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) · CI |
+
+**Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599).
 
 ### Hard rules
 
@@ -40,11 +42,22 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € �
 9. **Vol.1 living edition** = 69 `book-*` reference lookups via `lumo_lookup` on hosted MCP
    (Freelancer / Pro / Agency). Not Catch. Not the PDF. Free / Core / Pack get teaser copy only.
 10. **AI Forge Hosted** is included on **Freelancer / Pro / Agency** (all paid hosted seats) —
-    packaging entitlement / founder lock. Not Free / Core / Pack. Self-host remains available to all.
+    **Included entitlement. Hosted Forge install not yet available.** Not Free / Core / Pack. Self-host remains available to all.
 11. **Do not claim “Ready for WP 7.1”** until Pro has published sourced `wp-7-1-*` entries
     (see `website-pricing-table.md` §3.6 and `knowledge-import-agent-skills.md`).
 12. Website feature detail (domains + agent topics): [website-pricing-table.md](./website-pricing-table.md).
+13. Sales Day-0: [sales-ready-checklist.md](./sales-ready-checklist.md).
 
+### Name glossary
+
+| Website | LS / internal | Price |
+| --- | --- | --- |
+| Free | Lumo Free | 0 € |
+| Starter | Agent Core | 39 €/yr |
+| Agent Team | Agent Pack | 99 €/yr |
+| Solo Hosted ★ | Freelancer | 149 €/yr |
+| Pro | Lumo Pro | 199 €/seat/yr |
+| Team 20 | Agency | 599 €/yr |
 ## UnleashWP Learn Vol.1 (living edition)
 
 | Tier | Vol.1 |

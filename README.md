@@ -24,7 +24,16 @@ npx @unleashwp/lumo demo
 Real engine. Four samples. LOUD findings with sources. No account required for this proof.
 
 Then: **Free** → local MCP (`npx -y -p @unleashwp/lumo lumo-mcp`) + AI Forge self-host.
-**Paid** → Agent Team (self-install) or [connect](https://mcp.unleash-wp.com/connect) with Solo Hosted / Pro / Team 20 → hosted MCP + **Forge Hosted** (all three) + (Pro / Team 20) CI.
+**Paid** → Agent Team (files only) or [connect](https://mcp.unleash-wp.com/connect) with Solo Hosted / Pro / Team 20 → hosted MCP + **Forge Hosted entitlement** (install not yet available) + (Pro / Team 20) CI.
+
+**Free testers of this go-live candidate** (until npm publish catches up):
+
+```bash
+npx -y github:unleash-wp/lumo#release/v1.0.0-go-live demo
+npx -y github:unleash-wp/lumo#release/v1.0.0-go-live check path/to/file.php
+```
+
+Published `npx @unleashwp/lumo demo` still works for the honesty demo on the last npm release.
 
 Products (do not mix): **Lumo** = watcher (English). **AI Forge** = tool shelf (DE optional in local UI). **Vol.1 living edition** = 69 MCP lookups on paid hosted seats (not PDF). Bookstore PDF = optional separate SKU.
 
@@ -158,8 +167,9 @@ gate = Pro on the same UnleashWP account.
 
 Free proves the watcher **locally**. Paid is the job on **our** host: full evidence,
 deeper catalogue, pre-release briefings, commercial-plugin coverage, upgrade
-compat reports, and (Pro / Team 20) the CI gate. **AI Forge Hosted** is included on
-**Solo Hosted / Pro / Team 20** (all paid hosted seats); Free self-hosts AI Forge locally.
+compat reports, and (Pro / Team 20) the CI gate. **AI Forge Hosted** is an included
+entitlement on **Solo Hosted / Pro / Team 20** (Hosted Forge install not yet available);
+Free self-hosts AI Forge locally.
 
 **Ladder (website names):**
 
@@ -167,12 +177,14 @@ compat reports, and (Pro / Team 20) the CI gate. **AI Forge Hosted** is included
 | --- | --- | --- |
 | Free | 0 € | **Local** CLI + local MCP + Forge self-host (**no** hosted MCP) |
 | **Starter** (Agent Core) | **39 €/yr** | 2 agents (Currency Guard + Reviewer) — entry under Agent Team |
-| **Agent Team** (Agent Pack) | **99 €/yr** | 6 agents + skills + commands (included free in Solo Hosted / Pro / Team 20) |
-| **Solo Hosted** ★ (Freelancer) | **149 €/yr** · 1 seat | **Hosted** Pro MCP + **Vol.1 living lookups** + **Forge Hosted** · **no CI** · Agent Team included |
-| **Pro** | **199 €/yr** per seat | **Hosted only** + **CI Action** + **Vol.1 lookups** + **Forge Hosted** · Pack included — no self-hosted Pro |
-| **Team 20** (Agency) | **599 €/yr** | **20 seats** + **Forge Hosted** · **Pack + Vol.1 lookups** · CI |
+| **Agent Team** (Agent Pack) | **99 €/yr** | 6 agents + skills + commands · **files only** (included free in Solo Hosted / Pro / Team 20) |
+| **Solo Hosted** ★ (Freelancer) | **149 €/yr** · 1 seat | **Hosted** Pro MCP + **Vol.1 living lookups** + Forge Hosted entitlement (install not yet available) · **no CI** · Agent Team included |
+| **Pro** | **199 €/yr** per seat | **Hosted only** + **CI Action** + **Vol.1 lookups** + Forge Hosted entitlement (install not yet available) · Pack included - no self-hosted Pro |
+| **Team 20** (Agency) | **599 €/yr** | **20 seats** + Forge Hosted entitlement (install not yet available) · **Pack + Vol.1 lookups** · CI |
 
-Pack details: [docs/packages.md](docs/packages.md) (canonical), [docs/agent-core.md](docs/agent-core.md), [docs/agent-pack.md](docs/agent-pack.md), [docs/freelancer-pack.md](docs/freelancer-pack.md). 30-day money-back.
+**Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats (3×199 ≈ 599).
+
+Pack details: [docs/packages.md](docs/packages.md) (canonical), [docs/website-pricing-table.md](docs/website-pricing-table.md), [docs/sales-ready-checklist.md](docs/sales-ready-checklist.md). 30-day money-back.
 **Not sold as AppSec.** Checkout: Lemon Squeezy when variants are live.
 
 ---

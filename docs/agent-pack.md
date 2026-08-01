@@ -51,9 +51,11 @@ Do not sell Agency / Pro / Freelancer buyers a second Agent Pack checkout.
 | Free | 0 € | Local watcher only |
 | Agent Core | **39 €/yr** | 2 agents (entry) |
 | **Agent Pack** | **99 €/yr** | Full team files |
-| Freelancer | 149 €/yr | Pack included + hosted MCP + **Forge Hosted** |
-| Pro | 199 €/seat/yr | Pack included + MCP + CI + **Forge Hosted** |
-| Agency | 599 €/yr · 20 seats | Pack included + MCP + CI + **Forge Hosted** |
+| Freelancer | 149 €/yr | Pack included + hosted MCP + Forge Hosted entitlement (install not yet available) |
+| Pro | 199 €/seat/yr | Pack included + MCP + CI + Forge Hosted entitlement (install not yet available) |
+| Agency | 599 €/yr · 20 seats | Pack included + MCP + CI + Forge Hosted entitlement (install not yet available) |
+
+**Website:** Agent Pack = **Agent Team** (secondary, not starred). Need live catalogue? **Solo Hosted 149**, not this SKU alone.
 
 ## Ladder
 

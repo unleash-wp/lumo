@@ -16,7 +16,7 @@ File-only alternatives (no hosted MCP): **[Agent Core 39 €/yr](./agent-core.md
 | Hosted MCP in Cursor/Claude (**Pro depth**) | Multi-dev Agency |
 | **Lumo Agent Pack** (6 agents + skills + commands) — included | — |
 | **UnleashWP Learn Vol.1 (living edition)** — 69 `lumo_lookup` reference entries | — |
-| **AI Forge Hosted** — included on Freelancer / Pro / Agency (founder lock; packaging entitlement) | — |
+| **AI Forge Hosted** - included entitlement on Freelancer / Pro / Agency. Hosted Forge install not yet available. | - |
 | Cursor one-shot (`/connect` + `lumo.mdc`) | — |
 | Offline CLI: `demo`, `check`, `scan` | — |
 | Money-back 30 days | — |
@@ -35,8 +35,12 @@ Why CI is out: CI is the team/merge job. Freelancers win in the editor first.
 | Agent Core | **39 € / year** (2 agents — no Pro MCP) |
 | Agent Pack | **99 € / year** (full team files — no Pro MCP) |
 | Free | 0 € (**local only**) |
-| Pro | 199 € / seat / year (+ CI · Forge Hosted) |
-| Agency | 599 € / year (**20 seats** · Forge Hosted · Pack included) |
+| Pro | 199 € / seat / year (+ CI · Forge Hosted entitlement) |
+| Agency | 599 € / year (**20 seats** · Forge Hosted entitlement · Pack included) |
+
+**Seat helper:** Pro for 1–3 CI seats; Agency / Team 20 from ~4 seats (3×199 ≈ 599).
+
+**Website names:** Freelancer = **Solo Hosted** ★ · Agency = **Team 20** · Agent Pack = **Agent Team** (files only — need live MCP? buy Solo Hosted).
 
 ## Ladder
 
