@@ -6,7 +6,16 @@ Cheaper entry (2 agents only): **[Agent Core 39 €/yr](./agent-core.md)**.
 
 ## The pitch (one line)
 
-**Your WordPress Agent Team — 6 specialists + skills + commands, 99 €/year. Install once. Updates yearly.**
+**Your WordPress Agent Team — 6 specialists + 9 skills + 5 commands, 99 €/year. Install once. Updates yearly.** Quiet ≠ clean. Core-sourced knowledge, not model memory.
+
+## What's inside (honest counts)
+
+| Surface | Count |
+| --- | --- |
+| Specialized agents (`uwp-*`) | **6** |
+| Domain skills (`wp-*`) | **9** |
+| Slash commands | **5** |
+| Hosted Pro MCP | Not in this SKU |
 
 ## What’s in the pack
 
@@ -14,7 +23,7 @@ Cheaper entry (2 agents only): **[Agent Core 39 €/yr](./agent-core.md)**.
 | --- | --- |
 | 6 agents with topic coverage below | Hosted Pro MCP (buy Freelancer / Pro / Agency) |
 | 9 skills + 5 slash commands | GitHub Action CI gate |
-| Claude Code / Cursor / Codex install paths | AI Forge Hosted |
+| Claude Code / Cursor / Codex install paths | AI Forge Hosted (entitlement only on Solo Hosted / Pro / Team 20; install not yet available) |
 | Annual update entitlement (LS, 1 activation) | **Vol.1 living knowledge** (69 MCP lookups — paid hosted only) |
 | Money-back 14 days | Optional bookstore PDF (week-1; does not block go-live) |
 

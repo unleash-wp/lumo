@@ -44,7 +44,7 @@ This is not “good enough to merge.” The bar is **professionally shippable + 
 | AI `Co-authored-by: Cursor` in **older** release commits | Medium (process) | **Accepted residual** (rewriting shipped history needs founder call; new commits cleaned via commit-tree) |
 | Full `http.ts` process boot in CI | Low–Medium | **Accepted residual** (shared gate functions cover drift; process boot is env-heavy) |
 | Update paths (portal zips refresh, WP plugin artefact channel) | P1 after Day-0 | **Noted**, not Day-0 blocker |
-| Agent id rename (`wp-currency-guard` → `currency-guard`) | Process | **Shipped on branch**; confirm www/docs/Cursor rule paths after merge |
+| Agent id rename (final: `uwp-*` only, never bare / never `wp-` as agent id) | Process | **Shipped on branch**; kit + docs + Pro toolkit aligned |
 
 ---
 
