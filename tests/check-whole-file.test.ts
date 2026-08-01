@@ -24,10 +24,17 @@ function get_user_row( $user_id ) {
     expect(text).toMatch(/BREAKING:|LOUD|SQL injection|prepare/i);
   });
 
-  it('explains usage when no paths given', async () => {
-    const { lines } = await runCheck([]);
+  it('explains usage when no paths given and exits non-zero', async () => {
+    const { lines, exitCode } = await runCheck([]);
     expect(lines.join('\n')).toContain('lumo check');
     expect(lines.join('\n')).toContain('lumo scan');
+    expect(exitCode).toBe(1);
+  });
+
+  it('exits non-zero when every path is missing (no silent pass)', async () => {
+    const { lines, exitCode } = await runCheck(['/no/such/lumo-check-file.php']);
+    expect(exitCode).toBe(1);
+    expect(lines.join('\n')).toMatch(/no files checked|not an all-clear/i);
   });
 });
 

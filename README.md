@@ -94,7 +94,7 @@ npx @unleashwp/lumo demo
 
 Then on your diff: `npx @unleashwp/lumo scan`. On a full file: `npx @unleashwp/lumo check file.php`.
 
-Official [WordPress/agent-skills](https://github.com/WordPress/agent-skills) = the manual; Lumo = the watcher. Run both.
+[WordPress/agent-skills](https://github.com/WordPress/agent-skills) = the manual; Lumo = the watcher. Run both.
 
 ---
 

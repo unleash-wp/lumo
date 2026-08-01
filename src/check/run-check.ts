@@ -36,7 +36,9 @@ export async function runCheck(
         'Example: lumo check includes/orders.php\n' +
         'This checks whole file contents. For uncommitted diffs only, use `lumo scan`.',
     );
-    return { lines, exitCode: 0 };
+    // Usage help only — not a completed check. Non-zero so scripts cannot
+    // treat "nothing asked" as a passed review.
+    return { lines, exitCode: 1 };
   }
 
   let anyLoud = false;
@@ -80,8 +82,11 @@ export async function runCheck(
   }
 
   if (checked === 0) {
-    lines.push('lumo check: no files checked.');
-    return { lines, exitCode: 0 };
+    lines.push(
+      'lumo check: no files checked. Paths were missing, unreadable, or not files. ' +
+        'This is not a completed check and not an all-clear.',
+    );
+    return { lines, exitCode: 1 };
   }
 
   const exitCode = opts.failOnLoud && anyLoud ? 1 : 0;
