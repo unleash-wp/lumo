@@ -1,7 +1,8 @@
 # Founder perf + token savings — 2026-08-01
 
-**Status:** FOUNDERS-DECIDE (recommend only).  
+**Status:** P0-1 + P0-2 **implemented** on `release/v1.0.0-go-live` (2026-08-01). P0-3 docs routing unchanged.  
 **Companion:** `docs/founder-load-and-usage-pricing-2026-08-01.md` (Quota, CI-Gates, SKU).  
+**Deploy notes:** `docs/RELEASE-PERF-QUOTA-NOTES.md`.  
 **Audience:** Benjamin (founder). German exec first; English technical detail below.
 
 ---
@@ -64,8 +65,8 @@
 
 | ID | Bereich | Maßnahme | Server-Ersparnis (Richtung) | Token-Ersparnis | Produktgesetz-Risiko |
 | --- | --- | --- | --- | --- | --- |
-| **PERF-P0-1** | Action (`lumo`) | **`lumo_check_code` Batch-Argument** `files[]` + per-file `structuredContent` Array; Action sendet einen Call | **~80–95% HTTP/RPS** bei N-Datei-PRs; Quota **N→1** | **~(N−1)×** Tool-Wrapper + weniger duplizierter Neutral-Prose pro PR | **Mittel:** Schema-Contract (`docs/tool-contract.md`); jede Datei braucht eigenes `computed`/`complete`/`found`; PR-Summary darf nicht „clean“ sagen wenn Datei X `didNotRun` |
-| **PERF-P0-2** | Pro catch | **Module-level Signal-Cache:** DB-Rows + deserialisierte `RuntimeSignal[]` einmal laden, bei Deploy invalidieren | **~30–60% CPU** pro `check_code` (Regex-Allokation + wiederholter Select) | **0** (Antwort unverändert) | **Niedrig** wenn Ergebnis bit-identisch; Cache-Fehler = `computed:false`, nicht neutral |
+| **PERF-P0-1** | Action (`lumo`) | **`lumo_check_code` Batch-Argument** `files[]` + per-file `structuredContent.results`; Action sendet einen Call | **~80–95% HTTP/RPS** bei N-Datei-PRs; Quota **1 HTTP = 1 unit** | **~(N−1)×** Tool-Wrapper + weniger duplizierter Neutral-Prose pro PR | **Shipped** |
+| **PERF-P0-2** | Pro catch | **Module-level Signal-Cache:** DB-Rows + deserialisierte `RuntimeSignal[]` einmal laden | **~30–60% CPU** pro `check_code` | **0** | **Shipped** |
 | **PERF-P0-3** | GTM / Docs | **Pack + Free lokal pushen**; Hosted-MCP-Skill: „list before get; lookup before check wenn nur Wissen“ | Entlastet Quota **komplett** für Pack-Kunden | **6× get_agent (~26k Token)** vermeidbar pro Session | **Niedrig** (Routing, kein Claim) |
 | **PERF-P0-4** | Quota (bereits release) | SKU-Limits + Solo CI-Block (`X-Lumo-Client: action`) | Deckelt Worst-Case | Verhindert Retry-Stürme | **Niedrig** — 429/402 = did-not-run Copy |
 
@@ -217,4 +218,4 @@ In Skills/Commands explizit: **„Do not call lumo_check_code on unchanged files
 
 ---
 
-*FOUNDERS-DECIDE. Recommendations only; no runtime behavior changed in this commit.*
+*P0-1/P0-2 implemented 2026-08-01. P1+ still FOUNDERS-DECIDE.*
