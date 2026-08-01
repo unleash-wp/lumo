@@ -1105,3 +1105,39 @@ describe('the free catch names its own limits', () => {
     expect(checkCodeWithGaps(CLEAN_LINE, 'php').inputTruncated).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// #113: the engine's own outer catch must not be indistinguishable from a
+// clean pass. `results: []` normally means "scanned, nothing matched"; when
+// the outer catch fires (a broken snapshot, here simulated by injecting one
+// missing its `entries` array) nothing was scanned at all, and a caller that
+// treats that the same as a no-match verdict is dressing a crash as a pass.
+// ---------------------------------------------------------------------------
+
+describe('checkCodeWithGaps: the outer catch is a distinguishable outcome (#113)', () => {
+  it('BELL: a broken snapshot surfaces as didNotRun, not a clean empty result', () => {
+    const brokenSnapshot = {} as unknown as import('../src/types.js').Snapshot;
+    const outcome = checkCodeWithGaps(
+      '$wpdb->query( "SELECT * FROM wp_posts WHERE id = $id" );',
+      'php',
+      brokenSnapshot,
+    );
+    expect(outcome.didNotRun).toBe(true);
+    expect(outcome.results).toEqual([]);
+  });
+
+  it('SILENCE: a normal clean run is not marked didNotRun', () => {
+    const outcome = checkCodeWithGaps('$post = get_post( $id );', 'php', catchSnap);
+    expect(outcome.didNotRun).toBe(false);
+  });
+
+  it('SILENCE: a normal run with findings is not marked didNotRun', () => {
+    const outcome = checkCodeWithGaps(
+      '$wpdb->query( "SELECT * FROM wp_posts WHERE id = $id" );',
+      'php',
+      catchSnap,
+    );
+    expect(outcome.didNotRun).toBe(false);
+    expect(outcome.results.length).toBeGreaterThan(0);
+  });
+});

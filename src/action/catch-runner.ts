@@ -49,6 +49,14 @@ export interface RunResult {
    * travel with it so the summary stays checkable.
    */
   scanLimits: Array<{ filename: string; note: string }>;
+  /**
+   * Files where the free catch itself failed to produce a result (its own
+   * outer catch fired, typically the local snapshot could not be loaded).
+   * The caller MUST NOT treat these files as "no match": nothing was checked
+   * on them at all, and a run that is otherwise silent must not post
+   * ACTION_NO_MATCH_LINE while this is non-empty.
+   */
+  didNotRunFiles: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -64,6 +72,21 @@ interface ProRenderedFinding {
   /** From Pro structuredContent.loudCount. >= 1 → LOUD for fail_on_loud. */
   loudCount: number;
 }
+
+// ---------------------------------------------------------------------------
+// #112: licence-degradation fallback for servers predating licenseNotice /
+// servedTier as structured fields. These are the fixed opening clauses of
+// LICENSE_UNVERIFIED_NOTICE, LICENSE_INACTIVE_NOTICE, and
+// LICENSE_NO_INSTANCE_NOTICE in lumo-pro's src/mcp/cap.ts, duplicated here (not
+// imported: this client has no dependency on the Pro server's source) so an
+// older server that only ever spoke prose still degrades this run instead of
+// having its free-tier text read as a Pro verdict.
+// ---------------------------------------------------------------------------
+const LICENSE_DEGRADATION_NOTICE_PREFIXES = [
+  '> **Lumo Pro could not verify your licence right now.**',
+  '> **The licence key sent with this request is not active for Lumo Pro.**',
+  '> **Lumo Pro could not confirm an activation for this request.**',
+];
 
 // ---------------------------------------------------------------------------
 // Response framing.
@@ -155,6 +178,8 @@ async function fetchProResults(
         found?: boolean;
         loudCount?: number;
         softCount?: number;
+        licenseNotice?: 'none' | 'unverified' | 'inactive' | 'no_instance';
+        servedTier?: 'free' | 'pro';
       };
     };
   };
@@ -178,6 +203,35 @@ async function fetchProResults(
   // quietly. Servers predating the flag send undefined, which is not false.
   if (json?.result?.structuredContent?.computed === false) {
     throw new Error('Pro MCP could not run the scan (computed:false)');
+  }
+
+  // #112: a licence-service outage, an inactive key, or a client that sent no
+  // device fingerprint all resolve the request to the free tier, and the
+  // server states that as data now (licenseNotice, servedTier) as well as in
+  // the prose notice it prepends. This client sent a licence key expecting Pro
+  // coverage; a free-tier answer served back for that request is not a Pro
+  // verdict, whatever the text reads like, and must degrade exactly like an
+  // unreachable server: fall back to the local free catch and mark the run
+  // degraded, never trust the served text as Pro's.
+  //
+  // Undefined fields (a server predating #112) deliberately do NOT trip this:
+  // an absent field is not a claim of degradation, only an explicit one is.
+  const licenseNotice = json?.result?.structuredContent?.licenseNotice;
+  const servedTier = json?.result?.structuredContent?.servedTier;
+  if (servedTier === 'free' || (licenseNotice !== undefined && licenseNotice !== 'none')) {
+    throw new Error(
+      `Pro MCP served the free tier for a licensed request (licenseNotice: ${licenseNotice ?? 'unknown'})`,
+    );
+  }
+
+  // Older servers still predating even the prose notices' distinguishing data
+  // fields may prepend one of the three fixed licence-degradation notices as
+  // plain text with no structured signal at all. Recognise it by its fixed
+  // opening line so a caller of that vintage still degrades instead of
+  // reading the free-tier prose as a Pro verdict.
+  const trimmedText = text.trim();
+  if (LICENSE_DEGRADATION_NOTICE_PREFIXES.some((prefix) => trimmedText.startsWith(prefix))) {
+    throw new Error('Pro MCP response opens with a licence-degradation notice');
   }
 
   // The Pro server states its verdict as data: structuredContent.found. Decide
@@ -235,16 +289,18 @@ async function catchFile(
   proUrl?: string,
   licenseKey?: string,
   instanceId?: string,
-): Promise<{ findings: Finding[]; proDegraded: boolean; scanLimits: string[] }> {
+): Promise<{ findings: Finding[]; proDegraded: boolean; scanLimits: string[]; didNotRun: boolean }> {
   let results: Array<CatchResult | ProRenderedFinding>;
   // Set only on the free path: Pro has the knowledge, so it reports no gap.
   let proGaps: ProGap[] = [];
   let proDegraded = false;
+  let didNotRun = false;
   const scanLimits: string[] = [];
 
   const runFreeCatch = (): Array<CatchResult | ProRenderedFinding> => {
     const outcome = checkCodeWithGaps(file.blob, file.language);
     proGaps = outcome.proGaps;
+    didNotRun = outcome.didNotRun;
     if (outcome.inputTruncated) scanLimits.push(catchInputTruncatedLine(INPUT_LINE_CAP));
     if (outcome.hitsOmitted > 0) scanLimits.push(catchHitsOmittedLine(outcome.hitsOmitted));
     return outcome.results;
@@ -315,7 +371,7 @@ async function catchFile(
     });
   }
 
-  return { findings, proDegraded, scanLimits };
+  return { findings, proDegraded, scanLimits, didNotRun };
 }
 
 // ---------------------------------------------------------------------------
@@ -339,12 +395,14 @@ export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const files = parseDiff(opts.diff);
   const findings: Finding[] = [];
   const scanLimits: RunResult['scanLimits'] = [];
+  const didNotRunFiles: string[] = [];
   let proDegraded = false;
 
   for (const file of files) {
     const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey, opts.instanceId);
     findings.push(...fileResult.findings);
     proDegraded = proDegraded || fileResult.proDegraded;
+    if (fileResult.didNotRun) didNotRunFiles.push(file.filename);
     for (const note of fileResult.scanLimits) {
       scanLimits.push({ filename: file.filename, note });
     }
@@ -353,5 +411,5 @@ export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const loudCount = findings.filter((f) => f.tier === 'LOUD').length;
   const softCount = findings.filter((f) => f.tier === 'SOFT').length;
 
-  return { loudCount, softCount, findings, proDegraded, scanLimits };
+  return { loudCount, softCount, findings, proDegraded, scanLimits, didNotRunFiles };
 }

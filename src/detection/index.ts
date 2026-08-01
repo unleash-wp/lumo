@@ -4,7 +4,7 @@ import { renderFree } from '../lib/render.js';
 import { detectFromComposer } from './composer.js';
 import { detectFromDirectory } from './directory.js';
 import { detectFromWpCli } from './wp-cli.js';
-import { detectFromSource } from './heuristic.js';
+import { detectFromSource, detectFromSourceOutcome } from './heuristic.js';
 import { detectFromGitTracked } from './git.js';
 import { PATTERNS } from './registry.js';
 import type { PluginDetection } from './types.js';
@@ -69,6 +69,19 @@ const NEUTRAL_NO_MATCH =
   'applied. That covers the stacks Lumo knows how to spot, not the code inside ' +
   'them, so this is not an all-clear.';
 
+/**
+ * Same scope statement as NEUTRAL_NO_MATCH, but the heuristic step of the
+ * ladder stopped at its own file budget before it finished reading the
+ * project. That is not "read everything, matched nothing": some of the
+ * project was never looked at, and this line says so instead of letting a
+ * budget limit read as a clean result on the files it never reached.
+ */
+const NEUTRAL_NO_MATCH_INCOMPLETE =
+  'Lumo matched this project against the patterns it detects and none of them ' +
+  'applied in the files it read. The heuristic scan stopped at its own file ' +
+  'budget before covering the whole project, so this is not a full-project ' +
+  'all-clear.';
+
 /** The project could not be read at all. Naming the path is what makes it fixable. */
 export const unreadableProjectLine = (root: string): string =>
   `Lumo could not read a project at ${root}. Nothing was checked, so this says ` +
@@ -86,6 +99,36 @@ export function detectStack(projectRoot: string): PluginDetection | null {
     detectFromSource(projectRoot) ??
     detectFromGitTracked(projectRoot)
   );
+}
+
+export interface StackDetectionOutcome {
+  detection: PluginDetection | null;
+  /**
+   * True only when every step of the ladder found nothing AND the heuristic
+   * step stopped at its file budget rather than reading the whole project.
+   * auditProject() uses this to tell "scanned everything, no match" apart
+   * from "stopped scanning before finishing, no match yet".
+   */
+  incomplete: boolean;
+}
+
+/**
+ * Same ladder as detectStack(), but keeps the heuristic step's own budget
+ * signal instead of collapsing it into a plain null. Used by auditProject()
+ * so a budget-limited miss and a full-project miss get different wording.
+ */
+export function detectStackWithLimits(projectRoot: string): StackDetectionOutcome {
+  const composer = detectFromComposer(projectRoot);
+  if (composer) return { detection: composer, incomplete: false };
+  const directory = detectFromDirectory(projectRoot);
+  if (directory) return { detection: directory, incomplete: false };
+  const wpCli = detectFromWpCli(projectRoot);
+  if (wpCli) return { detection: wpCli, incomplete: false };
+  const heuristic = detectFromSourceOutcome(projectRoot);
+  if (heuristic.detection) return { detection: heuristic.detection, incomplete: false };
+  const git = detectFromGitTracked(projectRoot);
+  if (git) return { detection: git, incomplete: false };
+  return { detection: null, incomplete: heuristic.incomplete };
 }
 
 /**
@@ -106,9 +149,9 @@ export function auditProject(projectRoot: string, snapshot?: Snapshot): AuditRes
       return { detected: false, message: unreadableProjectLine(projectRoot) };
     }
 
-    const detection = detectStack(projectRoot);
+    const { detection, incomplete } = detectStackWithLimits(projectRoot);
     if (!detection) {
-      return { detected: false, message: NEUTRAL_NO_MATCH };
+      return { detected: false, message: incomplete ? NEUTRAL_NO_MATCH_INCOMPLETE : NEUTRAL_NO_MATCH };
     }
 
     // Pro-teaser path: plugin detected but Free has no knowledge for it.

@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { detectFromComposer } from '../src/detection/composer.js';
 import { detectFromDirectory } from '../src/detection/directory.js';
 import { detectFromWpCli } from '../src/detection/wp-cli.js';
-import { detectFromSource } from '../src/detection/heuristic.js';
+import { detectFromSource, detectFromSourceOutcome } from '../src/detection/heuristic.js';
 import { detectFromGitTracked } from '../src/detection/git.js';
 import { detectStack, auditProject, buildProTeaser, buildDetectionNote } from '../src/detection/index.js';
 
@@ -300,6 +300,37 @@ describe('detectFromSource', () => {
 });
 
 // ---------------------------------------------------------------------------
+// #113.2: heuristic file-budget exhaustion is a distinguishable outcome, not
+// a silent null that reads the same as "scanned everything, found nothing".
+// ---------------------------------------------------------------------------
+
+describe('detectFromSourceOutcome, file budget (#113)', () => {
+  it('BELL: a project with more than MAX_FILES clean .php files sets incomplete:true', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-heuristic-budget-'));
+    // MAX_FILES is 200; write enough clean PHP files to exhaust the budget
+    // before the scan can conclude it read the whole tree.
+    for (let i = 0; i < 210; i++) {
+      writeFileSync(join(dir, `file-${i}.php`), '<?php // nothing interesting here\n');
+    }
+    const outcome = detectFromSourceOutcome(dir);
+    expect(outcome.detection).toBeNull();
+    expect(outcome.incomplete).toBe(true);
+  });
+
+  it('SILENCE: a small clean project is not marked incomplete', () => {
+    const outcome = detectFromSourceOutcome(join(fixturesDir, 'non-woo'));
+    expect(outcome.detection).toBeNull();
+    expect(outcome.incomplete).toBe(false);
+  });
+
+  it('SILENCE: a project where a signal is found before the budget is exhausted is not incomplete', () => {
+    const outcome = detectFromSourceOutcome(join(fixturesDir, 'heuristic-woo'));
+    expect(outcome.detection).not.toBeNull();
+    expect(outcome.incomplete).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 2a: orchestrator falls through to heuristic
 // ---------------------------------------------------------------------------
 
@@ -309,6 +340,24 @@ describe('detectStack, heuristic fallback', () => {
     expect(result).not.toBeNull();
     expect(result?.source).toBe('heuristic');
     expect(result?.pattern).toBe('woocommerce');
+  });
+});
+
+describe('auditProject, heuristic budget exhaustion (#113)', () => {
+  it('BELL: a no-match caused by a stopped heuristic scan says so, not a plain all-clear', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lumo-audit-budget-'));
+    for (let i = 0; i < 210; i++) {
+      writeFileSync(join(dir, `file-${i}.php`), '<?php // nothing interesting here\n');
+    }
+    const result = auditProject(dir);
+    expect(result.detected).toBe(false);
+    expect(result.message).toMatch(/stopped at its own file budget/);
+  });
+
+  it('SILENCE: a small clean project keeps the plain full-project no-match message', () => {
+    const result = auditProject(join(fixturesDir, 'non-woo'));
+    expect(result.detected).toBe(false);
+    expect(result.message).not.toMatch(/stopped at its own file budget/);
   });
 });
 

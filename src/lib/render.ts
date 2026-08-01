@@ -456,6 +456,35 @@ export const CATCH_NEUTRAL_LINE =
   'as knowledge, and the catch reaches only part of that; anything outside what ' +
   'it reaches was not checked, so this is not an all-clear.';
 
+/**
+ * The catch engine's own outer catch fired (checkCodeWithGaps.didNotRun),
+ * typically the local snapshot failed to load. Distinct from
+ * CATCH_NEUTRAL_LINE on purpose: that line reports "scanned, nothing
+ * matched"; nothing was scanned here. A caller that renders the neutral line
+ * on this path is dressing a crash as a clean pass, exactly the false
+ * all-clear this product exists to prevent.
+ */
+export const CATCH_DID_NOT_RUN_LINE =
+  'DID NOT RUN: the catch engine failed before producing a result, so no code ' +
+  'was checked. This is not a clean result. Retry the check.';
+
+/**
+ * One notice per run, not one per file, same rule as buildScanLimitsNotice:
+ * a scanner failure describes the run, not the contributor's code, and
+ * repeating it under every affected file in one pull request is the noise
+ * that gets a reviewer switched off. Filenames stay in it so the summary is
+ * still checkable.
+ */
+export function buildCatchDidNotRunNotice(filenames: readonly string[]): string {
+  const unique = [...new Set(filenames)];
+  const list = unique.map((f) => `\`${f}\``).join(', ');
+  return (
+    `**DID NOT RUN**: the catch engine failed before producing a result for ` +
+    `${unique.length === 1 ? 'this file' : 'these files'}: ${list}. Nothing was ` +
+    'checked there, so this is not a clean result on them. Retry the check.'
+  );
+}
+
 // The two scan limits, said out loud. Both are deliberate and both used to be
 // invisible, which turned them into coverage limits presented as results: a
 // blob longer than the scanner reads produced the same neutral line as a clean

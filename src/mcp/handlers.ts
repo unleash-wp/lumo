@@ -9,6 +9,7 @@ import {
   formatFreeMarkdown,
   formatCatch,
   CATCH_NEUTRAL_LINE,
+  CATCH_DID_NOT_RUN_LINE,
   buildCodeProTeaser,
   buildCodeProGapLine,
   buildCodeDetectionNote,
@@ -245,11 +246,29 @@ export async function handleCheckCodeFull(
   try {
     const { checkCodeWithGaps } = await import('../detection/catch.js');
     const snap = snapshot ?? loadSnapshot();
-    const { results, proGaps, inputTruncated, hitsOmitted } = checkCodeWithGaps(
+    const { results, proGaps, inputTruncated, hitsOmitted, didNotRun } = checkCodeWithGaps(
       input.code ?? '',
       input.language ?? 'auto',
       snap,
     );
+
+    // The engine's own outer catch fired (typically the snapshot failed to
+    // load): nothing was scanned. `results: []` here is not "scanned, nothing
+    // matched", and rendering CATCH_NEUTRAL_LINE would dress that crash as a
+    // clean pass. Report the failure as data too (computed: false), same
+    // contract as the fail-open path below.
+    if (didNotRun) {
+      return {
+        text: CATCH_DID_NOT_RUN_LINE,
+        computed: false,
+        complete: false,
+        found: false,
+        loudCount: 0,
+        softCount: 0,
+        gaps: [],
+      };
+    }
+
     // Appended to every answer that reports a result. A truncated blob that
     // matched nothing is not a clean blob, and a capped report is not the whole
     // report; without these lines both read as complete.
@@ -328,10 +347,14 @@ export async function handleCheckCodeFull(
     }
     return verdict(appendFreshnessReveal(withPrompt, results, snap?.generatedAt));
   } catch {
-    // Fail-open path: the prose still answers, and the marker says the layer
-    // did NOT run, never dress this as a clean verdict.
+    // Fail-open path: the prose still answers, and it must say the layer did
+    // NOT run. CATCH_NEUTRAL_LINE reads as "scanned, nothing matched"; on this
+    // path nothing was scanned, and printing it here would dress a crash as a
+    // clean verdict, the same failure computed:false exists to prevent one
+    // layer down. `computed: false` already carries that for a caller reading
+    // data; this line carries it for one reading only the text.
     return {
-      text: CATCH_NEUTRAL_LINE,
+      text: CATCH_DID_NOT_RUN_LINE,
       computed: false,
       complete: false,
       found: false,
