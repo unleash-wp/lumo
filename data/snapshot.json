@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-01T18:00:00Z",
+  "generatedAt": "2026-08-01T20:00:00Z",
   "source": {
     "repo": "unleash-wp/lumo-pro",
     "db": "knowledge.db"
@@ -270,13 +270,13 @@
       "slug": "gutenberg-apiversion-2-deprecated-wp6-9",
       "title": "Block API version 2 deprecated in WP 6.9: migrate to apiVersion 3",
       "category_slug": "gutenberg",
-      "summary": "Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings. A future WordPress version is expected to run the post editor as an iframe regardless of apiVersion (no specific version has been announced), which would make API v2 blocks non-compliant. useBlockProps() is not what version 3 adds: the Block API docs make it a version 2 requirement for the edit implementation, so a correct v2 block already calls it. What version 3 adds is working inside an iframe - WordPress 6.3 iframes the post editor when every registered block is version 3 or higher and no traditional meta boxes are present - which mainly means not reaching for the parent document and not assuming editor styles are inherited.",
+      "summary": "Starting in WordPress 6.9, blocks registered with apiVersion 2 or lower trigger browser console warnings. Gutenberg 23.6 and WordPress 7.1 always iframe the Post Editor regardless of apiVersion (Block Editor handbook migration guide), so v1/v2 no longer opts a post out of the iframe. useBlockProps() is not what version 3 adds: the Block API docs make it a version 2 requirement for the edit implementation, so a correct v2 block already calls it. What version 3 signals is iframe readiness: do not reach for the parent document/window, and load canvas editor styles via editorStyle. See wp-7-1-post-editor-always-iframe and wp-7-1-post-editor-iframe-owner-document.",
       "code_example": "// CORRECT, apiVersion 3 with useBlockProps\nconst { useBlockProps } = wp.blockEditor;\n\nwp.blocks.registerBlockType( 'my-namespace/my-block', {\n  apiVersion: 3,\n  edit: function( props ) {\n    const blockProps = useBlockProps();\n    return <div { ...blockProps }>Content</div>;\n  },\n  save: function( props ) {\n    const blockProps = useBlockProps.save();\n    return <div { ...blockProps }>{ props.attributes.content }</div>;\n  },\n} );",
       "bad_pattern": "// WRONG, apiVersion 2 (or omitted, defaults to 2 in older blocks)\nwp.blocks.registerBlockType( 'my-namespace/my-block', {\n  apiVersion: 2,\n  edit: function( props ) {\n    return <div { ...props.attributes }>Content</div>;\n  },\n  save: function( props ) {\n    return <div>{ props.attributes.content }</div>;\n  },\n} );",
       "source_url": "https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/",
       "test_step": "Open block.json or registerBlockType() calls. Check browser console in WP 6.9+ for apiVersion warnings. Verify useBlockProps() is used in both edit and save functions. Test block rendering in iframe editor (WP 7.1+).",
       "tier": "free",
-      "updatedAt": "2026-06-22T13:00:00Z",
+      "updatedAt": "2026-08-01T20:00:00Z",
       "versions": [
         {
           "wp_version_min": "6.9",
@@ -943,6 +943,26 @@
           "wp_version_max": null,
           "woo_version_min": null,
           "breaking_change": false
+        }
+      ]
+    },
+    {
+      "slug": "wp-7-1-post-editor-iframe-owner-document",
+      "title": "WordPress 7.1: Post Editor canvas is always iframed — use ownerDocument/defaultView, not global document/window",
+      "category_slug": "wordpress-7-1",
+      "summary": "In Gutenberg 23.6 and WordPress 7.1 the Post Editor canvas always runs inside an iframe, regardless of block apiVersion (Site Editor was already iframed). Editor scripts still load in the admin parent window, so global document and window refer to the admin page, not the canvas. Block edit code that calls window.addEventListener, document.addEventListener, window.innerWidth, or document.querySelector(\".editor-styles-wrapper\") against those globals breaks or silently no-ops. Derive the canvas document from the block element (element.ownerDocument) and its window (ownerDocument.defaultView), preferably with useRefEffect from @wordpress/compose. Set apiVersion to 3 and test in an iframed editor; see also Pro entries for editorStyle enqueue and admin-scoped CSS.",
+      "code_example": "import { useBlockProps } from '@wordpress/block-editor';\nimport { useRefEffect } from '@wordpress/compose';\nimport { useState } from '@wordpress/element';\n\n// CORRECT: canvas window from the block element (works iframed or not).\nexport default function Edit() {\n  const [ width, setWidth ] = useState( 0 );\n  const ref = useRefEffect( ( element ) => {\n    const { ownerDocument } = element;\n    const { defaultView } = ownerDocument;\n    if ( ! defaultView ) {\n      return;\n    }\n    const update = () => setWidth( defaultView.innerWidth );\n    update();\n    defaultView.addEventListener( 'resize', update );\n    return () => defaultView.removeEventListener( 'resize', update );\n  }, [] );\n  return <div { ...useBlockProps( { ref } ) }>{ width }</div>;\n}",
+      "bad_pattern": "import { useBlockProps } from '@wordpress/block-editor';\nimport { useEffect, useState } from '@wordpress/element';\n\n// WRONG in the iframed Post Editor: window is the admin window.\nexport default function Edit() {\n  const [ width, setWidth ] = useState( 0 );\n  useEffect( () => {\n    const update = () => setWidth( window.innerWidth );\n    update();\n    window.addEventListener( 'resize', update );\n    return () => window.removeEventListener( 'resize', update );\n  }, [] );\n  return <div { ...useBlockProps() }>{ width }</div>;\n}\n\n// Also WRONG: outside-click on the admin document (canvas clicks never arrive).\ndocument.addEventListener( 'click', closeOnOutsideClick );\n\n// Also WRONG: querying the canvas from the admin document.\ndocument.querySelector( '.editor-styles-wrapper' );",
+      "source_url": "https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/block-migration-for-iframe-editor-compatibility/",
+      "test_step": "1. Grep edit components for window.addEventListener / document.addEventListener / document.querySelector(\".editor-styles-wrapper\") next to useBlockProps.\n2. Replace with element.ownerDocument / defaultView via useRefEffect.\n3. On Gutenberg 23.6+ or WordPress 7.1, open the Post Editor, confirm iframe[name=\"editor-canvas\"], and verify resize / outside-click / width behaviour against the canvas.",
+      "tier": "free",
+      "updatedAt": "2026-08-01T20:00:00Z",
+      "versions": [
+        {
+          "wp_version_min": "7.1",
+          "wp_version_max": null,
+          "woo_version_min": null,
+          "breaking_change": true
         }
       ]
     }

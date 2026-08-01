@@ -56,7 +56,7 @@ Under the three cards (one line):
 
 ## 3. What Lumo actually watches (coverage domains)
 
-Plain English for a WordPress developer. Numbers from lumo-pro `docs/capability-inventory.md` (2026-08-01): published catalogue **~177**, Free snapshot **~47**, catch-capable **~95**.
+Plain English for a WordPress developer. Numbers from lumo-pro `docs/capability-inventory.md` (2026-08-01): published catalogue **~192**, Free snapshot **~48**, catch-capable **~95+**.
 
 ### 3.1 WordPress Core (everyday PHP / admin surface)
 
@@ -193,7 +193,7 @@ Legend: ● included · ○ not included · ~ local / Free snapshot only
 | `lumo check` (whole-file) | ● | ● | ● | ● | ● | ● |
 | `lumo scan` (git diff) | ● | ● | ● | ● | ● | ● |
 | Local MCP (`lumo-mcp`) | ● | ● | ● | ● | ● | ● |
-| Free snapshot (~**47** catch entries) | ● | ● | ● | ● | ● | ● |
+| Free snapshot (~**48** catch entries) | ● | ● | ● | ● | ● | ● |
 | Local tools: `lumo_check_code`, `lumo_lookup`, `lumo_audit` | ● | ● | ● | ● | ● | ● |
 | Honest caps (`computed` / `complete` / line limits) | ● | ● | ● | ● | ● | ● |
 | Quiet ≠ clean (never false all-clear) | ● | ● | ● | ● | ● | ● |
@@ -217,7 +217,7 @@ Pack Plugin / Woo agents ship **bundled patterns** on disk. Live ACF / Woo / GF 
 | Feature | Free | Starter | Agent Team | **Solo Hosted ★** | Pro | Team 20 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Hosted MCP access | ○ | ○ | ○ | ● | ● | ● |
-| Pro catalogue (~**177** entries) | ○ | ○ | ○ | ● | ● | ● |
+| Pro catalogue (~**192** entries) | ○ | ○ | ○ | ● | ● | ● |
 | Live catch depth (~**95** catch-capable) | ○ | ○ | ○ | ● | ● | ● |
 | Plugin advice (`lumo_plugin_advice`: ACF, Woo, GF, Elementor, Meta Box, Carbon Fields, CF7, …) | ○ | ○ | ○ | ● | ● | ● |
 | `lumo_check_code` (hosted) | ○ | ○ | ○ | ● | ● | ● |
@@ -320,7 +320,7 @@ Pack also: **9** skills + **5** commands. Still **no** hosted MCP on the 99 € 
 
 Same full agent kit, plus:
 
-- Live Pro catalogue (~177) and catch depth (~95)
+- Live Pro catalogue (~192) and catch depth (~95+)
 - Plugin advice for ACF, WooCommerce, Gravity Forms, Elementor, Meta Box, Carbon Fields, CF7, …
 - Vol.1 living lookups (69)
 - **AI Forge Hosted** entitlement on all three (Hosted Forge install not yet available)
