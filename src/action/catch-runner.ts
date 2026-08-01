@@ -42,6 +42,13 @@ export interface RunResult {
    */
   proDegraded: boolean;
   /**
+   * True when a paid-configured run hit quota or CI-not-included on the Pro
+   * server. No free-catch fallback ran: the check did not happen.
+   */
+  checkDidNotRun: boolean;
+  /** When checkDidNotRun, why the gate stopped (for PR copy). */
+  checkDidNotRunReason?: 'quota' | 'ci_not_included';
+  /**
    * Files whose scan hit one of its own limits, and which limit. Reported ONCE
    * per run by the caller, not once per file: a limit of the scanner describes
    * the run, not the contributor's code, and repeating it twenty times in one
@@ -65,6 +72,19 @@ export interface RunResult {
 // on LOUD. Pro owns the tier counts in structuredContent; this client must not
 // invent a softer tier than Pro reported.
 // ---------------------------------------------------------------------------
+
+/** Pro server refused the check (quota / CI gate). No free fallback. */
+export class ProCheckBlockedError extends Error {
+  readonly reason: 'quota' | 'ci_not_included';
+
+  constructor(reason: 'quota' | 'ci_not_included', detail: string) {
+    super(detail);
+    this.name = 'ProCheckBlockedError';
+    this.reason = reason;
+  }
+}
+
+export const LUMO_CLIENT_ACTION = 'action';
 
 interface ProRenderedFinding {
   _proRendered: true;
@@ -143,6 +163,7 @@ async function fetchProResults(
     'Content-Type': 'application/json',
     Accept: 'application/json, text/event-stream',
     Authorization: `Bearer ${licenseKey}`,
+    'X-Lumo-Client': LUMO_CLIENT_ACTION,
   };
   // #159: Pro requires this to enforce the seat. Without it, the server
   // validates the key but cannot check its activation, and resolves free.
@@ -165,7 +186,21 @@ async function fetchProResults(
   });
 
   if (!res.ok) {
-    throw new Error(`Pro MCP responded ${res.status}: ${await res.text()}`);
+    const bodyText = await res.text();
+    if (res.status === 429) {
+      throw new ProCheckBlockedError('quota', bodyText || '429 rate_limited');
+    }
+    if (res.status === 402) {
+      try {
+        const parsed = JSON.parse(bodyText) as { error?: string };
+        if (parsed.error === 'ci_not_included') {
+          throw new ProCheckBlockedError('ci_not_included', bodyText);
+        }
+      } catch (err) {
+        if (err instanceof ProCheckBlockedError) throw err;
+      }
+    }
+    throw new Error(`Pro MCP responded ${res.status}: ${bodyText}`);
   }
 
   const rawBody = await res.text();
@@ -287,11 +322,20 @@ async function catchFile(
   proUrl?: string,
   licenseKey?: string,
   instanceId?: string,
-): Promise<{ findings: Finding[]; proDegraded: boolean; scanLimits: string[]; didNotRun: boolean }> {
+): Promise<{
+  findings: Finding[];
+  proDegraded: boolean;
+  checkDidNotRun: boolean;
+  checkDidNotRunReason?: 'quota' | 'ci_not_included';
+  scanLimits: string[];
+  didNotRun: boolean;
+}> {
   let results: Array<CatchResult | ProRenderedFinding>;
   // Set only on the free path: Pro has the knowledge, so it reports no gap.
   let proGaps: ProGap[] = [];
   let proDegraded = false;
+  let checkDidNotRun = false;
+  let checkDidNotRunReason: 'quota' | 'ci_not_included' | undefined;
   let didNotRun = false;
   const scanLimits: string[] = [];
 
@@ -327,13 +371,19 @@ async function catchFile(
         );
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      // "did not deliver a check", not "unreachable": a server that answers but
-      // could not scan lands here too, and telling the operator it was
-      // unreachable sends them to look at the network instead of the server.
-      console.error(`[lumo] Pro MCP did not deliver a check (${msg}), falling back to free catch`);
-      proDegraded = true;
-      results = runFreeCatch();
+      if (err instanceof ProCheckBlockedError) {
+        checkDidNotRun = true;
+        checkDidNotRunReason = err.reason;
+        results = [];
+      } else {
+        const msg = err instanceof Error ? err.message : String(err);
+        // "did not deliver a check", not "unreachable": a server that answers but
+        // could not scan lands here too, and telling the operator it was
+        // unreachable sends them to look at the network instead of the server.
+        console.error(`[lumo] Pro MCP did not deliver a check (${msg}), falling back to free catch`);
+        proDegraded = true;
+        results = runFreeCatch();
+      }
     }
   } else {
     results = runFreeCatch();
@@ -369,7 +419,7 @@ async function catchFile(
     });
   }
 
-  return { findings, proDegraded, scanLimits, didNotRun };
+  return { findings, proDegraded, checkDidNotRun, checkDidNotRunReason, scanLimits, didNotRun };
 }
 
 // ---------------------------------------------------------------------------
@@ -395,11 +445,17 @@ export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const scanLimits: RunResult['scanLimits'] = [];
   const didNotRunFiles: string[] = [];
   let proDegraded = false;
+  let checkDidNotRun = false;
+  let checkDidNotRunReason: RunResult['checkDidNotRunReason'];
 
   for (const file of files) {
     const fileResult = await catchFile(file, opts.proUrl, opts.licenseKey, opts.instanceId);
     findings.push(...fileResult.findings);
     proDegraded = proDegraded || fileResult.proDegraded;
+    if (fileResult.checkDidNotRun) {
+      checkDidNotRun = true;
+      checkDidNotRunReason = fileResult.checkDidNotRunReason ?? checkDidNotRunReason;
+    }
     if (fileResult.didNotRun) didNotRunFiles.push(file.filename);
     for (const note of fileResult.scanLimits) {
       scanLimits.push({ filename: file.filename, note });
@@ -409,5 +465,14 @@ export async function runCatch(opts: RunCatchOptions): Promise<RunResult> {
   const loudCount = findings.filter((f) => f.tier === 'LOUD').length;
   const softCount = findings.filter((f) => f.tier === 'SOFT').length;
 
-  return { loudCount, softCount, findings, proDegraded, scanLimits, didNotRunFiles };
+  return {
+    loudCount,
+    softCount,
+    findings,
+    proDegraded,
+    checkDidNotRun,
+    checkDidNotRunReason,
+    scanLimits,
+    didNotRunFiles,
+  };
 }

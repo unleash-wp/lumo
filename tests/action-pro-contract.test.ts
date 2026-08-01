@@ -515,6 +515,50 @@ describe('SSE-framed responses (the live Pro server default)', () => {
   });
 });
 
+describe('quota and CI gate: no free fallback', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('BELL: HTTP 429 sets checkDidNotRun without proDegraded or free findings', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 429,
+        text: async () =>
+          JSON.stringify({
+            error: 'rate_limited',
+            message: 'This check did not run (daily quota).',
+          }),
+      })),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.checkDidNotRun).toBe(true);
+    expect(res.checkDidNotRunReason).toBe('quota');
+    expect(res.proDegraded).toBe(false);
+    expect(res.findings).toEqual([]);
+  });
+
+  it('BELL: HTTP 402 ci_not_included sets checkDidNotRun', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 402,
+        text: async () =>
+          JSON.stringify({
+            error: 'ci_not_included',
+            message: 'This check did not run.',
+          }),
+      })),
+    );
+    const res = await runCatch({ diff: DIFF, proUrl: 'https://pro.example', licenseKey: 'k' });
+    expect(res.checkDidNotRun).toBe(true);
+    expect(res.checkDidNotRunReason).toBe('ci_not_included');
+    expect(res.proDegraded).toBe(false);
+    expect(res.findings).toEqual([]);
+  });
+});
+
 describe('parseMcpHttpResponseBody: the de-framing unit', () => {
   it('parses a bare JSON object unchanged', () => {
     expect(parseMcpHttpResponseBody('{"a":1}')).toEqual({ a: 1 });
