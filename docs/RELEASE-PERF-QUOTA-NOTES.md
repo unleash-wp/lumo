@@ -40,7 +40,7 @@ Action sends `X-Lumo-Client: action`. Solo Hosted returns 402 `ci_not_included` 
 
 1. Pro MCP `tools/call` with `files: [{ path: 'test.php', code: '...' }]` → `structuredContent.batch === true`, `results[0].computed`.
 2. Action on a multi-file PR → one fetch in logs (or ceil(n/50) for large PRs).
-3. Quota heart test: `docs/quota-sku-heart-test-2026-08-01.md` scenarios still green.
+3. Day-0 smoke from [sales-ready-checklist.md](./sales-ready-checklist.md): anonymous 401, tier gates, Action unlicensed “did not run”.
 
 ## Still founder-gated (not blocked by this release)
 

@@ -469,11 +469,11 @@ Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1
 | CI Action | `lumo-action/action.yml` |
 | WP abilities | `lumo-wp` abilities registration |
 | Knowledge import plan | [knowledge-import-agent-skills.md](./knowledge-import-agent-skills.md) |
-| Product lock | [go-live-final.md](./go-live-final.md) · [packages.md](./packages.md) |
+| Product lock | [START-HERE-GO-LIVE.md](./START-HERE-GO-LIVE.md) · [packages.md](./packages.md) |
 
-Canonical product rules: [go-live-final.md](./go-live-final.md) · [packages.md](./packages.md).
+Canonical product rules: [packages.md](./packages.md).
 
-**Buyer smoke paths (per tier, honest):** [go-live-final.md §6b](./go-live-final.md#6b-buyer-verification-per-tier). Free is the trial; no hosted trial keys.
+**Buyer smoke paths (per tier, honest):** see [sales-ready-checklist.md](./sales-ready-checklist.md). Free is the trial; no hosted trial keys.
 
 ---
 
@@ -500,4 +500,4 @@ Canonical product rules: [go-live-final.md](./go-live-final.md) · [packages.md]
 
 **No price change in this pass.** Any price tweak = **FOUNDERS-DECIDE**.
 
-Also mirrored: [sales-ready-checklist.md](./sales-ready-checklist.md) · [pricing-personas.md](./pricing-personas.md) · `/connect`.
+Also mirrored: [sales-ready-checklist.md](./sales-ready-checklist.md) · `/connect`.

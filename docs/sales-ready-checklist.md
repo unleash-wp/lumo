@@ -1,6 +1,6 @@
 # Sales-ready checklist (founder, Day 0)
 
-English. Use with [go-live-final.md](./go-live-final.md) §9 and [website-pricing-table.md](./website-pricing-table.md).
+English. Use with [START-HERE-GO-LIVE.md](./START-HERE-GO-LIVE.md) and [website-pricing-table.md](./website-pricing-table.md).
 Do **not** invent Lemon Squeezy product ids. Create products first, then paste real ids.
 
 **USP (say this first):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot; Pro = live curated from Core. Quiet ≠ clean. Forge Hosted = entitlement only (install not yet available). Do not claim Ready for WP 7.1.
@@ -92,7 +92,7 @@ Putting Core or Pack ids in that list would unlock hosted MCP for file-only buye
 3. Put Freelancer + Pro + Agency ids in Mittwald `LUMO_LS_PRODUCT_IDS` (exclude Core + Pack).
 4. Webhook → `https://mcp.unleash-wp.com/webhooks/lemon-squeezy` + signing secret.
 5. Deploy lumo-pro / `job restart`; seed knowledge if host DB lags branch.
-6. Day-0 smoke ([go-live-final.md](./go-live-final.md) §6): anonymous 401, free/core/pack 402, paid 200, connect names, Action unlicensed “did not run”.
+6. Day-0 smoke: anonymous 401, free/core/pack 402, paid 200, connect names, Action unlicensed “did not run”.
 7. Paste [website-pricing-table.md](./website-pricing-table.md) §2 + §7 (+ glossary §1) onto www pricing.
 8. Tag `v1.0.0-go-live` only after smoke green.
 
@@ -120,4 +120,4 @@ After npm publish of the go-live tag, prefer `npx @unleashwp/lumo …` again.
 | “Ready for WP 7.1” | Forbidden; say coverage expanding |
 | Hosted trial keys | Not offered; Free local is the trial |
 
-Canonical lock: [go-live-final.md](./go-live-final.md) · [website-pricing-table.md](./website-pricing-table.md) · [packages.md](./packages.md).
+Canonical lock: [START-HERE-GO-LIVE.md](./START-HERE-GO-LIVE.md) · [website-pricing-table.md](./website-pricing-table.md) · [packages.md](./packages.md).

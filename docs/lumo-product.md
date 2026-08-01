@@ -65,7 +65,7 @@ Layer 1 alone is not enough — ship connect + skills + hook path + CI path.
 
 ## Who pays what (happy panel)
 
-See [pricing-personas.md](./pricing-personas.md) and
+See [website-pricing-table.md](./website-pricing-table.md) and
 [skills-pack.md](./skills-pack.md) · [freelancer-pack.md](./freelancer-pack.md):
 Free (**local**) → **Agent Core 39 €** → **Agent Pack 99 €** → **Freelancer 149 €** (hosted) → Pro 199 € → Agency 599 € (20 seats).
 Hosted MCP = paid only.

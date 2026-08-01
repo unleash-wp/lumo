@@ -86,7 +86,7 @@ Honest line: queryable engineering reference in hosted MCP, updated per release 
 | Lumo Agency | Annual 599 EUR | **20** | Yes | **Yes** |
 
 Checkout copy anchors: see `agent-core.md`, `agent-pack.md`, `freelancer-pack.md`,
-`pricing-personas.md`. Connect page: `GET /connect` on the Pro host (payers).
+and [website-pricing-table.md](./website-pricing-table.md). Connect page: `GET /connect` on the Pro host (payers).
 
 ## Who runs what technically
 
@@ -101,8 +101,7 @@ Checkout copy anchors: see `agent-core.md`, `agent-pack.md`, `freelancer-pack.md
 - Agent Core: [agent-core.md](./agent-core.md)
 - Agent Pack: [agent-pack.md](./agent-pack.md)
 - Freelancer: [freelancer-pack.md](./freelancer-pack.md)
-- Personas: [pricing-personas.md](./pricing-personas.md)
-- Go-live: [go-live-final.md](./go-live-final.md) (canonical), [go-live-48h.md](./go-live-48h.md)
+- Go-live ops: [START-HERE-GO-LIVE.md](./START-HERE-GO-LIVE.md), [sales-ready-checklist.md](./sales-ready-checklist.md)
 - Harmony + paid gate: lumo-pro `docs/product-harmony.md`
 - Server load: lumo-pro `docs/server-load.md`
 - LS go-live: lumo-pro `docs/licensing-runbook.md`

@@ -86,7 +86,7 @@ node scripts/check-vocabulary.mjs
 
 - [ ] Lemon Squeezy 5 products live with correct prices
 - [ ] `LUMO_LS_PRODUCT_IDS` = Freelancer, Pro, Agency only
-- [ ] Deploy + day-0 smoke (see [go-live-final.md](./go-live-final.md))
+- [ ] Deploy + day-0 smoke (see [sales-ready-checklist.md](./sales-ready-checklist.md))
 - [ ] www pricing matches `docs/packages.md`
 
 ## Vol.1 honesty (all channels)
