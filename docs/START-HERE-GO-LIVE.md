@@ -150,7 +150,8 @@ Paste auf die Pricing-Seite:
 
 1. **§1** Name glossary  
 2. **§2** Page layout (3 Solo-Cards, Free-Strip, Teams)  
-3. **§7** Card copy (paste-ready)
+3. **§7** Card copy (paste-ready)  
+4. **§11** Everyone buys (persona close map) — intern / Sales; auf www mindestens die vier Close-Zeilen  
 
 Checks auf der live Page:
 
@@ -192,7 +193,28 @@ lumo-action    → @v1 pin bleibt (kein neuer Tag nötig)
 | --- | --- |
 | AI Forge **Hosted** Install | Nur Entitlement; Install noch nicht verfügbar |
 | „Ready for WP 7.1“ | Verboten; Coverage expanding |
-| Hosted Trial-Keys | Gibt es nicht; Free lokal = Trial |
+| Hosted Trial-Keys als Produkt | Gibt es nicht; Free lokal = Trial. **Optional:** temporäre Dogfood-Keys für Abteilungsleiter-Finance (FOUNDER-ONLY), kein Public Trial |
+
+---
+
+## Everyone buys — Close-Map (Sales)
+
+Definition: jeder **Käufer**-Persona hat ein Primary-SKU. CEO = du, kein Käufer.
+Details: `docs/website-pricing-table.md` §11.
+
+| Persona | Close | Trigger |
+| --- | --- | --- |
+| Entwickler | Solo Hosted 149 **oder** Agent Team 99 | Nach Free-Aha: live Katalog vs Files; Free friert ein |
+| Freelancer | **Solo Hosted 149 ★** | Agent Team = Files-Sackgasse; Solo inkl. Pack |
+| Abteilungsleiter | **Pro 199/Seat** | CI Pflicht; Close = Free-LOUD + 30-Tage-Geld-zurück **oder** Dogfood-Key |
+| Agentur-Chef | **Team 20 · 599** | Default Agency; Seat-Math ab ~4 |
+
+**Deine Close-Tools (nicht Code):**
+
+1. [ ] 30-day money-back auf allen 5 LS Paid-Seiten  
+2. [ ] 1–2 temporäre Dogfood-Keys für Abteilungsleiter-Demo (nicht öffentlich listen)  
+3. [ ] Optional: 60-s Free-Demo + Solo-LOUD-Screenshot für Finance  
+4. [ ] **FOUNDERS-DECIDE:** 14-Tage-Badge statt 30? Prefer 30 behalten; Preis nicht senken  
 
 ---
 
@@ -209,8 +231,9 @@ Auf älteren Commits am Branch steht noch `Co-authored-by: Cursor <cursoragent@c
 3. [ ] Webhook URL + Secret  
 4. [ ] Merge PRs (Reihenfolge oben) → Deploy / `job restart`  
 5. [ ] Smoke curls grün  
-6. [ ] www §1 + §2 + §7 pasted  
+6. [ ] www §1 + §2 + §7 + §11 close-map pasted  
 7. [ ] Tags setzen  
 8. [ ] Ersten echten Checkout testen  
+9. [ ] Dogfood-Key-Pfad für Abteilungsleiter bereit (optional, FOUNDER-ONLY)  
 
 Fertig. Verkauf starten.
