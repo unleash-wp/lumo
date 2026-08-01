@@ -12,24 +12,26 @@
  * memory, and `mcp` must not pull the GitHub Action deps.
  */
 
-const HELP = `UnleashWP Lumo: catches stale AI-written WordPress code.
+const HELP = `UnleashWP Lumo — the WordPress AI code watcher (English).
+
+Start here (30 seconds, no account):
+  lumo demo
 
 Usage: lumo <command>
 
 Commands:
-  demo     Show the catch working on four code samples that ship with Lumo.
-           no project, no setup. Prints real findings from the real engine.
-  scan     Scan your current git diff for WordPress/WooCommerce patterns that
-           broke in a real release. Prints findings (LOUD first) or the scope
-           that was checked, never a verdict on your code.
-  mcp      Start the MCP server on stdio (for Claude Code, Cursor, VS Code).
-  skills   Install the WordPress agent skills (WordPress/agent-skills):
-           the manual to Lumo's watcher. Delegates to their installer.
-  action   GitHub Action runner, invoked by unleash-wp/lumo-action in CI.
-           Requires a Lumo Pro licence; without one it reports that it did
-           not run and checks nothing.
+  demo     Prove the catch on four shipped samples (real engine, real findings).
+  check    Check whole file contents (what scan cannot see in committed code).
+           Example: lumo check path/to/plugin.php
+  scan     Scan your current git DIFF only for patterns that broke in a release.
+           Not a whole-tree audit. Quiet ≠ clean.
+  mcp      Start the LOCAL Free MCP (bundled snapshot). Hosted Pro MCP is paid
+           only: https://mcp.unleash-wp.com/connect (Solo Hosted / Pro / Team 20).
+  skills   Install WordPress agent-skills (the manual; Lumo is the watcher).
+  action   GitHub Action runner (Lumo Pro / Team 20 licence required).
 
-Run without arguments to print this help.`;
+Products: Free (local) · Starter 39€ · Agent Team 99€ · Solo Hosted 149€ / Pro / Team 20 (hosted MCP).
+Free gets nothing from the Pro server. Lumo stays English. AI Forge local UI may offer DE.`;
 
 async function main(): Promise<void> {
   const cmd = process.argv[2];
@@ -37,6 +39,9 @@ async function main(): Promise<void> {
   switch (cmd) {
     case 'demo':
       await import('../demo/main.js');
+      return;
+    case 'check':
+      await import('../check/main.js');
       return;
     case 'scan':
       await import('../scan/main.js');

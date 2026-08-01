@@ -289,8 +289,10 @@ export function formatCatch(result: CatchResult, projectVersion?: string): strin
  * Caller substitutes {files} and {date}.
  */
 export const SCAN_NO_MATCH_TEMPLATE =
-  'lumo scan: {files} checked against Lumo Free{date}: no covered pattern matched. ' +
-  'Outside that coverage nothing was checked, so this is not an all-clear.';
+  'lumo scan: {files} checked against Lumo Free{date}: no covered pattern matched in the git diff. ' +
+  'Outside that coverage nothing was checked, so this is not an all-clear.\n' +
+  'Scope is the diff only (not whole files already committed). ' +
+  'Whole file: `lumo check path/to/file.php`. Proof on samples: `lumo demo`.';
 
 /**
  * Logged when the Action finds nothing. States scope, never a verdict on the PR.

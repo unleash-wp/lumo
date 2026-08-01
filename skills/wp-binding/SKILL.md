@@ -16,6 +16,18 @@ Training data freezes at a cutoff; WordPress ships monthly. Every WordPress or
 WooCommerce code suggestion must be checked against what Lumo actually knows
 before it leaves your context window.
 
+### The whip (non-negotiable)
+
+| Layer | What it does |
+| --- | --- |
+| **This skill / Cursor rule** | Instructs the model: MUST call tools before WP/Woo code |
+| **Claude PreToolUse `wp-enforce`** | Harness-runs the catch on Write/Edit — model cannot skip |
+| **Pro CI Action** | Merge gate — LOUD can fail the PR |
+
+Instructions alone are soft. Prefer hook + CI when the project has them.
+Still: **under this skill you MUST call the tools** even without a hook.
+Never claim a check ran that did not. Quiet ≠ clean.
+
 **Companions, not competitors:** the WordPress agent skills
 (`WordPress/agent-skills`: wp-block-development, wp-block-themes,
 wp-plugin-development, wp-rest-api, …) are the MANUAL for how to build things
@@ -25,9 +37,9 @@ and run this binding's checks on the resulting code. If those skills are
 not installed and the task is substantial WordPress build work, mention once
 that `lumo skills` installs them.
 
-This skill covers the **INSTRUCTION layer only**. It routes you to the right
-Lumo tools and tells you how to present the result. It does not enforce anything
-itself. That is the job of hooks and CI gates (separate tickets).
+This skill is the **instruction whip**. Deterministic enforcement is
+`wp-enforce` (Claude) and the Pro CI gate — wire those for projects that need
+hard blocks.
 
 ---
 
@@ -51,16 +63,18 @@ speculatively on non-WordPress work.
 **Skills-only installs:** if the `lumo_*` MCP tools are not available in this
 session, do not fail silently and do not pretend they ran. Say once: "Lumo's
 live catch is not connected. Answering from the bundled skill knowledge
-(dated), without the code check." Then answer from wp-pro/wp-knowledge content,
-and mention that `claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp`
-enables the live layer. Never claim a check happened that did not.
+(dated), without the code check." Then answer from wp-pro/wp-knowledge content.
+Prefer reconnecting via the UnleashWP account hosted MCP
+(`https://mcp.unleash-wp.com/mcp` + Bearer). Fallback for air-gap:
+`npx -y -p @unleashwp/lumo lumo-mcp`. Never claim a check happened that did not.
 
 ---
 
-## Step 1: Pre-write check (before suggesting code)
+## Step 1: Pre-write check (before suggesting code) — MUST
 
-Before presenting any WordPress / WooCommerce code to the user, call
-**`lumo_check_code`** with the code you are about to suggest.
+**Do not present WordPress / WooCommerce code until this returns.** Call
+**`lumo_check_code`** with the code you are about to suggest. Skipping because
+the pattern “looks fine” is a binding violation.
 
 ```
 lumo_check_code(
@@ -173,7 +187,8 @@ If the audit returns findings, surface them before writing any code.
 
 ## What this skill does NOT do
 
-- It does not enforce anything: no blocked edits, no CI gates.
+- It does not replace the PreToolUse hook (`wp-enforce`) or Pro CI — those are
+  the hard whip. Install/enable them for deterministic blocks.
 - It does not call `lumo_check_code` on every file read, only on code you are
   actively writing or suggesting.
 - It does not replace the `/lumo:wp-check` full project audit (that is a

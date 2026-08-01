@@ -17,6 +17,8 @@ export default defineConfig({
     scan: 'src/scan/main.ts',
     // First-contact demo, runs the engine over bundled samples.
     demo: 'src/demo/main.ts',
+    // Whole-file check, complements diff-only `scan`.
+    check: 'src/check/main.ts',
   },
   format: ['esm'],
   outDir: 'dist',
