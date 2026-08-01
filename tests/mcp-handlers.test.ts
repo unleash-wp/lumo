@@ -107,7 +107,7 @@ describe('handleAudit', () => {
     expect(result).toContain('Detected WooCommerce');
     expect(result).toContain('Lumo Pro');
     // Not a false all-clear
-    expect(result).not.toContain('No known WordPress risk patterns detected');
+    expect(result).not.toContain('none of them applied');
   });
 
   it('returns Free Markdown when a Free-covered pattern is detected', async () => {
@@ -133,13 +133,17 @@ describe('handleAudit', () => {
 
   it('returns neutral message for a non-Woo project', async () => {
     const result = await handleAudit({ project_root: join(fixturesDir, 'non-woo') });
-    expect(result).toContain('No known WordPress risk patterns detected');
+    expect(result).toContain('none of them applied');
+    expect(result).toContain('not an all-clear');
   });
 
-  it('returns neutral message for a non-existent path, never throws', async () => {
-    await expect(
-      handleAudit({ project_root: '/tmp/__lumo_nonexistent_fixture__' }),
-    ).resolves.toContain('No known WordPress risk patterns detected');
+  // A path we cannot read is its own answer, not the neutral one. These two used
+  // to assert the same sentence, which is how the false all-clear survived.
+  it('names the path it could not read, and never throws', async () => {
+    const out = await handleAudit({ project_root: '/tmp/__lumo_nonexistent_fixture__' });
+    expect(out).toContain('could not read a project at');
+    expect(out).toContain('/tmp/__lumo_nonexistent_fixture__');
+    expect(out).not.toContain('none of them applied');
   });
 
   it('defaults to process.cwd() when project_root is omitted, never throws', async () => {

@@ -145,7 +145,8 @@ describe('auditProject', () => {
     expect(() => auditProject(emptyDir)).not.toThrow();
     const result = auditProject(emptyDir);
     expect(result.detected).toBe(false);
-    expect(result.message).toMatch(/No known WordPress risk patterns detected/);
+    expect(result.message).toMatch(/none of them applied/);
+    expect(result.message).toMatch(/not an all-clear/);
     expect(result.entry).toBeUndefined();
   });
 
@@ -153,7 +154,8 @@ describe('auditProject', () => {
     expect(() => auditProject(join(fixturesDir, 'non-woo'))).not.toThrow();
     const result = auditProject(join(fixturesDir, 'non-woo'));
     expect(result.detected).toBe(false);
-    expect(result.message).toMatch(/No known WordPress risk patterns detected/);
+    expect(result.message).toMatch(/none of them applied/);
+    expect(result.message).toMatch(/not an all-clear/);
   });
 
   it('returns detected:false for a dir with an untracked .env, git rung requires tracking, not mere presence', () => {
