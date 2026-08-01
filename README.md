@@ -186,7 +186,7 @@ Free self-hosts AI Forge locally.
 
 **Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats (3×199 ≈ 599).
 
-Pack details: [docs/packages.md](docs/packages.md) (canonical), [docs/website-pricing-table.md](docs/website-pricing-table.md), [docs/sales-ready-checklist.md](docs/sales-ready-checklist.md). 30-day money-back.
+Pack details: [docs/packages.md](docs/packages.md) (canonical), [docs/website-pricing-table.md](docs/website-pricing-table.md), [docs/sales-ready-checklist.md](docs/sales-ready-checklist.md). 14-day money-back.
 **Not sold as AppSec.** Checkout: Lemon Squeezy when variants are live.
 
 ---

@@ -5,7 +5,7 @@ Do **not** invent Lemon Squeezy product ids. Create products first, then paste r
 
 **USP (say this first):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot; Pro = live curated from Core. Quiet ≠ clean. Forge Hosted = entitlement only (install not yet available). Do not claim Ready for WP 7.1.
 
-**Money-back:** Paid SKUs claim **30-day money-back** once Lemon Squeezy checkout is live
+**Money-back:** Paid SKUs claim **14-day money-back** once Lemon Squeezy checkout is live
 (already stated on pricing matrix footnotes and kit docs). Restate on LS product pages.
 That refund line is the finance close for Abteilungsleiter when there is no hosted trial.
 
@@ -19,7 +19,7 @@ Canonical detail: [website-pricing-table.md §11](./website-pricing-table.md#11-
 | --- | --- | --- |
 | Entwickler | Solo Hosted 149 or Agent Team 99 | After Free Aha: live catalogue vs files; Free freezes |
 | Freelancer | Solo Hosted 149 ★ | Agent Team = files dead end; Solo includes Pack |
-| Abteilungsleiter | Pro 199/seat | CI non-negotiable; Free proof + 30-day MB / dogfood key |
+| Abteilungsleiter | Pro 199/seat | CI non-negotiable; Free proof + 14-day MB / dogfood key |
 | Agentur-Chef | Team 20 · 599 | Default agency; ~4+ seats math |
 
 **Founder actions still open (not code):**
@@ -27,9 +27,9 @@ Canonical detail: [website-pricing-table.md §11](./website-pricing-table.md#11-
 | Action | Why |
 | --- | --- |
 | Share temporary dogfood / demo keys with Abteilungsleiter finance | No public hosted trial by design |
-| Restate **30-day money-back** on every LS paid product page | Finance close without fake trial |
+| Restate **14-day money-back** on every LS paid product page | Finance close without fake trial |
 | Optional 60 s Free + Solo LOUD screenshot | Substitutes trial for deck/finance |
-| **FOUNDERS-DECIDE:** louder 14-day badge vs keep 30-day | Prefer framing; do not cut price |
+| **FOUNDERS-LOCKED:** refund window is **14 days** only | Do not advertise 30; do not cut price |
 
 ---
 

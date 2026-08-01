@@ -110,7 +110,7 @@ Externe Kunden-Mails sind optional später, nicht der Gate.
 **Blocks purchase:**
 - No hosted trial / sandbox key (by design) — need a recorded Solo/Pro smoke video or founder-shared key for dogfood.
 - Action verification needs a real repo + secrets.
-- Money-back 30 days only after LS exists.
+- Money-back 14 days only after LS exists.
 
 **Verdict:** Strong Pro fit. Purchase blocked on delivery + seat story, not on price.
 

@@ -54,7 +54,7 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € (h
 | --- | --- | --- | --- | --- |
 | **Entwickler** | Free → **Solo Hosted 149** or **Agent Team 99** | After `demo`: live catalogue vs files-only fork; Free snapshot freezes | Starter 39 tiny entry | Stay Free without stating freeze; npm vs go-live branch confusion |
 | **Freelancer** | **Solo Hosted 149 ★** | Pack 99 = files dead end for live Cursor; Solo includes Pack + Vol.1 + Forge Hosted entitlement | Starter 39 budget | Stop at Agent Team when they need live MCP |
-| **Abteilungsleiter** | **Pro 199/seat** | CI gate non-negotiable for merge; 1–3 seats; no hosted trial — Free LOUD + 30-day money-back / founder dogfood key | Solo if no CI | Fake trial product |
+| **Abteilungsleiter** | **Pro 199/seat** | CI gate non-negotiable for merge; 1–3 seats; no hosted trial — Free LOUD + 14-day money-back / founder dogfood key | Solo if no CI | Fake trial product |
 | **Agentur-Chef** | **Team 20 · 599** | Default agency close; seat math from ~4 | Pro × 1–3 tiny shop | Double-sell Starter/Agent Team |
 | Agency chef (alias) | **Team 20** | Same | — | Upsell Pack twice |
 | Senior Dev | Free → **Solo Hosted** or **Pro** | Same as Entwickler / Abteilungsleiter | — | Hide Cursor rule |

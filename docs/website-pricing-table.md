@@ -15,7 +15,7 @@ Feature rows are **measured from code**, not marketing guesswork.
 
 **WordPress 7.1 readiness:** **Coverage expanding, not complete.** Catalogue has WordPress **7.0** catch/reference entries plus a **growing 7.1 wave** (Free high-signal Catch slice + Pro depth). A full WordPress **7.1** pack and founder briefing remain **open**. Do **not** claim “Ready for WP 7.1.” See §9 and `docs/knowledge-import-agent-skills.md`.
 
-**Money-back:** 30 days on paid SKUs once Lemon Squeezy checkout is live.
+**Money-back:** 14 days on paid SKUs once Lemon Squeezy checkout is live.
 
 **Everyone buys (definition):** Each buying persona has one primary SKU they would pay for, with a clear trigger. CEO is the founder, not a buyer. See §11.
 
@@ -262,7 +262,7 @@ Local Forge UI may offer German (DE). Lumo product language stays English.
 | GitHub Action **CI gate** (LOUD can fail PR) | ○ | ○ | ○ | ○ | ● | ● |
 | WordPress plugin abilities (`lumo-wp`, needs licence) | ○ | ○ | ○ | ● | ● | ● |
 | Self-hosted Pro catalogue | ○ | ○ | ○ | ○ | ○ | ○ |
-| Money-back 30 days | — | ● | ● | ● | ● | ● |
+| Money-back 14 days | — | ● | ● | ● | ● | ● |
 
 ### Footnotes (must appear under the table)
 
@@ -391,7 +391,7 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 - GitHub Action can fail LOUD PRs — **required if WordPress merges need a gate that cannot be skipped**  
 - Unlicensed Action stays green and says the gate **did not run** (never a silent pass)  
 - Prefer Pro for **1–3** seats with CI; Team 20 from ~4 seats  
-- **No hosted trial.** Proof path: Free `demo` LOUD first, then 30-day money-back once checkout is live (or a founder-shared dogfood key for finance review)  
+- **No hosted trial.** Proof path: Free `demo` LOUD first, then 14-day money-back once checkout is live (or a founder-shared dogfood key for finance review)  
 **CTA:** Get Pro
 
 ### Agent Team — 99 €/yr (secondary · not starred)
@@ -475,7 +475,7 @@ Canonical product rules: [go-live-final.md](./go-live-final.md) · [packages.md]
 | --- | --- | --- | --- | --- |
 | **Entwickler** | Free → **Solo Hosted 149** (live) or **Agent Team 99** (files) | After `demo` Aha: local snapshot freezes; live ACF/Woo/GF needs hosted (402 without key). One-line npm vs go-live branch everywhere Free is sold. | Starter 39 if tiny entry | Stay Free forever without stating the freeze; confuse npm `0.4.x` with go-live `check` |
 | **Freelancer** | **Solo Hosted 149 ★** | Best Value: +50 € over Agent Team buys hosted MCP + Pack included + Vol.1 + Forge Hosted entitlement. Agent Team alone = files dead end for live Cursor. | Starter 39 budget / files-curious | Stop at Agent Team 99 when they need live MCP |
-| **Abteilungsleiter** | **Pro 199/seat** | CI merge gate is non-negotiable when WordPress PRs merge without a human re-check. Unlicensed Action never silent-passes. Seat math: 1–3 Pro; Team 20 from ~4. | Solo Hosted if no CI | Invent live trial infra. Close with Free LOUD proof + **30-day money-back** and/or **founder dogfood key** for finance |
+| **Abteilungsleiter** | **Pro 199/seat** | CI merge gate is non-negotiable when WordPress PRs merge without a human re-check. Unlicensed Action never silent-passes. Seat math: 1–3 Pro; Team 20 from ~4. | Solo Hosted if no CI | Invent live trial infra. Close with Free LOUD proof + **14-day money-back** and/or **founder dogfood key** for finance |
 | **Agentur-Chef** | **Team 20 · 599** | Default agency close. ~30 €/seat/year vs Pro 199. Pack + CI + Vol.1 + Forge Hosted entitlement included. | Pro × 1–3 only if tiny shop | Upsell Starter/Agent Team twice; weaken Team 20 |
 
 **Founder close tools (not product infra):**
@@ -483,10 +483,10 @@ Canonical product rules: [go-live-final.md](./go-live-final.md) · [packages.md]
 | Tool | Who | Status |
 | --- | --- | --- |
 | Free `demo` / go-live branch `check` | All | Live |
-| 30-day money-back on LS paid pages | All paid | Restate on checkout (already locked) |
+| 14-day money-back on LS paid pages | All paid | Restate on checkout (already locked) |
 | Founder-shared dogfood / demo keys | Abteilungsleiter finance | **FOUNDER-ONLY** — temporary keys, not a public trial product |
 | 60 s Free + Solo LOUD screenshot | Abteilungsleiter / Freelancer | Open (founder media) |
-| Shorter refund window (e.g. 14-day badge) | Optional louder close | **FOUNDERS-DECIDE** — prefer keep 30-day; do not cut price |
+| Refund window | All paid | **FOUNDERS-LOCKED:** **14 days** only; do not advertise 30; do not cut price |
 
 **No price change in this pass.** Any price tweak = **FOUNDERS-DECIDE**.
 

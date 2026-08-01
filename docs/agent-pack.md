@@ -16,7 +16,7 @@ Cheaper entry (2 agents only): **[Agent Core 39 €/yr](./agent-core.md)**.
 | 9 skills + 5 slash commands | GitHub Action CI gate |
 | Claude Code / Cursor / Codex install paths | AI Forge Hosted |
 | Annual update entitlement (LS, 1 activation) | **Vol.1 living knowledge** (69 MCP lookups — paid hosted only) |
-| Money-back 30 days | Optional bookstore PDF (week-1; does not block go-live) |
+| Money-back 14 days | Optional bookstore PDF (week-1; does not block go-live) |
 
 Source tree: `unleash-wp/lumo-agent-kit` (ship as zip / installer from that repo).
 Public topic matrix: [website-pricing-table.md](./website-pricing-table.md) §5.

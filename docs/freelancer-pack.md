@@ -19,7 +19,7 @@ File-only alternatives (no hosted MCP): **[Agent Core 39 €/yr](./agent-core.md
 | **AI Forge Hosted** - included entitlement on Freelancer / Pro / Agency. Hosted Forge install not yet available. | - |
 | Cursor one-shot (`/connect` + `lumo.mdc`) | — |
 | Offline CLI: `demo`, `check`, `scan` | — |
-| Money-back 30 days | — |
+| Money-back 14 days | — |
 | — | **GitHub Action CI gate** (Pro+) |
 
 Why CI is out: CI is the team/merge job. Freelancers win in the editor first.
