@@ -2,9 +2,14 @@
 
 English. Locked 2026-08-01. Founder gate for Lemon Squeezy + deploy.
 
-> **Founder (DE):** Dogfood ist raus — Branch `release/v1.0.0-go-live` + Kunden-Testblatt
-> [`customer-dogfood-test.md`](./customer-dogfood-test.md). **Feedback der Tester abwarten**,
-> dann umsetzen, **danach** erst der formale Code-Review-Pass. Kein Review-Gate jetzt.
+> **Founder (DE):** Dogfood für diesen Release Candidate = **Agent-Team-Persona-Testing-Mode**
+> (simulierte Käufer-Personas gegen die locked Leiter), nicht Warten auf externe Kunden-Mails.
+> Ablauf: Persona-Feedback → Freigabe der Fix-Liste → umsetzen → **danach** formaler
+> Code-Review-Pass. Kein Review-Gate jetzt.
+>
+> Artefakt: [`dogfood-persona-feedback-2026-08-01.md`](./dogfood-persona-feedback-2026-08-01.md).
+> Manual smoke sheet (optional later / invitees): [`customer-dogfood-test.md`](./customer-dogfood-test.md).
+> Branch: `release/v1.0.0-go-live`.
 
 ---
 

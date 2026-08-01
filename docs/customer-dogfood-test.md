@@ -1,9 +1,16 @@
 # Lumo dogfood test — go-live candidate
 
-English. For invited testers. Locked with the 2026-08-01 go-live candidate.
+English. Locked with the 2026-08-01 go-live candidate.
 
-You are testing the **go-live candidate**, not a finished public checkout. Some paid
-paths need an UnleashWP invite or license key. Free local works without an account.
+**Dogfood path for this release candidate:** **Agent Team persona testing mode** —
+internal simulated buyer personas score the locked ladder and messaging first.
+Results: [`dogfood-persona-feedback-2026-08-01.md`](./dogfood-persona-feedback-2026-08-01.md).
+External customer email is **optional later**, not the gate for the fix pass.
+
+This sheet remains the **manual smoke checklist** for invitees or founder Day-0 runs
+when zips / keys exist. You are testing the **go-live candidate**, not a finished
+public checkout. Some paid paths need an UnleashWP invite or license key. Free local
+works without an account.
 
 **Honesty (read first):**
 
@@ -93,7 +100,12 @@ Do **not** expect Forge Hosted to open in this round.
 
 ## Feedback (keep it simple)
 
-Reply to the invite email with:
+**Primary (this RC):** Persona panel output in
+[`dogfood-persona-feedback-2026-08-01.md`](./dogfood-persona-feedback-2026-08-01.md)
+(clarity / value / trust / buy intent / confusion / blockers + P0–P2 fix list).
+Founder approves fixes → implement → code review.
+
+**If an invitee runs this sheet later**, reply with:
 
 1. Tier you tested (Free / Starter / Agent Team / Solo / Pro / Team 20)
 2. What worked (one sentence + command or screenshot)
@@ -101,5 +113,3 @@ Reply to the invite email with:
 4. Anything that felt like a false all-clear
 
 Optional: open a GitHub issue on [unleash-wp/lumo](https://github.com/unleash-wp/lumo/issues) with title `dogfood: …` and the same four points.
-
-Thank you — your notes drive the next fix pass, then code review.
