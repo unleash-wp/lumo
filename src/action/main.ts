@@ -24,6 +24,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { createHash } from 'node:crypto';
 import { runCatch } from './catch-runner.js';
 import {
   ACTION_NO_MATCH_LINE,
@@ -59,6 +60,39 @@ import {
  */
 export function failsOnDegraded(rawInput: string, proDegraded: boolean): boolean {
   return proDegraded && rawInput.trim().toLowerCase() === 'true';
+}
+
+// ---------------------------------------------------------------------------
+// Pro seat fingerprint (#159)
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive a stable, privacy-preserving fingerprint for this installation, sent
+ * to the Pro server as X-Lumo-Instance so it can enforce the seat limit
+ * (#159: without one, activation could never be checked and one licence key
+ * worked on unlimited installs).
+ *
+ * Stable across restarts and across runs on purpose: `owner/repo` is the
+ * identity of the installation Lemon Squeezy's activation limit is meant to
+ * count, so every run against the same repository must present the same
+ * fingerprint. A per-run id (the run id, a timestamp, a random UUID) would
+ * look like a fresh install to LS on every single push, and a five-seat
+ * licence would be exhausted inside a day by one repository's CI alone.
+ *
+ * Hashed rather than sent raw: `owner/repo` is not a secret (it is public in
+ * the checkout itself), but the fingerprint travels over the network and
+ * into Lemon Squeezy's `instance.name` field, and a one-way hash keeps that
+ * value opaque to anyone who only has the hash, symmetric with how the
+ * WordPress plugin derives its own (site URL + blog_id, hashed).
+ *
+ * Returns undefined when repository is empty, so a caller with nothing to
+ * hash sends no header rather than a fingerprint for the empty string, which
+ * would collide across every misconfigured run.
+ */
+export function deriveActionInstanceId(repository: string | undefined): string | undefined {
+  const trimmed = repository?.trim();
+  if (!trimmed) return undefined;
+  return createHash('sha256').update(trimmed).digest('hex');
 }
 
 // ---------------------------------------------------------------------------
@@ -218,10 +252,13 @@ async function main(): Promise<void> {
   // The diff comes back as the raw response body when mediaType.format='diff'.
   const diff = diffResponse.data as unknown as string;
 
+  const instanceId = deriveActionInstanceId(`${ctx.repo.owner}/${ctx.repo.repo}`);
+
   const { loudCount, softCount, findings, proDegraded, scanLimits } = await runCatch({
     diff,
     proUrl: proUrl || undefined,
     licenseKey: licenseKey || undefined,
+    instanceId,
   });
 
   // The degradation must speak in the PR itself, not only in the job log,
