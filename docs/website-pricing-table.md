@@ -282,7 +282,7 @@ Lead with **jobs and topics**. Commands and skills are how you invoke them.
 
 ### Starter (39 €) — two agents on disk
 
-#### Currency Guard (`currency-guard`)
+#### Currency Guard (`uwp-currency-guard`)
 
 Catches stale or version-wrong AI output for blocks, themes, and Interactivity:
 
@@ -299,7 +299,7 @@ Catches stale or version-wrong AI output for blocks, themes, and Interactivity:
 
 With hosted MCP connected: live `lumo_check_code`. Without: bundled patterns at kit release.
 
-#### Code Reviewer (`code-reviewer`)
+#### Code Reviewer (`uwp-code-reviewer`)
 
 Senior PR pass on PHP / `block.json` / `theme.json`:
 
@@ -326,7 +326,17 @@ Everything in Starter, plus:
 | **Security Auditor** | XSS / SQLi / CSRF / caps / REST holes / uploads / `unserialize` / open redirects / `WP_DEBUG_DISPLAY`; secrets and `.env` hygiene |
 | **Release Engineer** | Testing strategy, CI stages, atomic deploy / rollback, staging hygiene, caching / cron / logging / backups, Composer lock, plugin standards, project layout (advisory `lumo_lookup` lane) |
 
-Pack also: **9** skills + **5** commands. Still **no** hosted MCP on the 99 € SKU alone.
+Pack also: **9** skills + **5** commands (honest counts). Still **no** hosted MCP on the 99 € SKU alone.
+
+#### Skills catalog (9) — IDs stay `wp-*`; agents stay `uwp-*`
+
+| Category | Skills |
+| --- | --- |
+| Scaffold & project structure | `wp-project-scaffold`, `wp-composer-bedrock`, `wp-mu-plugin`, `wp-block-scaffold` |
+| CI, test & deploy | `wp-ci-pipeline`, `wp-playwright-e2e`, `wp-atomic-deploy`, `wp-release` |
+| Secrets & hygiene | `wp-secrets-env` |
+
+Commands: `/wp-scaffold`, `/wp-review`, `/wp-audit`, `/wp-deploy-check`, `/wp-test-setup`.
 
 ### Solo Hosted 149 / Pro 199 / Team 20 599 — hosted depth
 
