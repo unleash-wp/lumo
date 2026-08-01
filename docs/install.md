@@ -88,13 +88,13 @@ Use this when you have a Lumo Pro license and want to connect the Pro knowledge 
 **macOS / Linux (bash or zsh):**
 
 ```
-claude mcp add --transport http lumo-pro https://mcp.unleashwp.de/mcp --scope project
+claude mcp add --transport http lumo-pro https://mcp.unleash-wp.com/mcp --scope project
 ```
 
 **Windows: PowerShell**
 
 ```
-claude mcp add --transport http lumo-pro https://mcp.unleashwp.de/mcp --scope project
+claude mcp add --transport http lumo-pro https://mcp.unleash-wp.com/mcp --scope project
 ```
 
 (No special quoting needed for these arguments in PowerShell. If a value you pass ever contains `&` or spaces, wrap that value in double quotes.)
@@ -102,7 +102,7 @@ claude mcp add --transport http lumo-pro https://mcp.unleashwp.de/mcp --scope pr
 **Windows: cmd.exe**
 
 ```
-claude mcp add --transport http lumo-pro "https://mcp.unleashwp.de/mcp" --scope project
+claude mcp add --transport http lumo-pro "https://mcp.unleash-wp.com/mcp" --scope project
 ```
 
 (The URL has no special characters, so the bare and quoted forms are equivalent here. The quoted form is shown as the safe default. Quote any argument value containing `&`, `|`, `^`, or spaces.)
@@ -123,7 +123,7 @@ If the marketplace or MCP path is not available, copy the skill into your projec
 ```json
 {
   "mcpServers": {
-    "lumo-pro": { "type": "http", "url": "https://mcp.unleashwp.de/mcp" }
+    "lumo-pro": { "type": "http", "url": "https://mcp.unleash-wp.com/mcp" }
   }
 }
 ```

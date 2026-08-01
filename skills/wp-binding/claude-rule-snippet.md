@@ -64,7 +64,7 @@ Or use the Pro endpoint if you have a license:
 ```json
 {
   "mcpServers": {
-    "lumo-pro": { "type": "http", "url": "https://mcp.unleashwp.de/mcp" }
+    "lumo-pro": { "type": "http", "url": "https://mcp.unleash-wp.com/mcp" }
   }
 }
 ```

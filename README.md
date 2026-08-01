@@ -17,47 +17,21 @@ bundled samples and prints what it finds:
 npx @unleashwp/lumo demo
 ```
 
-It says in its first line that those are samples, not your project. When you
-want it on your own code, read on.
+It says in its first line that those are samples, not your project. Two of the
+findings are LOUD (certain defects with a dated source), two are advisory.
+Reproduce it yourself; that is the flagship proof.
 
-Ask any AI assistant for a WordPress image filter. Sooner or later it writes this:
+When you want it on your own code:
 
-```php
-function my_theme_filter_images( $html ) {
-    return wp_img_tag_add_decoding_attr( $html, 'the_content' );
-}
-add_filter( 'the_content', 'my_theme_filter_images' );
+```bash
+npx @unleashwp/lumo scan
 ```
 
-It looks fine. It compiles. It has been deprecated since WordPress 6.4 and throws a
-deprecation notice on every modern install. Run the scan on your uncommitted changes
-and Lumo catches it, unprompted:
-
-```
-$ npx @unleashwp/lumo scan
-lumo scan: 1 LOUD finding in your current changes.
-
---- images.php ---
-> BREAKING: your AI suggested code that broke in WordPress 6.4.0.
-> This was deprecated or removed in WordPress 6.4.0 (2026-06-21).
-> Your model's training likely predates this release.
-
-## wp_img_tag_add_decoding_attr() deprecated in WP 6.4: use wp_img_tag_add_loading_optimization_attrs()
-
-### Wrong
-$img_html = wp_img_tag_add_decoding_attr( $img_html, 'custom-context' );
-
-### Correct
-$img_html = wp_img_tag_add_loading_optimization_attrs( $img_html, 'custom-context' );
-
-**Source:** https://developer.wordpress.org/reference/functions/wp_img_tag_add_decoding_attr/
-**Affected:** WordPress ≥ 6.4.0
-
-Fix the LOUD finding above before committing.
-```
-
-(Output trimmed. The full catch includes the summary, a test step, and the knowledge
-date. Reproduce it yourself: [docs/catch-demo.md](docs/catch-demo.md).)
+`lumo scan` walks your uncommitted diff. Deprecations that are not stamped as
+breaking changes (for example `wp_img_tag_add_decoding_attr` after WP 6.4) land
+as **advisory**, not LOUD — LOUD is reserved for patterns with a verified
+breaking version fact or an always-wrong security signal. See
+[docs/catch-demo.md](docs/catch-demo.md) for a walkthrough.
 
 Nobody asked Lumo to check. That is the product. The official [WordPress/agent-skills](https://github.com/WordPress/agent-skills) answer when your AI consults them; Lumo fires when your AI is wrong. Run both.
 
