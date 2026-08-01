@@ -20,3 +20,7 @@ build/
 
 # npm pack output (build artifact)
 *.tgz
+
+# Local smoke fixtures
+.tmp-check/
+.tmp-prodev-bait/
