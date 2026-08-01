@@ -5,7 +5,7 @@ English. One global price. No PPP.
 **USP:** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot. Pro = live curated knowledge that tracks Core.
 
 **Two doors:**
-- **Free** may self-host (local CLI + local MCP + AI Forge self-host). Encouraged.
+- **Free** runs Lumo as an **AI Forge plugin** on a local Forge host. Encouraged.
 - **Freelancer / Pro / Agency** = **done-for-you online access** to UnleashWP’s hosted MCP
   (`mcp.unleash-wp.com`). Not a self-hosted Pro package.
 
@@ -22,7 +22,7 @@ Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € �
 
 | Package | Website | Price | Hosted MCP (Pro DB) | What they get |
 | --- | --- | --- | --- | --- |
-| **Lumo Free** | Free | 0 € | **Never** | Local `@unleashwp/lumo` (bundled snapshot: Core/REST/block teaser Catch) + AI Forge **self-host**. No hosted MCP. |
+| **Lumo Free** | Free | 0 € | **Never** | **AI Forge plugin** (`github:unleash-wp/lumo`) + `@unleashwp/lumo` engine (Free snapshot on `uwp mcp`). No hosted MCP. |
 | **Agent Core** | **Starter** | **39 €/yr** | **Never** | **2 specialist agents on disk:** block/theme/Interactivity currency (WP 7.0 + **WP 7.1 always-iframe** breaks) + Core PHP review (escaping, REST auth, caps, HPOS basics, Cron/HTTP/options). Scaffold skills. No live plugin catalogue. |
 | **Lumo Agent Pack** | **Agent Team** | **99 €/yr** | **Never** | **Full 6-agent team on disk** (Currency Guard, Code Reviewer, Woo HPOS/Subscriptions, Plugin ACF/GF/Elementor/Meta Box/Carbon/CF7 patterns, Security, Release) + 9 skills + 5 commands. No hosted MCP. |
 | **Freelancer** | **Solo Hosted** ★ | **149 €/yr** | **Yes** · 1 seat | Hosted MCP depth (Core, REST, FSE, Abilities, WP **7.0** + growing **7.1** wave, plugins via `lumo_plugin_advice`) · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) · no CI. **Full WP 7.1 pack = still open (not claimed ready).** |

@@ -10,7 +10,15 @@ import { Button } from '../../src/client/ui';
 
 const SNIPPETS = [
   {
-    label: 'Claude Code / Cursor (MCP)',
+    label: 'AI Forge plugin (primary Free path)',
+    cmd: 'github:unleash-wp/lumo',
+  },
+  {
+    label: 'Catch engine (after plugin install)',
+    cmd: 'npm install -g @unleashwp/lumo',
+  },
+  {
+    label: 'Claude Code / Cursor (standalone MCP, no Forge)',
     cmd: 'claude mcp add lumo -- npx -y -p @unleashwp/lumo lumo-mcp',
   },
   {

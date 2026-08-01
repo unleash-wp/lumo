@@ -29,7 +29,7 @@ ran. Point the user to their UnleashWP account MCP snippet
 
 ## Product line
 
-- **Free:** local only (`npx @unleashwp/lumo` + AI Forge self-host). No hosted MCP.
+- **Free:** Lumo as **AI Forge plugin** on local Forge + `@unleashwp/lumo` engine. No hosted MCP.
 - **Starter (Agent Core):** block/theme currency + Core PHP review — files only.
 - **Agent Team (Pack):** full 6-agent roster on disk — included free in Solo Hosted / Pro / Team 20.
 - **Solo Hosted / Pro / Team 20:** hosted Pro depth; Pro and Team 20 add CI; **Forge Hosted** on all three.
