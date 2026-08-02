@@ -10,7 +10,7 @@
  * Deliberately NOT vendored into this package: the skills are actively
  * maintained upstream with their own installer and their own licence. A frozen
  * copy inside Lumo would rot from day one: the freshness product must not
- * ship staling copies. This command delegates to the official installer and
+ * ship staling copies. This command delegates to the upstream installer and
  * inherits the terminal so their prompts reach the user directly.
  */
 

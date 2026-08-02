@@ -13,6 +13,12 @@ build/
 
 # Claude Code local-only settings
 .claude/settings.local.json
+.claude/hooks/.logs/
+
+# Agent tooling cache (never ship)
+.impeccable/
+.agent-transcripts/
+.cursor/projects/
 
 # OS / editor
 .DS_Store

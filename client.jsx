@@ -30,7 +30,7 @@ const SNIPPETS = [
     cmd: '- uses: unleash-wp/lumo@v0.4.0',
   },
   {
-    label: 'Official WordPress skills, the manual to Lumo’s watcher (GPL, by the WordPress project)',
+    label: 'WordPress agent skills (WordPress/agent-skills), the manual to Lumo’s watcher',
     cmd: 'lumo skills',
   },
 ];
