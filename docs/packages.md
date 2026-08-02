@@ -1,107 +1,75 @@
-# Lumo packages — final (locked 2026-08-01)
+# Lumo packages
 
-English. One global price. No PPP.
+English. One global price. No PPP. Locked 2026-08-01.
 
-**USP:** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot. Pro = live curated knowledge that tracks Core.
+## Sales story
 
-**Two doors:**
-- **Free** runs Lumo as an **AI Forge plugin** on a local Forge host. Encouraged.
-- **Freelancer / Pro / Agency** = **done-for-you online access** to UnleashWP’s hosted MCP
-  (`mcp.unleash-wp.com`). Not a self-hosted Pro package.
+**Free:** Lumo plugin in AI Forge. Local snapshot on `uwp mcp`. No hosted MCP.
 
-**File packs (no hosted MCP):** Agent Core (entry) and Agent Pack (full team).
-Paid hosted seats include the **full Agent Pack** — never double-sell.
+**Paid:** Hosted done for you at `mcp.unleash-wp.com`: live catalogue, Agent Pack included, MCP link, CI on Pro/Team 20. Forge Hosted entitlement on paid hosted seats when install ships.
+
+**File packs:** Starter (39 €) and Agent Team (99 €) are offline agent files only. No hosted MCP.
+
+Knowledge is curated from WordPress Core changes (Make/Core, Trac, handbooks) with wrong→correct, source, and version. Free uses a bundled snapshot. Paid uses the live Pro catalogue.
 
 ## Ladder
 
 ```
-Free (local) → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € → Pro 199 € → Team 20 · 599 €
+Free → Starter 39 € → Agent Team 99 € → Solo Hosted 149 € → Pro 199 € → Team 20 · 599 €
 ```
 
-(Internal LS: Agent Core · Agent Pack · Freelancer · Agency.)
-
-| Package | Website | Price | Hosted MCP (Pro DB) | What they get |
+| Package | Website | Price | Hosted MCP | What they get |
 | --- | --- | --- | --- | --- |
-| **Lumo Free** | Free | 0 € | **Never** | **AI Forge plugin** (`github:unleash-wp/lumo`) + `@unleashwp/lumo` engine (Free snapshot on `uwp mcp`). No hosted MCP. |
-| **Agent Core** | **Starter** | **39 €/yr** | **Never** | **2 specialist agents on disk:** block/theme/Interactivity currency (WP 7.0 + **WP 7.1 always-iframe** breaks) + Core PHP review (escaping, REST auth, caps, HPOS basics, Cron/HTTP/options). Scaffold skills. No live plugin catalogue. |
-| **Lumo Agent Pack** | **Agent Team** | **99 €/yr** | **Never** | **Full 6-agent team on disk** (Currency Guard, Code Reviewer, Woo HPOS/Subscriptions, Plugin ACF/GF/Elementor/Meta Box/Carbon/CF7 patterns, Security, Release) + 9 skills + 5 commands. No hosted MCP. |
-| **Freelancer** | **Solo Hosted** ★ | **149 €/yr** | **Yes** · 1 seat | Hosted MCP depth (Core, REST, FSE, Abilities, WP **7.0** + growing **7.1** wave, plugins via `lumo_plugin_advice`) · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) · no CI. **Full WP 7.1 pack = still open (not claimed ready).** |
-| **Lumo Pro** | **Pro** | **199 €/seat/yr** | **Yes · hosted only** | Same as Solo Hosted + CI Action · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) |
-| **Agency** | **Team 20** | **599 €/yr** | **Yes · hosted only** · **20 seats** | Hosted MCP · **Agent Pack** · Vol.1 · **Forge Hosted entitlement** (install not yet available) · CI |
+| Lumo Free | Free | 0 € | Never | AI Forge plugin + `@unleashwp/lumo` engine (Free snapshot) |
+| Agent Core | Starter | 39 €/yr | Never | 2 agents on disk: block/theme currency + Core PHP review |
+| Agent Pack | Agent Team | 99 €/yr | Never | 6 agents + 9 skills + 5 commands on disk |
+| Freelancer | Solo Hosted ★ | 149 €/yr | Yes · 1 seat | Hosted MCP + Pack + Vol.1 lookups + Forge Hosted entitlement · no CI |
+| Lumo Pro | Pro | 199 €/seat/yr | Yes | Same as Solo + CI Action |
+| Agency | Team 20 | 599 €/yr | Yes · 20 seats | Hosted MCP + Pack + Vol.1 + CI |
 
-**Seat helper:** Pro for 1–3 seats with CI; Team 20 from about 4 seats or one shop license (3×199 ≈ 599).
+Seat helper: Pro for 1–3 seats with CI; Team 20 from about 4 seats (3×199 ≈ 599).
 
-### Hard rules
+## Hard rules
 
-1. Free / Agent Core / Agent Pack / Community `uwp.free.…` → **zero bytes** from `mcp.unleash-wp.com`.
-2. **Full Agent Pack** included free in Freelancer / Pro / Agency — never double-sell.
-3. Agent Core + Agent Pack LS product ids must **not** be in `LUMO_LS_PRODUCT_IDS`.
-4. Freelancer + Pro + Agency LS product ids **must** be in `LUMO_LS_PRODUCT_IDS`.
-5. **No self-hosted Pro.** Paying seats = hosted MCP only.
-6. Quiet ≠ clean. Not AppSec. Lumo English; Forge local UI may be DE.
-7. Agency = **up to 20** hosted MCP seats (stated on checkout).
-8. Core is **not** called “Team” — Pack is the team. Core upsells to Pack.
-9. **Vol.1 living edition** = 69 `book-*` reference lookups via `lumo_lookup` on hosted MCP
-   (Freelancer / Pro / Agency). Not Catch. Not the PDF. Free / Core / Pack get teaser copy only.
-10. **AI Forge Hosted** is included on **Freelancer / Pro / Agency** (all paid hosted seats) —
-    **Included entitlement. Hosted Forge install not yet available.** Not Free / Core / Pack. Self-host remains available to all.
-11. **Do not claim “Ready for WP 7.1”** until Pro has published sourced `wp-7-1-*` entries
-    (see `website-pricing-table.md` §3.6 and `knowledge-import-agent-skills.md`).
-    **Loud fact (already shipped):** From WordPress 7.1 the Post Editor canvas runs inside an
-    iframe. Blocks that touch `document`/`window` or inject admin-scoped CSS break. Lumo watches
-    for those patterns.
-12. Website feature detail (domains + agent topics): [website-pricing-table.md](./website-pricing-table.md).
-13. Sales Day-0: [sales-ready-checklist.md](./sales-ready-checklist.md).
-14. **Everyone buys (persona close map):** [website-pricing-table.md §11](./website-pricing-table.md#11-everyone-buys-persona-close-map) — Entwickler → Solo/Pack fork; Freelancer → Solo Hosted 149; Abteilungsleiter → Pro 199; Agentur-Chef → Team 20. CEO is not a buyer.
+1. Free / Starter / Agent Team / community tokens → zero bytes from `mcp.unleash-wp.com`.
+2. Full Agent Pack included in Solo Hosted / Pro / Team 20. Never double-sell.
+3. Agent Core and Agent Pack LS product IDs stay out of `LUMO_LS_PRODUCT_IDS`.
+4. Freelancer, Pro, and Agency LS product IDs must be in `LUMO_LS_PRODUCT_IDS`.
+5. No self-hosted Pro. Paying seats use the hosted MCP only.
+6. Agency = up to 20 hosted MCP seats on checkout.
+7. Vol.1 living edition = 69 `book-*` reference lookups via `lumo_lookup` on hosted tiers only (not Catch, not the PDF).
+8. Forge Hosted: included entitlement on Solo Hosted / Pro / Team 20. Install not yet available.
+9. Do not claim “Ready for WP 7.1” until sourced `wp-7-1-*` entries ship. Post Editor always-iframe (7.1) is a known loud pattern; coverage is still expanding.
 
-### Name glossary
+Website copy: [website-sell-sheet.md](./website-sell-sheet.md) · [website-pricing-table.md](./website-pricing-table.md) · Install: [install.md](./install.md)
 
-| Website | LS / internal | Price |
-| --- | --- | --- |
-| Free | Lumo Free | 0 € |
-| Starter | Agent Core | 39 €/yr |
-| Agent Team | Agent Pack | 99 €/yr |
-| Solo Hosted ★ | Freelancer | 149 €/yr |
-| Pro | Lumo Pro | 199 €/seat/yr |
-| Team 20 | Agency | 599 €/yr |
-## UnleashWP Learn Vol.1 (living edition)
+## Vol.1 living edition
 
 | Tier | Vol.1 |
 | --- | --- |
-| Free | Teaser copy only |
-| Agent Core / Pack | No MCP book corpus (Pack = agent files, not hosted knowledge) |
-| Freelancer / Pro / Agency | **69 living `lumo_lookup` entries** (32/37 chapters distilled) |
+| Free / Starter / Agent Team | Teaser copy only |
+| Solo Hosted / Pro / Team 20 | 69 living `lumo_lookup` entries |
 
-Honest line: queryable engineering reference in hosted MCP, updated per release — not the
-345-page print/PDF and not automatic Catch rules. Bookstore PDF may stay separate on Digistore24.
+Queryable engineering reference in hosted MCP, updated per release. Not the print/PDF.
 
-## Lemon Squeezy products (founder creates)
+## Lemon Squeezy products
 
-| LS product name | Variant | Activations | License | In `LUMO_LS_PRODUCT_IDS`? |
-| --- | --- | --- | --- | --- |
-| Lumo Agent Core | Annual 39 EUR | 1 | Yes (download entitlement) | **No** |
-| Lumo Agent Pack | Annual 99 EUR | 1 | Yes (download entitlement) | **No** |
-| Lumo Freelancer | Annual 149 EUR | **1** | Yes | **Yes** |
-| Lumo Pro | Annual 199 EUR / seat | **1** per seat key | Yes | **Yes** |
-| Lumo Agency | Annual 599 EUR | **20** | Yes | **Yes** |
+| LS product | Variant | Activations | In `LUMO_LS_PRODUCT_IDS`? |
+| --- | --- | --- | --- |
+| Lumo Agent Core | Annual 39 EUR | 1 | No |
+| Lumo Agent Pack | Annual 99 EUR | 1 | No |
+| Lumo Freelancer | Annual 149 EUR | 1 | Yes |
+| Lumo Pro | Annual 199 EUR / seat | 1 per key | Yes |
+| Lumo Agency | Annual 599 EUR | 20 | Yes |
 
-Checkout copy anchors: see `agent-core.md`, `agent-pack.md`, `freelancer-pack.md`,
-and [website-pricing-table.md](./website-pricing-table.md). Connect page: `GET /connect` on the Pro host (payers).
+Connect page: `GET /connect` on the Pro host.
 
-## Who runs what technically
+## Who runs what
 
-| Buyer | MCP | Knowledge source |
+| Buyer | MCP endpoint | Knowledge |
 | --- | --- | --- |
-| Free | `npx … lumo-mcp` local | Free snapshot in npm package |
-| Agent Core / Pack only | local Free MCP + kit files | Snapshot + agent/skill patterns |
-| Freelancer / Pro / Agency | `https://mcp.unleash-wp.com/mcp` + Bearer LS key | **Pro SQLite on UnleashWP host only** |
+| Free | local `lumo-mcp` / `uwp mcp` | Free snapshot in npm package |
+| Starter / Agent Team | local Free MCP + kit files | Snapshot + bundled agent patterns |
+| Solo Hosted / Pro / Team 20 | `https://mcp.unleash-wp.com/mcp` + Bearer key | Pro SQLite on UnleashWP host |
 
-## Specs
-
-- Agent Core: [agent-core.md](./agent-core.md)
-- Agent Pack: [agent-pack.md](./agent-pack.md)
-- Freelancer: [freelancer-pack.md](./freelancer-pack.md)
-- Go-live ops: [START-HERE-GO-LIVE.md](./START-HERE-GO-LIVE.md), [sales-ready-checklist.md](./sales-ready-checklist.md)
-- Harmony + paid gate: lumo-pro `docs/product-harmony.md`
-- Server load: lumo-pro `docs/server-load.md`
-- LS go-live: lumo-pro `docs/licensing-runbook.md`
+Ops: lumo-pro [licensing-runbook.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/licensing-runbook.md) · [deployment-runbook.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/deployment-runbook.md) · [product-harmony.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/product-harmony.md)
