@@ -1,23 +1,25 @@
-# Website pricing table — final (locked)
+# Website pricing table
 
-English. Canonical for www /connect / checkout. Locked 2026-08-01.
-Feature rows are **measured from code**, not marketing guesswork.
+English. Canonical for www, /connect, and checkout. Locked 2026-08-01.
+Feature rows are measured from code.
 
-**USP (lead sales signal):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs. Free = local snapshot. Pro = live curated knowledge that tracks Core. Quiet ≠ clean.
+## Sales story
 
-**Psychology:** three hero cards for solos; **middle = Best Value**. Agent Team 99 stays visible but secondary. Team 20 = separate Teams block.
+**Free:** Lumo plugin in AI Forge. Local snapshot. No hosted MCP.
 
-**Founder lock:** **AI Forge Hosted** is included on **Solo Hosted, Pro, and Team 20** (all hosted paid tiers), not Agency-only.
+**Paid:** Hosted done for you at `mcp.unleash-wp.com`: live catalogue, Agent Pack included, MCP link, CI on Pro/Team 20. Forge Hosted entitlement on paid hosted seats when install ships.
 
-**Forge Hosted (customer line):** Included entitlement. Hosted Forge install not yet available. Self-host Forge remains available to everyone. Do not sell Hosted Forge as live-installable until `ai-forge` unblocks.
+**File packs:** Starter and Agent Team are offline agent files only.
 
-**WordPress 7.1 Post Editor iframe (USP in action):** Core landed the always-iframe Post Editor. Lumo curated that change into Catch/reference (wrong→correct + source + version). Blocks that touch `document`/`window` or inject admin-scoped CSS break. Free Catch slice + Pro depth watch it. Coverage expanding; not a full “Ready for WP 7.1” claim.
+Knowledge is curated from WordPress Core changes with wrong→correct, source, and version.
 
-**WordPress 7.1 readiness:** **Coverage expanding, not complete.** Catalogue has WordPress **7.0** catch/reference entries plus a **growing 7.1 wave** (Free high-signal Catch slice + Pro depth). A full WordPress **7.1** pack and founder briefing remain **open**. Do **not** claim “Ready for WP 7.1.” See §9 and `docs/knowledge-import-agent-skills.md`.
+**Layout:** three solo hero cards; Solo Hosted 149 is Best Value. Team 20 in a separate block.
+
+**Forge Hosted:** included entitlement. Install not yet available.
+
+**WP 7.1:** coverage expanding. Do not claim “Ready for WP 7.1.” Post Editor always-iframe is a known loud pattern.
 
 **Money-back:** 14 days on paid SKUs once Lemon Squeezy checkout is live.
-
-**Everyone buys (definition):** Each buying persona has one primary SKU they would pay for, with a clear trigger. CEO is the founder, not a buyer. See §11.
 
 ---
 
@@ -38,7 +40,7 @@ Invoice may show the LS name. Marketing and `/connect` use the website name.
 
 ## 2. Page layout (above the fold)
 
-**Hero one-liner (paste above cards):** Knowledge curated from WordPress Core changes (Make/Core, Trac, handbooks, contributor pipeline), with wrong→correct, source, and version. Not AI training cutoffs.
+**Hero one-liner (paste above cards):** WordPress knowledge from Core changes, with wrong→correct, source, and version.
 
 ### Block A — Solo (hero, 3 cards)
 
@@ -52,7 +54,7 @@ Under the three cards (one line):
 
 ### Block B — Free strip
 
-> **Free - 0 €.** Local watcher. `npx @unleashwp/lumo demo`. No hosted MCP. Quiet ≠ clean.
+> **Free - 0 €.** Local watcher. `npx @unleashwp/lumo demo`. No hosted MCP. Limits are stated in output.
 > Until npm catches this release: go-live candidate = `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live` (demo / check / scan).
 > **After the Aha:** stay Free only while the local snapshot is enough. Need live plugin catalogue → **Solo Hosted 149**. Need six agents on disk, no live MCP → **Agent Team 99**. Staying Free forever means frozen coverage while Core and plugins move.
 
@@ -65,7 +67,7 @@ Under the three cards (one line):
 
 ## 3. What Lumo actually watches (coverage domains)
 
-Plain English for a WordPress developer. Numbers from lumo-pro `docs/capability-inventory.md` (2026-08-01): published catalogue **~192**, Free snapshot **~48**, catch-capable **~95+**.
+Plain English for a WordPress developer. Re-measure catalogue counts from code before publishing numbers on www.
 
 ### 3.1 WordPress Core (everyday PHP / admin surface)
 
@@ -167,7 +169,7 @@ What the watcher and agents look for when you write plugin or theme PHP:
 | Client-side media processing | **Reference (Pro):** `wp-7-1-client-side-media-processing` |
 | React 19 punted beyond 7.1 | **Reference (Pro):** `wp-7-1-react-19-punted` |
 | `dimensions.minWidth` | **Reference (Pro):** `wp-7-1-dimensions-min-width` |
-| Knowledge CPT / DataViews / Design System / jQuery UI 1.14.2 / founder briefing | **Still open** |
+| Knowledge CPT / DataViews / Design System / jQuery UI 1.14.2 | **Still open** |
 
 Website / sales line: **“From WP 7.1 the Post Editor is always iframed; Lumo watches document/window and admin-scoped CSS breaks. Covers WordPress 7.0 breakages we have sourced, plus a growing WordPress 7.1 wave (Free Catch slice + Pro depth). Full 7.1 pack is still open, not Ready.”**
 
@@ -207,7 +209,7 @@ Legend: ● included · ○ not included · ~ local / Free snapshot only
 | Free snapshot (~**48** catch entries) | ● | ● | ● | ● | ● | ● |
 | Local tools: `lumo_check_code`, `lumo_lookup`, `lumo_audit` | ● | ● | ● | ● | ● | ● |
 | Honest caps (`computed` / `complete` / line limits) | ● | ● | ● | ● | ● | ● |
-| Quiet ≠ clean (never false all-clear) | ● | ● | ● | ● | ● | ● |
+| Scan limits disclosed in output | ● | ● | ● | ● | ● | ● |
 
 ### B. Agent kit files (`lumo-agent-kit`)
 
@@ -268,7 +270,7 @@ Local Forge UI may offer German (DE). Lumo product language stays English.
 
 1. Free / Starter / Agent Team never call `mcp.unleash-wp.com` (production **402**).
 2. Vol.1 = **69 IDE lookups** from UnleashWP Learn Vol.1 — **not** the 345-page PDF, **not** Catch.
-3. Quiet ≠ clean. Engineering watcher with sources — **not** AppSec / pentest.
+3. Engineering watcher with sources. Not AppSec or pentest.
 4. Unlicensed CI runs stay green and say the gate **did not run** (never a silent pass).
 5. Do **not** claim “Ready for WP 7.1” until §3.6 gap is closed with sourced entries.
 6. Lumo is **not** the `WordPress/agent-skills` project. That repository is a separate public skill set; Lumo may curate overlapping topics into its own evidence-backed catalogue.
@@ -401,7 +403,7 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 - GitHub Action can fail LOUD PRs — **required if WordPress merges need a gate that cannot be skipped**  
 - Unlicensed Action stays green and says the gate **did not run** (never a silent pass)  
 - Prefer Pro for **1–3** seats with CI; Team 20 from ~4 seats  
-- **No hosted trial.** Proof path: Free `demo` LOUD first, then 14-day money-back once checkout is live (or a founder-shared dogfood key for finance review)  
+- **No hosted trial.** Use Free `demo`, then 14-day money-back once checkout is live  
 **CTA:** Get Pro
 
 ### Agent Team — 99 €/yr (secondary · not starred)
@@ -425,24 +427,19 @@ Shorter table for the first screen; full matrix on `/pricing#compare`.
 ### Free — 0 €
 
 **Prove it on your machine.** `npx @unleashwp/lumo demo`  
-Local snapshot + CLI + local MCP. No hosted Pro catalogue. Quiet ≠ clean.  
-Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1.0.0-go-live`  
-**Fork after the Aha:** live ACF/Woo/GF → Solo Hosted 149 · files-only six agents → Agent Team 99 · tiny entry → Starter 39. Free coverage freezes; Core does not.
+Local snapshot + CLI + local MCP. No hosted Pro catalogue.  
+**CTA:** Install Free
 
 ---
 
-## 8. Psychology rules
+## 8. Layout rules
 
-1. **Solo Hosted** is the only starred solo card.
-2. Never star Agent Team 99 on the main grid.
-3. Never hide Agent Team completely — label it **files only / dead end for live catalogue**.
-4. Never put Team 20 in the three-card solo row.
-5. Forge Hosted shown on **Solo Hosted, Pro, Team 20** as **entitlement** (install not yet available) — not Free/Starter/Agent Team.
-6. Primary CTA colour only on Solo Hosted. Never star Agent Team.
-7. Never claim WP 7.1 readiness until the curated pack exists.
-8. Always show glossary (website ↔ LS name) near pricing or checkout.
-9. **Everyone buys** = each of the four buying personas has one primary close SKU (§11). CEO is not a buyer.
-10. Loss aversion only with honest facts (frozen Free snapshot, 402 on hosted without paid key, Pack included so 99 then 149 is double-pay).
+1. Solo Hosted is the only starred solo card.
+2. Agent Team stays visible but secondary (files only).
+3. Team 20 sits outside the three-card solo row.
+4. Forge Hosted on paid hosted tiers only, as entitlement (install not yet available).
+5. Show website ↔ LS name glossary near checkout.
+6. Do not claim WP 7.1 readiness until sourced entries ship.
 
 ---
 
@@ -464,40 +461,10 @@ Go-live candidate (until npm publish): `npx -y github:unleash-wp/lumo#release/v1
 | --- | --- |
 | Free MCP tools | `lumo/src/mcp/server.ts` |
 | Hosted MCP tools | `lumo-pro/src/mcp/tool-names.ts` |
-| Catalogue counts / honesty | `lumo-pro/docs/capability-inventory.md` |
 | Agents / skills | `lumo-agent-kit/CONTENTS.md` |
 | CI Action | `lumo-action/action.yml` |
 | WP abilities | `lumo-wp` abilities registration |
-| Knowledge import plan | [knowledge-import-agent-skills.md](./knowledge-import-agent-skills.md) |
-| Product lock | [START-HERE-GO-LIVE.md](./START-HERE-GO-LIVE.md) · [packages.md](./packages.md) |
 
-Canonical product rules: [packages.md](./packages.md).
+Canonical product rules: [packages.md](./packages.md) · [website-sell-sheet.md](./website-sell-sheet.md).
 
-**Buyer smoke paths (per tier, honest):** see [sales-ready-checklist.md](./sales-ready-checklist.md). Free is the trial; no hosted trial keys.
-
----
-
-## 11. Everyone buys (persona close map)
-
-**Definition (honest):** “Alle kaufen” means each **buying** persona has one primary SKU they would pay for, with a clear trigger and a secondary only when the job differs. **CEO is the founder, not a buyer.** Prices stay locked; framing carries conversion. No fake hosted trial.
-
-| Persona | Primary SKU | Close trigger | Secondary | Do not |
-| --- | --- | --- | --- | --- |
-| **Entwickler** | Free → **Solo Hosted 149** (live) or **Agent Team 99** (files) | After `demo` Aha: local snapshot freezes; live ACF/Woo/GF needs hosted (402 without key). One-line npm vs go-live branch everywhere Free is sold. | Starter 39 if tiny entry | Stay Free forever without stating the freeze; confuse npm `0.4.x` with go-live `check` |
-| **Freelancer** | **Solo Hosted 149 ★** | Best Value: +50 € over Agent Team buys hosted MCP + Pack included + Vol.1 + Forge Hosted entitlement. Agent Team alone = files dead end for live Cursor. | Starter 39 budget / files-curious | Stop at Agent Team 99 when they need live MCP |
-| **Abteilungsleiter** | **Pro 199/seat** | CI merge gate is non-negotiable when WordPress PRs merge without a human re-check. Unlicensed Action never silent-passes. Seat math: 1–3 Pro; Team 20 from ~4. | Solo Hosted if no CI | Invent live trial infra. Close with Free LOUD proof + **14-day money-back** and/or **founder dogfood key** for finance |
-| **Agentur-Chef** | **Team 20 · 599** | Default agency close. ~30 €/seat/year vs Pro 199. Pack + CI + Vol.1 + Forge Hosted entitlement included. | Pro × 1–3 only if tiny shop | Upsell Starter/Agent Team twice; weaken Team 20 |
-
-**Founder close tools (not product infra):**
-
-| Tool | Who | Status |
-| --- | --- | --- |
-| Free `demo` / go-live branch `check` | All | Live |
-| 14-day money-back on LS paid pages | All paid | Restate on checkout (already locked) |
-| Founder-shared dogfood / demo keys | Abteilungsleiter finance | **FOUNDER-ONLY** — temporary keys, not a public trial product |
-| 60 s Free + Solo LOUD screenshot | Abteilungsleiter / Freelancer | Open (founder media) |
-| Refund window | All paid | **FOUNDERS-LOCKED:** **14 days** only; do not advertise 30; do not cut price |
-
-**No price change in this pass.** Any price tweak = **FOUNDERS-DECIDE**.
-
-Also mirrored: [sales-ready-checklist.md](./sales-ready-checklist.md) · `/connect`.
+Free `demo` is the trial path. No hosted trial keys.
