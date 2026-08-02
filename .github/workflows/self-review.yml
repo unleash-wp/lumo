@@ -2,7 +2,7 @@
 #
 # Deliberately NOT the licensed CI gate. That gate is a Lumo Pro feature and
 # needs a licence key, and this is the free repository: no key belongs here.
-# What this job dogfoods is the engine: the same free catch a user gets from
+# What this job runs is the engine: the same free catch a user gets from
 # `lumo scan`, run over the changes in the pull request.
 #
 # It reports and never blocks, exactly like the local scan: findings are in the
