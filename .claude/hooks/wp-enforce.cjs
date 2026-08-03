@@ -247,6 +247,24 @@ function emitAdvisory(message) {
   );
 }
 
+function buildDidNotRunAdvisory(message) {
+  const failOpenNotice = message.toLowerCase().includes('not a clean result')
+    ? 'This edit was allowed because enforcement fails open. Retry after Lumo is available.'
+    : 'This is not a clean result. This edit was allowed because enforcement fails open. Retry after Lumo is available.';
+
+  return [
+    'Lumo DID NOT RUN on this WordPress/PHP edit:',
+    '',
+    message,
+    '',
+    failOpenNotice,
+  ].join('\n');
+}
+
+function emitDidNotRunAdvisory(message) {
+  emitAdvisory(buildDidNotRunAdvisory(message));
+}
+
 // ---------------------------------------------------------------------------
 // Hook catch runner path
 // ---------------------------------------------------------------------------
@@ -314,9 +332,8 @@ async function main() {
   const hookDir = __dirname;
   const catchRunnerPath = resolveCatchRunnerPath(hookDir);
   if (!fs.existsSync(catchRunnerPath)) {
-    // Emit a one-time notice so the team knows the build is missing
-    process.stderr.write(
-      '[lumo] wp-enforce: dist/hook-catch.mjs not found — run `npm run build` to activate enforcement.\n',
+    emitDidNotRunAdvisory(
+      'The Lumo catch module is unavailable, so this edit was not checked. Run `npm run build` and retry.',
     );
     process.exit(0);
   }
@@ -339,7 +356,19 @@ async function main() {
     const { runHookCatch } = await import(catchRunnerPath);
     catchResult = runHookCatch(content, 'auto', overridesArg);
   } catch {
-    // Fail-open: catch engine error must never block the developer
+    emitDidNotRunAdvisory(
+      'The Lumo catch module could not start, so this edit was not checked. Retry after Lumo is available.',
+    );
+    process.exit(0);
+  }
+
+  if (catchResult.didNotRun) {
+    emitDidNotRunAdvisory(catchResult.message);
+    process.exit(0);
+  }
+
+  if (catchResult.hasCoverageGap && !catchResult.tier) {
+    emitAdvisory(catchResult.message);
     process.exit(0);
   }
 
@@ -378,4 +407,12 @@ if (require.main === module) {
 }
 
 // Export pure functions for unit testing
-module.exports = { isWordPressFile, extractContent, resolveMode, resolveCatchRunnerPath, resolveCatchOverrides, applyCatchOverride };
+module.exports = {
+  isWordPressFile,
+  extractContent,
+  resolveMode,
+  resolveCatchRunnerPath,
+  resolveCatchOverrides,
+  applyCatchOverride,
+  buildDidNotRunAdvisory,
+};

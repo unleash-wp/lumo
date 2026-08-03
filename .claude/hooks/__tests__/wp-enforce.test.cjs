@@ -25,7 +25,14 @@ const path = require('node:path');
 // ---------------------------------------------------------------------------
 
 const hook = require('../wp-enforce.cjs');
-const { isWordPressFile, extractContent, resolveMode, resolveCatchOverrides, applyCatchOverride } = hook;
+const {
+  isWordPressFile,
+  extractContent,
+  resolveMode,
+  resolveCatchOverrides,
+  applyCatchOverride,
+  buildDidNotRunAdvisory,
+} = hook;
 
 const REPO_ROOT = path.join(__dirname, '..', '..', '..'); // <repo>/
 const HOOK_PATH = path.join(__dirname, '..', 'wp-enforce.cjs');
@@ -393,6 +400,15 @@ describe('applyCatchOverride — downgrade', () => {
   });
 });
 
+describe('buildDidNotRunAdvisory', () => {
+  it('names an unavailable check without blocking the edit', () => {
+    const advisory = buildDidNotRunAdvisory('DID NOT RUN: no code was checked.');
+    assert.match(advisory, /DID NOT RUN/);
+    assert.match(advisory, /not a clean result/i);
+    assert.match(advisory, /fails open/i);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // End-to-end hook invocation (spawnSync) — only when dist/hook-catch.mjs exists
 // ---------------------------------------------------------------------------
@@ -437,7 +453,7 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
   });
 
   // --- Allow path: clean WordPress code ---
-  it('allows Write on WordPress file with clean code', () => {
+  it('keeps a genuine WordPress/PHP no-match silent', () => {
     const result = invokeHook({
       tool_name: 'Write',
       tool_input: {
@@ -451,21 +467,19 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
       },
     });
     assert.equal(result.status, 0, `stderr: ${result.stderr}`);
-    assert.ok(!result.parsed || result.parsed.continue !== false);
+    assert.equal(result.stdout.trim(), '');
   });
 
   // --- Block path: LOUD catch on Write ---
-  it('blocks Write on WordPress file with HPOS LOUD catch', () => {
+  it('blocks Write on WordPress file with a Free LOUD catch', () => {
     const result = invokeHook({
       tool_name: 'Write',
       tool_input: {
         file_path: '/wp-content/plugins/my-plugin/includes/class-orders.php',
         content: [
           '<?php',
-          "$orders = get_posts( array( 'post_type' => 'shop_order', 'numberposts' => 10 ) );",
-          'foreach ( $orders as $order ) {',
-          '  echo $order->ID;',
-          '}',
+          'global $wpdb;',
+          '$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->users} WHERE ID = $user_id" );',
         ].join('\n'),
       },
     });
@@ -473,19 +487,17 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
     assert.ok(result.parsed, 'expected JSON output from hook');
     assert.equal(result.parsed.continue, false);
     assert.equal(result.parsed.decision, 'block');
-    // Reason must contain the dated version fact and correct pattern
-    assert.ok(result.parsed.reason.includes('⚠️'), 'reason should contain warning emoji');
-    assert.ok(result.parsed.reason.includes('8.2'), 'reason should contain breaking version');
+    assert.match(result.parsed.reason, /SQL injection|prepare/i);
   });
 
   // --- Block path: LOUD catch on Edit ---
-  it('blocks Edit that introduces HPOS bad pattern', () => {
+  it('blocks Edit that introduces an unprepared database query', () => {
     const result = invokeHook({
       tool_name: 'Edit',
       tool_input: {
         file_path: '/wp-content/plugins/my-plugin/orders.php',
-        old_string: '$order = wc_get_order( $id );',
-        new_string: "$orders = get_posts( [ 'post_type' => 'shop_order' ] );",
+        old_string: '$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->users} WHERE ID = %d", $user_id ) );',
+        new_string: '$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->users} WHERE ID = $user_id" );',
       },
     });
     assert.equal(result.status, 2, `expected block, got ${result.status}`);
@@ -501,7 +513,8 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
           file_path: '/wp-content/plugins/my-plugin/orders.php',
           content: [
             '<?php',
-            "$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+            'global $wpdb;',
+            '$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->users} WHERE ID = $user_id" );',
           ].join('\n'),
         },
       },
@@ -512,8 +525,8 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
     assert.ok(result.parsed, 'expected JSON advisory output');
     assert.ok(result.parsed.hookSpecificOutput, 'expected hookSpecificOutput key');
     assert.ok(
-      result.parsed.hookSpecificOutput.additionalContext.includes('⚠️') ||
-      result.parsed.hookSpecificOutput.additionalContext.includes('🔍'),
+      result.parsed.hookSpecificOutput.additionalContext.includes('BREAKING') ||
+      result.parsed.hookSpecificOutput.additionalContext.includes('SQL injection'),
     );
   });
 
@@ -535,8 +548,8 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
     assert.ok(!hasMeaningfulOutput, 'off mode must produce no stdout');
   });
 
-  // --- SOFT catch: advisory emitted, not a block ---
-  it('emits advisory (not block) for SOFT context-dependent catch', () => {
+  // --- Coverage gap: advisory emitted, not a block ---
+  it('emits an advisory when WooCommerce code is outside Free coverage', () => {
     const result = invokeHook({
       tool_name: 'Write',
       tool_input: {
@@ -548,14 +561,11 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
         ].join('\n'),
       },
     });
-    // SOFT → allow, but advisory injected
+    // Coverage gap → allow, but advisory injected
     assert.equal(result.status, 0);
-    if (result.parsed && result.parsed.hookSpecificOutput) {
-      assert.ok(
-        result.parsed.hookSpecificOutput.additionalContext.includes('🔍') ||
-        result.parsed.hookSpecificOutput.additionalContext.includes('Worth reviewing'),
-      );
-    }
+    assert.ok(result.parsed?.hookSpecificOutput, 'expected coverage advisory output');
+    assert.match(result.parsed.hookSpecificOutput.additionalContext, /WooCommerce/);
+    assert.match(result.parsed.hookSpecificOutput.additionalContext, /not an all-clear/i);
   });
 
   // --- Scoping: non-WP tool (Bash) → no-op ---
@@ -577,7 +587,7 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
         path.join(tmpDir, '.claude', '.lumo.json'),
         JSON.stringify({
           enforce: { mode: 'block' },
-          catch: { disable: ['woocommerce-hpos-order-access'] },
+          catch: { disable: ['wpdb-query-without-prepare-sql-injection'] },
         }),
       );
 
@@ -587,7 +597,7 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
           cwd: tmpDir,
           tool_input: {
             file_path: path.join(tmpDir, 'wp-content/plugins/bad.php'),
-            content: "<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+            content: '<?php\nglobal $wpdb;\n$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->users} WHERE ID = $user_id" );',
           },
         }),
         encoding: 'utf8',
@@ -614,7 +624,7 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
         path.join(tmpDir, '.claude', '.lumo.json'),
         JSON.stringify({
           enforce: { mode: 'block' },
-          catch: { downgrade: { 'woocommerce-hpos-order-access': 'soft' } },
+          catch: { downgrade: { 'wpdb-query-without-prepare-sql-injection': 'soft' } },
         }),
       );
 
@@ -624,7 +634,7 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
           cwd: tmpDir,
           tool_input: {
             file_path: path.join(tmpDir, 'wp-content/plugins/bad.php'),
-            content: "<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+            content: '<?php\nglobal $wpdb;\n$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->users} WHERE ID = $user_id" );',
           },
         }),
         encoding: 'utf8',
@@ -675,7 +685,7 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
           cwd: tmpDir,
           tool_input: {
             file_path: '/wp-content/plugins/bad.php',
-            content: "<?php\n$orders = get_posts( array( 'post_type' => 'shop_order' ) );",
+            content: '<?php\nglobal $wpdb;\n$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->users} WHERE ID = $user_id" );',
           },
         }),
         encoding: 'utf8',
@@ -740,11 +750,11 @@ describe('wp-enforce — e2e hook invocation', { skip: !CATCH_RUNNER_EXISTS && '
 });
 
 // ---------------------------------------------------------------------------
-// Dist-absent path: no block, stderr notice
+// Dist-absent path: no block, visible DID NOT RUN advisory
 // ---------------------------------------------------------------------------
 
 describe('wp-enforce — missing dist (fail-open)', () => {
-  it('exits 0 and writes a stderr notice when hook-catch.mjs is absent', () => {
+  it('exits 0 and injects a DID NOT RUN advisory when hook-catch.mjs is absent', () => {
     const result = spawnSync(process.execPath, [HOOK_PATH], {
       input: JSON.stringify({
         tool_name: 'Write',
@@ -769,6 +779,10 @@ describe('wp-enforce — missing dist (fail-open)', () => {
     if (CATCH_RUNNER_EXISTS) return;
 
     assert.equal(result.status, 0, 'should fail-open when dist missing');
-    assert.ok(result.stderr.includes('dist/hook-catch.mjs not found'), result.stderr);
+    const parsed = JSON.parse(result.stdout.split('\n').find((line) => line.trim()) ?? '{}');
+    const advisory = parsed.hookSpecificOutput?.additionalContext ?? '';
+    assert.match(advisory, /DID NOT RUN/);
+    assert.match(advisory, /not a clean result/i);
+    assert.match(advisory, /npm run build/);
   });
 });
