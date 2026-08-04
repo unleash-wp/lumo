@@ -76,6 +76,7 @@ describe('law 1: the hook says it once, then keeps it short', () => {
     const first = runHookCatch(PRO_ONLY, 'php', undefined, dir);
     expect(first.message).toBe(buildCodeProTeaser('WooCommerce'));
     expect(first.tier).toBeNull();
+    expect(first.hasCoverageGap).toBe(true);
   });
 
   it('SILENCE: every later edit gets the short line, not the sales copy', () => {
@@ -91,6 +92,7 @@ describe('law 1: the hook says it once, then keeps it short', () => {
       expect(r.message).toContain('not an all-clear');
       // But the pitch is gone.
       expect(r.message).not.toContain('Lumo Pro covers');
+      expect(r.hasCoverageGap).toBe(true);
     }
     expect(second.message).toBe(third.message);
   });
@@ -126,6 +128,7 @@ describe('law 2: the hook names the gap next to a finding too', () => {
     const dir = freshStateDir();
     const res = runHookCatch(`<?php $id = $_GET['x']; echo $id;`, 'php', undefined, dir);
     expect(res.tier).not.toBeNull();
+    expect(res.hasCoverageGap).toBe(false);
     expect(res.message).not.toContain('not the whole picture');
     expect(res.message).not.toContain('WooCommerce');
   });
