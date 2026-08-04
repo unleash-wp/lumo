@@ -18,6 +18,7 @@ import { checkCodeWithGaps } from '../detection/catch.js';
 import {
   formatCatch,
   CATCH_NEUTRAL_LINE,
+  CATCH_DID_NOT_RUN_LINE,
   buildCodeProTeaser,
   buildCodeDetectionNote,
   buildCodeProTeaserShort,
@@ -32,11 +33,37 @@ import type { Snapshot } from '../types.js';
 export interface HookCatchResult {
   /** Highest tier seen across all results (LOUD > SOFT > none). */
   tier: CatchTier | null;
-  /** Formatted Markdown for the first finding (or the neutral line if none). */
+  /** Formatted Markdown for the finding, neutral result, or unavailable scan. */
   message: string;
   /** Raw result count per tier. */
   loudCount: number;
   softCount: number;
+  /** True when the hook could not produce a verdict. */
+  didNotRun: boolean;
+  /** True when the code touched knowledge that Free cannot check. */
+  hasCoverageGap: boolean;
+}
+
+function didNotRunResult(): HookCatchResult {
+  return {
+    tier: null,
+    message: CATCH_DID_NOT_RUN_LINE,
+    loudCount: 0,
+    softCount: 0,
+    didNotRun: true,
+    hasCoverageGap: false,
+  };
+}
+
+function noFindingResult(message: string, hasCoverageGap: boolean): HookCatchResult {
+  return {
+    tier: null,
+    message,
+    loudCount: 0,
+    softCount: 0,
+    didNotRun: false,
+    hasCoverageGap,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -80,8 +107,8 @@ const SNAPSHOT: Snapshot | null = loadSnapshotForHook();
  * Scan a code blob for WordPress/WooCommerce issues.
  *
  * Language is auto-detected when not provided. Fail-open: any uncaught error
- * returns a null-tier result so the hook never blocks on an internal crash.
- * Also null-tier when the snapshot could not be loaded.
+ * returns a DID NOT RUN result so the hook never blocks on an internal crash.
+ * The same result is returned when the snapshot could not be loaded.
  *
  * overrides: per-project catch config from .claude/.lumo.json (optional).
  * When provided, disabled rules are filtered out and downgraded rules are
@@ -100,14 +127,17 @@ export function runHookCatch(
   stateDir?: string,
 ): HookCatchResult {
   if (!SNAPSHOT) {
-    return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
+    return didNotRunResult();
   }
 
   try {
     // Inject the pre-loaded snapshot so checkCode() does not re-resolve paths.
     // Thread overrides so disabled/downgraded rules are applied before the
     // tier decision reaches the hook.
-    const { results, proGaps } = checkCodeWithGaps(code, language, SNAPSHOT, overrides);
+    const { results, proGaps, didNotRun } = checkCodeWithGaps(code, language, SNAPSHOT, overrides);
+    if (didNotRun) {
+      return didNotRunResult();
+    }
 
     if (results.length === 0) {
       // Pro-only knowledge was hit: name EVERY touched plugin. The hook stays
@@ -129,9 +159,9 @@ export function runHookCatch(
         if (uncovered.length > 0) {
           parts.push(buildCodeDetectionNote(joinPluginNames(uncovered)));
         }
-        return { tier: null, message: parts.join('\n\n'), loudCount: 0, softCount: 0 };
+        return noFindingResult(parts.join('\n\n'), true);
       }
-      return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
+      return noFindingResult(CATCH_NEUTRAL_LINE, false);
     }
 
     const loudCount = results.filter((r) => r.tier === 'LOUD').length;
@@ -148,8 +178,15 @@ export function runHookCatch(
         ? `${formatCatch(top)}\n\n${buildCodeProGapLine(joinPluginNames(proGaps.map((g) => g.pluginName)))}`
         : formatCatch(top);
 
-    return { tier: top.tier, message, loudCount, softCount };
+    return {
+      tier: top.tier,
+      message,
+      loudCount,
+      softCount,
+      didNotRun: false,
+      hasCoverageGap: proGaps.length > 0,
+    };
   } catch {
-    return { tier: null, message: CATCH_NEUTRAL_LINE, loudCount: 0, softCount: 0 };
+    return didNotRunResult();
   }
 }
