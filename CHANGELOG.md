@@ -14,6 +14,24 @@ No entry ships without evidence; no claim ships without a test step.
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-08-04
+
+**Why you should update:** 0.4.0 could report a clean run in situations where it
+had not actually checked anything. Every one of those paths now says so instead.
+
+### Fixed
+- Licence notices and `servedTier` degrade a Pro run instead of silently
+  presenting free-tier output as a green Pro scan.
+- An empty `fail_on_loud` defers to `enforce.mode` rather than defaulting to
+  "do not block".
+- A crashed catch engine surfaces as `didNotRun`, not as a no-match all-clear.
+- Snapshot coverage is stated as 48 entries in `plugin.json`, `server.json` and
+  the README. They still said 42, the count at 0.4.0, after entries were added.
+- `plugin.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`
+  and `server.json` were left at 0.4.0 while `package.json` moved to 0.4.1.
+  AI Forge and Claude Code compare that field to decide whether an update
+  exists, so neither would ever have offered this release.
+
 ## [0.4.0] — 2026-07-30
 
 **Why you should update:** 0.3.0 installs carry a pre-gating snapshot that
