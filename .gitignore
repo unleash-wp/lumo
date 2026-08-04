@@ -30,3 +30,26 @@ build/
 # Local smoke fixtures
 .tmp-check/
 .tmp-prodev-bait/
+
+# Local Claude Code / assistant tooling. Vendored third-party skill packs live
+# here under their own licences (Apache-2.0, GPL-3.0, source-available); this
+# repository is MIT and must not appear to relicense them.
+#
+# Three files here are ours and ship as a product surface: the PreToolUse
+# enforcement hook (tsup builds dist/hook-catch.mjs for it, see tsup.config.ts),
+# its tests, and the settings.json that wires it. Those stay tracked.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/wp-enforce.cjs
+!.claude/hooks/__tests__/
+.claude/hooks/__tests__/*
+!.claude/hooks/__tests__/wp-enforce.test.cjs
+CLAUDE.md
+
+# Wires any checkout of this repo to the paid hosted MCP. Not a project default.
+.mcp.json
+
+# Internal planning scaffold; the real docs are archived outside the repo.
+plans/

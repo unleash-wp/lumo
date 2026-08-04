@@ -98,7 +98,7 @@ Full matrix: [docs/install.md](docs/install.md)
 
 ## What Free covers
 
-42 snapshot entries verified against primary sources: Core deprecations through WP 7.0, block basics, Abilities API, plugin standards, security fundamentals, Secure Custom Fields.
+48 snapshot entries verified against primary sources: Core deprecations through WP 7.0, block basics, Abilities API, plugin standards, security fundamentals, Secure Custom Fields.
 
 Commercial plugins (WooCommerce, ACF Pro, Elementor, and similar) are named when detected but not fully covered on Free. Live catalogue depth and CI are on paid hosted tiers.
 
