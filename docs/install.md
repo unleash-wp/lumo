@@ -1,9 +1,7 @@
 # Install Options
 
 **Paid door (hosted):** one UnleashWP Lemon Squeezy license → hosted MCP in
-Cursor/Claude for **Solo Hosted / Pro / Team 20**. See
-[packages.md](./packages.md) and lumo-pro
-[product-harmony.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/product-harmony.md).
+Cursor/Claude for **Solo Hosted / Pro / Team 20**. See [packages.md](./packages.md).
 
 **Free door (local):** Lumo as an **AI Forge plugin** + `@unleashwp/lumo` catch engine. Free never receives
 hosted MCP bytes from `mcp.unleash-wp.com`. Starter / Agent Team are file zips only.

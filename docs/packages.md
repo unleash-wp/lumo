@@ -72,4 +72,3 @@ Connect page: `GET /connect` on the Pro host.
 | Starter / Agent Team | local Free MCP + kit files | Snapshot + bundled agent patterns |
 | Solo Hosted / Pro / Team 20 | `https://mcp.unleash-wp.com/mcp` + Bearer key | Pro SQLite on UnleashWP host |
 
-Ops: lumo-pro [licensing-runbook.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/licensing-runbook.md) · [deployment-runbook.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/deployment-runbook.md) · [product-harmony.md](https://github.com/unleash-wp/lumo-pro/blob/main/docs/product-harmony.md)

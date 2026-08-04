@@ -30,3 +30,12 @@ build/
 # Local smoke fixtures
 .tmp-check/
 .tmp-prodev-bait/
+
+# Local Claude Code / assistant tooling. Vendored third-party skill packs live
+# here under their own licences (Apache-2.0, GPL-3.0, source-available); this
+# repository is MIT and must not appear to relicense them.
+.claude/
+CLAUDE.md
+
+# Wires any checkout of this repo to the paid hosted MCP. Not a project default.
+.mcp.json
