@@ -10,16 +10,21 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-// On Windows npm is a .cmd shim, and execFileSync does not apply PATHEXT — so a
-// bare 'npm' is ENOENT there while working everywhere else. Both assertions in
-// this file call through here, so the whole suite went red on windows-latest
-// while macOS and ubuntu stayed green.
-const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+// Windows needs both halves of this, and each one fails differently:
+//   - npm is a .cmd shim and execFileSync does not apply PATHEXT, so a bare
+//     'npm' is ENOENT
+//   - since Node's CVE-2024-27980 mitigation, spawning a .cmd without a shell
+//     is EINVAL
+// Neither applies elsewhere. The arguments are fixed and contain no spaces or
+// shell metacharacters, so enabling the shell here introduces nothing to quote.
+const IS_WINDOWS = process.platform === 'win32';
+const NPM = IS_WINDOWS ? 'npm.cmd' : 'npm';
 
 function packListing(): string[] {
   const out = execFileSync(NPM, ['pack', '--dry-run', '--json'], {
     cwd: root,
     encoding: 'utf8',
+    shell: IS_WINDOWS,
   });
   const parsed = JSON.parse(out) as Array<{ files: Array<{ path: string }> }>;
   // Every rule below is written against forward slashes. npm normalizes tarball
