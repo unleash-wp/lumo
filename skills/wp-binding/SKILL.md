@@ -64,9 +64,11 @@ speculatively on non-WordPress work.
 session, do not fail silently and do not pretend they ran. Say once: "Lumo's
 live catch is not connected. Answering from the bundled skill knowledge
 (dated), without the code check." Then answer from wp-pro/wp-knowledge content.
-Prefer reconnecting via the UnleashWP account hosted MCP
-(`https://mcp.unleash-wp.com/mcp` + Bearer). Fallback for air-gap:
-`npx -y -p @unleashwp/lumo lumo-mcp`. Never claim a check happened that did not.
+Prefer reconnecting to the hosted MCP at `https://mcp.unleash-wp.com/mcp`. This
+plugin declares it and the sign-in happens in a browser, so **do not ask the
+user for a key** -- there is nothing they could paste that the flow does not
+already do. Fallback for air-gap: `npx -y -p @unleashwp/lumo lumo-mcp`. Never
+claim a check happened that did not.
 
 ---
 

@@ -8,9 +8,9 @@ Lumo watches AI-written WordPress code and flags patterns that broke in a real r
 
 Knowledge comes from WordPress Core changes (Make/Core, Trac, handbooks), not from model training cutoffs.
 
-**Free:** Lumo plugin in [AI Forge](https://github.com/unleash-wp/ai-forge) plus `@unleashwp/lumo` for the local catch engine. No hosted MCP.
+**Free:** install this plugin, sign in once, and the hosted MCP answers at free depth — slug, title and summary for every entry, with what a paid seat adds beside it. There is a daily allowance. `@unleashwp/lumo` still runs the catch engine on your own machine, with a snapshot that freezes at package date.
 
-**Paid:** Hosted MCP at [mcp.unleash-wp.com](https://mcp.unleash-wp.com/connect) with a Lemon Squeezy license (Solo Hosted, Pro, Team 20). Starter and Agent Team are file packs only.
+**Paid:** the same server, answering in full — the code, the wrong pattern, the source and the verification step — and far more often. Solo Hosted, Pro or Team 20 at [mcp.unleash-wp.com](https://mcp.unleash-wp.com/connect). Starter and Agent Team are file packs only.
 
 See [docs/packages.md](docs/packages.md) for the full ladder.
 
@@ -36,6 +36,24 @@ Open AI Forge → Plugins → paste `github:unleash-wp/lumo` → Install.
 
 ## Cursor / Claude
 
+**Claude Code (nothing to paste):**
+
+```
+/plugin marketplace add unleash-wp/lumo
+/plugin install lumo
+```
+
+The plugin declares the hosted MCP server and stops there. It carries **no**
+`Authorization` header, and that absence is the feature: on the first tool call
+the server answers `401` with a `WWW-Authenticate` challenge, Claude Code reads
+the discovery document, registers itself, opens a browser, and you sign in once.
+The token is minted, stored and refreshed by Claude Code — you never see it, and
+there is nothing to copy out of an email into a settings file.
+
+What you are served follows the account, not the client: sign in with an
+organisation that holds a Solo Hosted, Pro or Team 20 seat and the same
+connection answers in full.
+
 **Free (Forge plugin):**
 
 1. `npm install -g @unleashwp/ai-forge @unleashwp/lumo`
@@ -48,10 +66,11 @@ Open AI Forge → Plugins → paste `github:unleash-wp/lumo` → Install.
 npx -y -p @unleashwp/lumo lumo-mcp
 ```
 
-**Paid (hosted):**
+**Paid (hosted), by hand:**
 
-1. Buy Solo Hosted, Pro, or Team 20.
-2. Open https://mcp.unleash-wp.com/connect and paste the MCP JSON.
+For a client that does not do OAuth, or if you would rather hold the key
+yourself. Buy Solo Hosted, Pro or Team 20, then open
+https://mcp.unleash-wp.com/connect and paste:
 
 ```json
 {
