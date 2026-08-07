@@ -1,6 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -16,12 +15,18 @@ import { describe, expect, it } from 'vitest';
  *
  * AGENTS.md is out for the same reason -- it is instructions to whoever works
  * on this repo, and it may need to say what the history was.
+ *
+ * Paths are joined with a literal '/', not path.join: these are repository
+ * paths, the same identifiers git and this file's own assertions use, and a
+ * repository path is '/' on every platform. path.join produced
+ * 'docs\\install.md' on the Windows runner, so the completeness check below
+ * failed there while the rule itself was working perfectly.
  */
 function liveDocuments(): string[] {
   const out: string[] = ['README.md'];
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const path = join(dir, entry.name);
+      const path = `${dir}/${entry.name}`;
       if (entry.isDirectory()) walk(path);
       else if (entry.name.endsWith('.md')) out.push(path);
     }
