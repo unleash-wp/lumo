@@ -1,6 +1,39 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
+
+/**
+ * Every markdown document that speaks to a reader today.
+ *
+ * README, plus everything under docs/, skills/, agents/ and commands/ -- the
+ * four trees that ship or are read on GitHub. This package is PUBLIC on npm,
+ * so "read on GitHub" is not a small audience.
+ *
+ * CHANGELOG.md is deliberately out: recording that a provider was removed is
+ * the one place naming it is correct, and sweeping it in would make the
+ * honest entry the thing that fails.
+ *
+ * AGENTS.md is out for the same reason -- it is instructions to whoever works
+ * on this repo, and it may need to say what the history was.
+ *
+ * Paths are joined with a literal '/', not path.join: these are repository
+ * paths, the same identifiers git and this file's own assertions use, and a
+ * repository path is '/' on every platform. path.join produced
+ * 'docs\\install.md' on the Windows runner, so the completeness check below
+ * failed there while the rule itself was working perfectly.
+ */
+function liveDocuments(): string[] {
+  const out: string[] = ['README.md'];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.md')) out.push(path);
+    }
+  };
+  for (const dir of ['docs', 'skills', 'agents', 'commands']) walk(dir);
+  return out;
+}
 
 /**
  * The plugin's own manifests, against the contract Claude Code actually reads.
@@ -123,8 +156,27 @@ describe('what the plugin tells people to do', () => {
   it('SILENCE: no live document names a payment provider we left', () => {
     // Dodo is merchant of record. Telling a customer to look for a Lemon
     // Squeezy licence sends them to a company that did not charge them.
-    for (const file of ['README.md', 'skills/wp-binding/SKILL.md']) {
+    //
+    // The named list used to be README.md and the binding skill only, which
+    // is why docs/install.md kept telling readers of a PUBLIC npm package to
+    // buy "one UnleashWP Lemon Squeezy license" long after Lemon closed. The
+    // rule was right and its reach was two files wide.
+    //
+    // Discovered rather than listed now: a new document cannot opt out of
+    // this by not being remembered.
+    for (const file of liveDocuments()) {
       expect(readFileSync(file, 'utf8'), file).not.toMatch(/Lemon Squeezy/i);
     }
+  });
+
+  it('BELL: the sweep actually reaches the documents it claims to', () => {
+    // Guards the guard. A glob that matched nothing would make the assertion
+    // above vacuously true -- the exact shape of false all-clear this file
+    // exists to prevent.
+    const found = liveDocuments();
+    expect(found.length).toBeGreaterThan(3);
+    expect(found).toContain('README.md');
+    expect(found).toContain('docs/install.md');
+    expect(found).toContain('docs/packages.md');
   });
 });

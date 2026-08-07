@@ -18,7 +18,8 @@ export function isUpgradePromptEnabled(env: Record<string, string | undefined> =
 /**
  * Resolve the checkout base URL from the environment.
  * Defaults to 'https://lumo.so/pro', a stable 301 the founder controls.
- * The actual Lemon Squeezy destination is a redirect target, not a code constant.
+ * The payment provider sits behind that redirect, never in a code constant --
+ * which is why switching providers cost this file nothing.
  */
 export function getCheckoutUrl(env: Record<string, string | undefined> = process.env): string {
   return env['LUMO_CHECKOUT_URL'] ?? 'https://lumo.so/pro';

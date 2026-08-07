@@ -109,17 +109,17 @@ export function resolveBlockOnLoud(
  * worked on unlimited installs).
  *
  * Stable across restarts and across runs on purpose: `owner/repo` is the
- * identity of the installation Lemon Squeezy's activation limit is meant to
- * count, so every run against the same repository must present the same
- * fingerprint. A per-run id (the run id, a timestamp, a random UUID) would
- * look like a fresh install to LS on every single push, and a five-seat
- * licence would be exhausted inside a day by one repository's CI alone.
+ * identity of the installation the seat limit is meant to count, so every run
+ * against the same repository must present the same fingerprint. A per-run id
+ * (the run id, a timestamp, a random UUID) would look like a fresh install on
+ * every single push, and a five-seat licence would be exhausted inside a day
+ * by one repository's CI alone.
  *
  * Hashed rather than sent raw: `owner/repo` is not a secret (it is public in
- * the checkout itself), but the fingerprint travels over the network and
- * into Lemon Squeezy's `instance.name` field, and a one-way hash keeps that
- * value opaque to anyone who only has the hash, symmetric with how the
- * WordPress plugin derives its own (site URL + blog_id, hashed).
+ * the checkout itself), but the fingerprint travels over the network and is
+ * stored server-side against the licence, and a one-way hash keeps that value
+ * opaque to anyone who only has the hash, symmetric with how the WordPress
+ * plugin derives its own (site URL + blog_id, hashed).
  *
  * Returns undefined when repository is empty, so a caller with nothing to
  * hash sends no header rather than a fingerprint for the empty string, which
