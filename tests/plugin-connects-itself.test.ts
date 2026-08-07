@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -15,6 +16,29 @@ import { describe, expect, it } from 'vitest';
  */
 
 const json = (p: string): any => JSON.parse(readFileSync(p, 'utf8'));
+
+/** The three files Claude Code reads to install and connect this plugin. */
+const MANIFESTS = ['.mcp.json', '.claude-plugin/plugin.json', '.claude-plugin/marketplace.json'];
+
+describe('the manifests are actually shipped', () => {
+  /**
+   * Reading a manifest off disk proves nothing about what a user receives.
+   *
+   * `.mcp.json` was untracked in 8bca2ff as an "internal-only file", and every
+   * assertion below kept passing on a developer's machine because the file was
+   * sitting there uncommitted. It failed only in CI, where a fresh checkout has
+   * exactly what git tracks -- and marketplace.json says `"source": "./"`, so a
+   * fresh checkout is precisely what an installing user gets. The plugin whose
+   * whole purpose is to connect itself was shipping without its server.
+   *
+   * git ls-files rather than existsSync, for that reason: presence on this
+   * disk is not delivery.
+   */
+  it.each(MANIFESTS)('BELL: %s is tracked, not just present on this machine', (file) => {
+    const tracked = execFileSync('git', ['ls-files', '--', file], { encoding: 'utf8' }).trim();
+    expect(tracked, `${file} is not tracked; a fresh checkout will not have it`).toBe(file);
+  });
+});
 
 describe('the plugin declares the hosted server', () => {
   const mcp = json('.mcp.json');

@@ -48,8 +48,13 @@ build/
 !.claude/hooks/__tests__/wp-enforce.test.cjs
 CLAUDE.md
 
-# Wires any checkout of this repo to the paid hosted MCP. Not a project default.
-.mcp.json
+# .mcp.json is TRACKED on purpose. It was untracked in 8bca2ff as an
+# "internal-only file", on the reasoning that it wires any checkout of this
+# repo to the paid hosted MCP. That reasoning was correct then and is wrong
+# now: .claude-plugin/marketplace.json declares "source": "./", so this
+# repository IS the plugin, and .mcp.json is the file Claude Code reads to
+# find its server. Ignored, the plugin installs with no server at all --
+# which is the one thing it exists to do.
 
 # Internal planning scaffold; the real docs are archived outside the repo.
 plans/
