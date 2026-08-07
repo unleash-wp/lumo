@@ -52,9 +52,12 @@ Website copy: [website-sell-sheet.md](./website-sell-sheet.md) · [website-prici
 
 Queryable engineering reference in hosted MCP, updated per release. Not the print/PDF.
 
-## Lemon Squeezy products
+## Products
 
-| LS product | Variant | Activations | In `LUMO_LS_PRODUCT_IDS`? |
+Dodo Payments is merchant of record: the checkout, the invoice and the refund
+all come from them.
+
+| Product | Variant | Activations | Unlocks hosted MCP? |
 | --- | --- | --- | --- |
 | Lumo Agent Core | Annual 39 EUR | 1 | No |
 | Lumo Agent Pack | Annual 99 EUR | 1 | No |

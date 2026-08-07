@@ -1,6 +1,6 @@
 # Install Options
 
-**Paid door (hosted):** one UnleashWP Lemon Squeezy license → hosted MCP in
+**Paid door (hosted):** one UnleashWP licence → hosted MCP in
 Cursor/Claude for **Solo Hosted / Pro / Team 20**. See [packages.md](./packages.md).
 
 **Free door (local):** Lumo as an **AI Forge plugin** + `@unleashwp/lumo` catch engine. Free never receives
@@ -25,7 +25,7 @@ Updates: AI Forge → Plugins → Check for updates.
 
 ## (0b) Hosted MCP — Solo Hosted / Pro / Team 20 (Cursor, Claude, Codex)
 
-1. Buy Solo Hosted, Pro, or Team 20 (Lemon Squeezy). Starter / Agent Team keys do **not** unlock hosted MCP.
+1. Buy Solo Hosted, Pro, or Team 20. Starter / Agent Team keys do **not** unlock hosted MCP.
 2. Open https://mcp.unleash-wp.com/connect — paste the MCP JSON and download `lumo.mdc`.
 3. Add the server in Cursor **Settings → MCP**:
 
