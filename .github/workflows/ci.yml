@@ -27,6 +27,9 @@ jobs:
       - name: Vocabulary check
         run: npm run check:vocabulary
 
+      - name: Lint the WordPress plugin
+        run: for f in wordpress-plugin/lumo.php wordpress-plugin/includes/*.php; do php -l "$f"; done
+
       - name: Test
         run: npm test
 
