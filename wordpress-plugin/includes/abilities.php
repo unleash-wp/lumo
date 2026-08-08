@@ -259,7 +259,7 @@ function lumo_remote_check( string $code, string $licence ): array {
 					'id'      => 1,
 					'method'  => 'tools/call',
 					'params'  => [
-						'name'      => 'wp_check_code',
+						'name'      => 'lumo_check_code',
 						'arguments' => [ 'code' => $code ],
 					],
 				]

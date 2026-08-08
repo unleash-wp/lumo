@@ -22,7 +22,7 @@ The plugin is read-only. It never writes content, never executes code, and never
 
 = What runs where =
 
-The pattern lookup runs entirely on your server against a bundled snapshot of 42 curated entries. No account, no network, no data leaves your site.
+The pattern lookup runs entirely on your server against a bundled snapshot of 48 curated entries. No account, no network, no data leaves your site.
 
 The code catch sends the code you pass it to the Lumo Pro server you configure, and only when you have configured one. Nothing is sent anywhere by default.
 

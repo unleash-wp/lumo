@@ -61,8 +61,25 @@ function lumo_render_settings_page(): void {
 		return;
 	}
 
-	$date    = lumo_knowledge_date();
-	$licence = lumo_licence_key();
+	$date = lumo_knowledge_date();
+
+	/*
+	 * Whether the key comes from wp-config.php, and it decides what this screen
+	 * may render.
+	 *
+	 * `lumo_licence_key()` prefers the constant. Echoing its value into a field
+	 * named `lumo_license_key` meant the next Save copied it into the options
+	 * table -- putting the key in the database, directly under a sentence
+	 * promising that the constant keeps it out. A database dump would then
+	 * carry a licence key that was deliberately never stored.
+	 *
+	 * So when the constant is set the field is disabled, which also means the
+	 * browser does not submit it, which means Save cannot write it. Three
+	 * consequences of one attribute, and the middle one is the load-bearing one.
+	 */
+	$from_constant = defined( 'LUMO_LICENSE_KEY' ) && is_string( LUMO_LICENSE_KEY );
+	$stored        = (string) get_option( 'lumo_license_key', '' );
+	$licence       = lumo_licence_key();
 	?>
 	<div class="wrap">
 		<h1><?php echo esc_html__( 'Lumo', 'lumo' ); ?></h1>
@@ -118,11 +135,16 @@ function lumo_render_settings_page(): void {
 							id="lumo_license_key"
 							name="lumo_license_key"
 							class="regular-text"
-							value="<?php echo esc_attr( $licence ); ?>"
+							value="<?php echo $from_constant ? '' : esc_attr( $stored ); ?>"
 							autocomplete="off"
+							<?php disabled( $from_constant ); ?>
 						/>
 						<p class="description">
-							<?php echo esc_html__( 'Both can also be set in wp-config.php as LUMO_PRO_URL and LUMO_LICENSE_KEY, which keeps them out of the database.', 'lumo' ); ?>
+							<?php
+							echo $from_constant
+								? esc_html__( 'Set in wp-config.php as LUMO_LICENSE_KEY, which is why this field is disabled: saving here would copy the key into the database, and keeping it out is the whole point of the constant.', 'lumo' )
+								: esc_html__( 'Both can also be set in wp-config.php as LUMO_PRO_URL and LUMO_LICENSE_KEY, which keeps them out of the database.', 'lumo' );
+							?>
 						</p>
 					</td>
 				</tr>
